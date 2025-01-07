@@ -1,0 +1,22 @@
+
+
+skipped system_manager.h
+
+/************ Queue *************/
+QueueHandle_t modeQueue;
+QueueHandle_t batteryQueue;
+
+
+
+lv_conf_internal.h
+line 22
+// #include "../../lv_conf.h"
+#include "components/GUI/lv_conf.h"
+
+
+
+
+
+44   // GUI_frontend();
+
+55 // async_battery_alert
