@@ -61,11 +61,11 @@ struct BATTERY_STATUS
 };
 
 // Variables to save machine data
-char app_version[32];
-char idf_version[32];
-char cpu_version[32];
-uint32_t RAM_size;
-uint32_t FLASH_size;
+extern char app_version[32];
+extern char idf_version[32];
+extern char cpu_version[32];
+extern uint32_t RAM_size;
+extern uint32_t FLASH_size;
 
 class SystemManager
 {

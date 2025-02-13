@@ -1,17 +1,24 @@
 #include <Arduino.h>
 
-#include <components/system_config/system_manager.h>
-
+#include <components/drivers/backlight/backlight.h>
 #include <components/drivers/battery/battery.h>
+#include <components/drivers/inputs/user_input.h>
 #include <components/drivers/LED/LED_notification.h>
 #include <components/drivers/sd_card/sd_card.h>
 #include <components/drivers/sound/sound.h>
-#include <components/drivers/inputs/user_input.h>
-#include <components/drivers/display/display_HAL/display_HAL.h>
+
+#include <components/system_config/system_config.h>
+#include <components/system_config/system_manager.h>
+
+#include <TFT_eSPI.h>
+
+#include <components/boot/ESPboyLogo.h>
 
 #include <esp32-hal-log.h>
 
-uint8_t console_running = NULL;
+// include c files
+#include <components/rom.h>
+
 
 TaskHandle_t gui_handler;
 TaskHandle_t intro_handler;
@@ -21,22 +28,17 @@ bool boot_screen_ani = true;
 
 static const char *TAG = "microByte_main";
 
-static void timer_isr(void)
-{
-    printf("save\r\n");
-    // gnuboy_save();
-    struct SYSTEM_MODE emulator;
-    emulator.mode = MODE_SAVE_GAME;
-    // emulator.console = emulator_selected;
-
-    if (xQueueSend(modeQueue, &emulator, (TickType_t)10) != pdPASS)
-    {
-        ESP_LOGE(TAG, "modeQueue send error");
-    }
-}
+TFT_eSPI tft = TFT_eSPI();
 
 void setup()
 {
+    Serial.begin(115200);
+
+    tft.begin();
+    tft.setRotation(2);
+    tft.fillScreen(TFT_BLACK);
+
+
     /**************** Basic initialization **************/
     sys_manager.system_init_config();
 
@@ -44,35 +46,19 @@ void setup()
     led_notification.LED_mode(LED_FADE_ON);
 
     sys_manager.system_info();
-    sys_manager.system_memory(MEMORY_SPIRAM),
-        sys_manager.system_memory(MEMORY_INTERNAL),
-        sys_manager.system_memory(MEMORY_DMA);
+    ESP_LOGE(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n",
+             sys_manager.system_memory(MEMORY_SPIRAM), sys_manager.system_memory(MEMORY_INTERNAL), sys_manager.system_memory(MEMORY_DMA));
 
-    displayHAL.display_HAL_init();
-
-    int32_t status = sys_manager.system_get_state();
-    // If the reset was done by a soft reset, it's not necessary to do the intro animation.
-    if (status == SYS_SOFT_RESET)
-    {
-        // boot_screen_ani = false;
-        sys_manager.system_set_state(SYS_NORMAL_STATE);
-    }
-
-    batteryQueue = xQueueCreate(1, sizeof(BATTERY_STATUS));
-    modeQueue = xQueueCreate(1, sizeof(SYSTEM_MODE));
-
-    displayHAL.display_HAL_change_endian();
-
-    sound.audio_init(AUDIO_SAMPLE_16KHZ);
-    sd_card.sd_init();
-    user_input.input_init();
+    backlight.backlight_init();
+    backlight.backlight_set(10);
 
 
-    bool game_running = false;
-    bool game_executed = false;
-    struct SYSTEM_MODE management;
+    
 
-    battery.battery_init();
+    // sd_card.sd_init();
+
+    // batteryQueue = xQueueCreate(1, sizeof(struct BATTERY_STATUS));
+    // battery.battery_init();
 }
 
 void loop()

@@ -11,12 +11,21 @@
 #include <esp32/spiram.h>
 
 #include "esp_system.h" // For esp_chip_info()
+#include <Esp.h>
+#include <SPIFFS.h>
 
-nvs_handle_t config_handle;
+static const char *TAG = "SystemManager";
 
-QueueHandle_t batteryQueue = nullptr; // Definition
-QueueHandle_t modeQueue = nullptr;   // Definition
+// nvs_handle_t config_handle;
 
+QueueHandle_t batteryQueue; // Definition
+QueueHandle_t modeQueue;    // Definition
+
+char app_version[32];
+char idf_version[32];
+char cpu_version[32];
+uint32_t RAM_size;
+uint32_t FLASH_size;
 
 void SystemManager::system_info()
 {
@@ -49,128 +58,140 @@ void SystemManager::system_info()
     cpu_version[sizeof(cpu_version) - 1] = '\0'; // Ensure null-termination
 
     // Get RAM size
-    RAM_size = esp_spiram_get_size();
-    if (RAM_size > 0)
-    {
-        RAM_size /= (1024 * 1024); // Convert to MB
-    }
-    else
+    RAM_size = ESP.getFreeHeap() / (1024 * 1024); // Get RAM size in MB
+    if (RAM_size == 0)
     {
         RAM_size = 0; // No SPI RAM available
     }
 
     // Get Flash size
-    size_t flash_size = 0;
-    esp_flash_get_size(NULL, &flash_size);
-    FLASH_size = flash_size / (1024 * 1024); // Convert to MB
+    FLASH_size = ESP.getFlashChipSize() / (1024 * 1024); // Get Flash size in MB
 }
 
 int SystemManager::system_memory(uint8_t memory)
 {
-    multi_heap_info_t info;
-
+    // For Arduino, heap management isn't as flexible as in ESP-IDF, so this is simplified.
     if (memory == MEMORY_DMA)
-        heap_caps_get_info(&info, MALLOC_CAP_DMA);
+        return ESP.getFreeHeap();
     else if (memory == MEMORY_INTERNAL)
-        heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
+        return ESP.getFreeHeap();
     else if (memory == MEMORY_SPIRAM)
-        heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
+        return ESP.getFreePsram();
     else if (memory == MEMORY_ALL)
-        heap_caps_get_info(&info, MALLOC_CAP_DEFAULT);
+        return ESP.getFreeHeap() + ESP.getFreePsram();
     else
     {
         return -1;
     }
-
-    return info.total_free_bytes;
 }
 
 void SystemManager::system_init_config()
 {
-    nvs_flash_init();
+    // Initialize SPIFFS filesystem
+    if (!SPIFFS.begin(true))
+    {
+        ESP_LOGE(TAG, "Failed to mount file system");
+        return;
+    }
+    ESP_LOGE(TAG, "SPIFFS Initialized");
 }
 
 void SystemManager::system_set_state(int8_t state)
 {
-    // TODO: Check if it's a valid code
-    nvs_open("nvs", NVS_READWRITE, &config_handle);
-    nvs_set_i8(config_handle, "prev_state", state);
-    nvs_close(config_handle);
+    File configFile = SPIFFS.open("/config.txt", "w");
+    if (configFile)
+    {
+        configFile.write(state);
+        configFile.close();
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to open config file for writing");
+    }
 }
 
 int8_t SystemManager::system_get_state()
 {
-    int8_t prev_state;
-    nvs_open("nvs", NVS_READWRITE, &config_handle);
-    nvs_get_i8(config_handle, "prev_state", &prev_state);
-    nvs_close(config_handle);
-    return prev_state;
+    File configFile = SPIFFS.open("/config.txt", "r");
+    if (configFile)
+    {
+        int8_t prev_state = configFile.read();
+        configFile.close();
+        return prev_state;
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to open config file for reading");
+        return -1;
+    }
 }
 
 void SystemManager::system_save_config(uint8_t config, int8_t value)
 {
-    nvs_handle_t config_handle;
-    esp_err_t err = nvs_open("nvs", NVS_READWRITE, &config_handle);
-    if (err != ESP_OK)
+    File configFile = SPIFFS.open("/config.txt", "w");
+    if (configFile)
     {
-        printf("Error opening NVS: %s\n", esp_err_to_name(err));
-        return;
+        if (config == SYS_BRIGHT && value <= 100)
+        {
+            configFile.print("scr_bright=");
+            configFile.println(value);
+        }
+        else if (config == SYS_VOLUME && value <= 100)
+        {
+            configFile.print("sound_volume=");
+            configFile.println(value);
+        }
+        else if (config == SYS_GUI_COLOR)
+        {
+            configFile.print("GUI_color=");
+            configFile.println(value);
+        }
+        else if (config == SYS_STATE_SAV_BTN)
+        {
+            configFile.print("Save_State=");
+            configFile.println(value);
+        }
+        configFile.close();
     }
-
-    if (config == SYS_BRIGHT && value <= 100)
+    else
     {
-        err = nvs_set_i8(config_handle, "scr_bright", value);
+        ESP_LOGE(TAG, "Error saving config to file");
     }
-    else if (config == SYS_VOLUME && value <= 100)
-    {
-        err = nvs_set_i8(config_handle, "sound_volume", value);
-    }
-    else if (config == SYS_GUI_COLOR)
-    {
-        err = nvs_set_i8(config_handle, "GUI_color", value);
-    }
-    else if (config == SYS_STATE_SAV_BTN)
-    {
-        err = nvs_set_i8(config_handle, "Save_State", value);
-        printf("Set save_State value %i\r\n", value);
-    }
-
-    if (err != ESP_OK)
-    {
-        printf("Error saving config: %s\n", esp_err_to_name(err));
-    }
-
-    nvs_close(config_handle);
 }
 
 int8_t SystemManager::system_get_config(uint8_t config)
 {
-    nvs_open("nvs", NVS_READWRITE, &config_handle);
+    File configFile = SPIFFS.open("/config.txt", "r");
     int8_t value = -1;
-    if (config == SYS_BRIGHT && value <= 100)
-    {
-        nvs_get_i8(config_handle, "scr_bright", &value);
-        if (value < 1 || value > 100)
-            value = 100;
-    }
-    else if (config == SYS_VOLUME && value <= 100)
-    {
-        nvs_get_i8(config_handle, "sound_volume", &value);
-        if (value < 0 || value > 100)
-            value = 80; // Default value of 80%
-    }
-    else if (config == SYS_GUI_COLOR)
-    {
-        nvs_get_i8(config_handle, "GUI_color", &value);
-        // if(value != 0 || value != 1) value = 0;
-    }
-    else if (config == SYS_STATE_SAV_BTN)
-    {
-        nvs_get_i8(config_handle, "Save_State", &value);
-        printf("Value get %i\r\n", value);
-    }
-    nvs_close(config_handle);
 
+    if (configFile)
+    {
+        while (configFile.available())
+        {
+            String line = configFile.readStringUntil('\n');
+            if (line.startsWith("scr_bright=") && config == SYS_BRIGHT)
+            {
+                value = line.substring(12).toInt();
+            }
+            else if (line.startsWith("sound_volume=") && config == SYS_VOLUME)
+            {
+                value = line.substring(14).toInt();
+            }
+            else if (line.startsWith("GUI_color=") && config == SYS_GUI_COLOR)
+            {
+                value = line.substring(10).toInt();
+            }
+            else if (line.startsWith("Save_State=") && config == SYS_STATE_SAV_BTN)
+            {
+                value = line.substring(11).toInt();
+            }
+        }
+        configFile.close();
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Error reading config file");
+    }
     return value;
 }
 

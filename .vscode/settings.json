@@ -40,6 +40,7 @@
   "C_Cpp_Runner.includePaths": [
     "C:/Users/dhima/Desktop/microByte_Arduino/include",
     "C:/Users/dhima/Desktop/microByte_Arduino/src",
+    "C:/Users/dhima/Desktop/microByte_Arduino/src/components/drivers/display",
     "C:/Users/dhima/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/newlib/platform_include",
     "C:/Users/dhima/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/freertos/include",
     "C:/Users/dhima/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/freertos/include/esp_additions/freertos",
@@ -300,6 +301,20 @@
     "memory_resource": "cpp",
     "functional": "cpp",
     "type_traits": "cpp",
-    "system_manager.h": "c"
+    "system_manager.h": "c",
+    "st7789_driver.h": "c",
+    "display_hal.h": "c",
+    "esp_system.h": "c",
+    "freertos.h": "c",
+    "task.h": "c",
+    "esp_log.h": "c",
+    "string.h": "c",
+    "font_render.h": "c",
+    "sin_table.h": "c",
+    "system_config.h": "c",
+    "ft2build.h": "c",
+    "tft_espi.h": "c",
+    "gui_frontend.h": "c",
+    "lvgl.h": "c"
   }
 }

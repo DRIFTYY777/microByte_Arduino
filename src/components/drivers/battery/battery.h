@@ -3,6 +3,9 @@
 
 #include <components/system_config/system_manager.h>
 
+#define DEFAULT_VREF 1040 // Adjust based on your ESP32's ADC calibration
+#define QUEUE_SIZE 5      // Maximum number of elements in the queue
+
 #define SDIO 0x00
 #define MMC 0x01
 #define SDHC 0x02
@@ -10,19 +13,16 @@
 
 class BATTERY
 {
-public:
-    bool game_mode_active = false;
-    bool battery_alert;
-    int channel = 0; // ADC channel for reading battery voltage
 
-    void battery_init(void);
+public:
+    void battery_init();
     void battery_game_mode(bool game_mode);
     uint8_t battery_get_percentage();
 
-    void batteryTask(void *arg);               // Non-static member function
-    static void batteryTaskWrapper(void *arg); // Static wrapper function
+private:
+    static void batteryTask(void *arg); // Non-static member function
 };
 
 extern BATTERY battery;
 
-#endif
+#endif // BATTERY_H

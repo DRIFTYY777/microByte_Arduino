@@ -20,8 +20,6 @@ public:
 
 private:
     static void LED_task(void *arg);
-
-   
 };
 
 extern LED_NOTIFICATION led_notification;
