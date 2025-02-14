@@ -51,9 +51,9 @@ bool SD_CARD::sd_init()
     ESP_LOGI(TAG, "Init SD Card");
 
     // Initialize SPI bus for SD card communication
-    SPI.begin(VSPI_CLK, VSPI_MISO, VSPI_MOSI, VSPI_CS0); // Pins for SPI communication
+    SPI.begin(VSPI_CLK, VSPI_MISO, VSPI_MOSI, SD_CS0); // Pins for SPI communication
 
-    if (!SD.begin(VSPI_CS0, SPI, SPI_SPEED))
+    if (!SD.begin(SD_CS0, SPI, SD_SPEED))
     {
         ESP_LOGE(TAG, "SD card initialization failed.");
         return false;

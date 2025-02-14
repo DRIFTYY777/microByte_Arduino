@@ -11,7 +11,7 @@ int8_t TCA9555::TCA955_I2C_write(uint8_t I2C_bus, uint8_t *data, size_t size)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (I2C_dev_address << 1) | I2C_MASTER_WRITE, 0x1);
+    i2c_master_write_byte(cmd, (TCA_dev_address << 1) | I2C_MASTER_WRITE, 0x1);
     i2c_master_write(cmd, data, size, 0x1); // Using &data will give a warning a compilation time, but is necessary to avoid I2C invalid address at running time
     i2c_master_stop(cmd);
 
@@ -35,7 +35,7 @@ int8_t TCA9555::TCA955_I2C_read(uint8_t I2C_bus, uint8_t *data, size_t size)
     }
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (I2C_dev_address << 1) | I2C_MASTER_READ, 0x1);
+    i2c_master_write_byte(cmd, (TCA_dev_address << 1) | I2C_MASTER_READ, 0x1);
     if (size > 1)
     {
         i2c_master_read(cmd, data, size - 1, I2C_MASTER_ACK);
@@ -54,11 +54,11 @@ bool TCA9555::TCA955_init(void)
 
     i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = MUX_SDA;
+    conf.sda_io_num = I2C_SDA;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.scl_io_num = MUX_SCL;
+    conf.scl_io_num = I2C_SCL;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.master.clk_speed = I2C_CLK;
+    conf.master.clk_speed = TCA_CLK_SPEED;
 
     i2c_param_config(0, &conf);
 

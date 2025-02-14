@@ -315,6 +315,11 @@
     "ft2build.h": "c",
     "tft_espi.h": "c",
     "gui_frontend.h": "c",
-    "lvgl.h": "c"
+    "lvgl.h": "c",
+    "openfontrender.h": "c",
+    "unicode.h": "c",
+    "math.h": "c",
+    "queue": "c",
+    "stdint.h": "c"
   }
 }

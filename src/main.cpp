@@ -12,13 +12,7 @@
 
 #include <TFT_eSPI.h>
 
-#include <components/boot/ESPboyLogo.h>
-
 #include <esp32-hal-log.h>
-
-// include c files
-#include <components/rom.h>
-
 
 TaskHandle_t gui_handler;
 TaskHandle_t intro_handler;
@@ -38,7 +32,6 @@ void setup()
     tft.setRotation(2);
     tft.fillScreen(TFT_BLACK);
 
-
     /**************** Basic initialization **************/
     sys_manager.system_init_config();
 
@@ -51,9 +44,6 @@ void setup()
 
     backlight.backlight_init();
     backlight.backlight_set(10);
-
-
-    
 
     // sd_card.sd_init();
 
