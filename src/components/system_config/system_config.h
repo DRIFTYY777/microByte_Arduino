@@ -19,7 +19,7 @@
 #define I2C_SCL 9 // SCL
 
 // SD Card pin configuration
-#define SD_CS0 5
+#define SD_CS0 39
 #define SD_SPEED 4000000 // 4Mhz
 
 // Sound pin configuration (MAX98357AETE)
@@ -44,7 +44,7 @@
 // Display pin configuration
 #define DSP_RST 46                     // RESET
 #define DSP_DC 14                      // DC
-#define DSP_CS 11                      // CS
+#define DSP_CS 10                      // CS
 #define DSP_BACKLIGTH 3                // Backlight
 #define DSP_CLK_SPEED (60 * 1000 * 1000) // 60Mhz
 

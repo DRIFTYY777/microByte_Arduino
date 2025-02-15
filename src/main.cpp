@@ -32,6 +32,14 @@ void setup()
     tft.setRotation(2);
     tft.fillScreen(TFT_BLACK);
 
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextSize(1);
+    tft.setCursor(0, 0);
+    tft.println("Hello World!");
+    
+
+
+
     /**************** Basic initialization **************/
     sys_manager.system_init_config();
 
@@ -42,8 +50,8 @@ void setup()
     ESP_LOGE(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n",
              sys_manager.system_memory(MEMORY_SPIRAM), sys_manager.system_memory(MEMORY_INTERNAL), sys_manager.system_memory(MEMORY_DMA));
 
-    backlight.backlight_init();
-    backlight.backlight_set(10);
+    //backlight.backlight_init();
+    //backlight.backlight_set(10);
 
     // sd_card.sd_init();
 
