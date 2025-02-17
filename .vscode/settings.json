@@ -320,6 +320,11 @@
     "unicode.h": "c",
     "math.h": "c",
     "queue": "c",
-    "stdint.h": "c"
+    "stdint.h": "c",
+    "inttypes.h": "c",
+    "st7789.h": "c",
+    "bmpfile.h": "c",
+    "pngle.h": "c",
+    "decode_png.h": "c"
   }
 }

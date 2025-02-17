@@ -115,12 +115,6 @@ bool SD_CARD::sd_init()
         return false;
     }
 
-    // sd_card_info.card_size = SD.cardSize() / (1024 * 1024);  // Size in MB
-    // strcpy(sd_card_info.card_name, "SDCard");
-    // sd_card_info.card_speed = 25000; // Set a default speed (adjust as necessary)
-
-    // sd_card_info.card_type = SD_CARD_TYPE;
-
     sd_card_info.card_size = SD.cardSize() / (1024 * 1024); // Size in MB
     strcpy(sd_card_info.card_name, "SDCard");
 

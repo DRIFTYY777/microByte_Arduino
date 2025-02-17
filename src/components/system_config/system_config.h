@@ -42,10 +42,10 @@
 #define SCR_BUFFER_SIZE SCR_WIDTH *SCR_HEIGHT * 2
 
 // Display pin configuration
-#define DSP_RST 46                     // RESET
-#define DSP_DC 14                      // DC
-#define DSP_CS 10                      // CS
-#define DSP_BACKLIGTH 3                // Backlight
+#define DSP_RST 46                       // RESET
+#define DSP_DC 14                        // DC
+#define DSP_CS 10                        // CS
+#define DSP_BACKLIGTH 3                  // Backlight
 #define DSP_CLK_SPEED (60 * 1000 * 1000) // 60Mhz
 
 // LED pin configuration

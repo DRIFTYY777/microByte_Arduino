@@ -21,7 +21,7 @@ void BACKLIGHT::backlight_init()
     // Configure LEDC Channel
     ledc_channel_config_t backlight_led = {
         .gpio_num = (gpio_num_t)DSP_BACKLIGTH, // Cast to gpio_num_t
-        .speed_mode = LEDC_LOW_SPEED_MODE,      // ESP32-S3 only supports LOW_SPEED_MODE
+        .speed_mode = LEDC_LOW_SPEED_MODE,     // ESP32-S3 only supports LOW_SPEED_MODE
         .channel = LEDC_CHANNEL_1,
         .timer_sel = LEDC_TIMER_1,
         .duty = 0, // Start with 0 brightness
