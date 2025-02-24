@@ -18,8 +18,12 @@ static const char *TAG = "SystemManager";
 
 // nvs_handle_t config_handle;
 
-QueueHandle_t batteryQueue; // Definition
-QueueHandle_t modeQueue;    // Definition
+QueueHandle_t modeQueue;
+QueueHandle_t batteryQueue;
+
+SYSTEM_MODE management;        // Only declare here
+APPS app;                      // Only declare here
+BATTERY_STATUS battery_status; // Only declare here
 
 char app_version[32];
 char idf_version[32];

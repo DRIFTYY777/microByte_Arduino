@@ -9,11 +9,6 @@ static const char *TAG = "Battery";
 bool game_mode_active = false;
 bool battery_alert;
 
-struct BATTERY_STATUS battery_status;
-struct SYSTEM_MODE management;
-
-BATTERY battery;
-
 void BATTERY::battery_init()
 {
 
@@ -61,7 +56,7 @@ void BATTERY::batteryTask(void *arg)
         if (battery_status.percentage <= 10 && battery_alert != true)
         {
             // Send battery alert if the level is below 10%
-            struct SYSTEM_MODE management;
+            // struct SYSTEM_MODE management;
             management.mode = MODE_BATTERY_ALERT;
 
             if (xQueueSend(modeQueue, &management, (TickType_t)10) != pdPASS)

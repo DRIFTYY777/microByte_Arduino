@@ -50,3 +50,7 @@
 
 // LED pin configuration
 #define LED_PIN 2
+
+// Vibraion Motor pin configuration
+// #define VIBRATION_PIN 42
+#define VIBRATION_PIN 1

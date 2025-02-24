@@ -6,6 +6,19 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 
+// Apps modes
+#define MODE_APPLEJUICE 0x66
+
+// Apps running status
+#define STATUS_RUNNING 0x01
+#define STATUS_STOPPED 0x00
+
+// clear the mode
+#define MODE_NONE 0x00
+
+#define ONN 0x01
+#define OFF 0x00
+
 // Modes available
 #define MODE_GAME 0x01
 #define MODE_SAVE_GAME 0x02
@@ -39,26 +52,40 @@
 #define SYS_GUI_COLOR 0x02
 #define SYS_STATE_SAV_BTN 0x03
 
-/************ Queue *************/
-extern QueueHandle_t modeQueue;
-extern QueueHandle_t batteryQueue;
-
 struct SYSTEM_MODE
+{
+    uint8_t mode;
+    uint8_t status;
+    uint8_t vib_level;
+    uint8_t vib_status;
+    uint8_t volume_level;
+    uint8_t brightness_level;
+    char game_name[200];
+};
+
+struct APPS
 {
     uint8_t mode;
     uint8_t status;
     uint8_t console;
     uint8_t load_save_game;
-    uint8_t volume_level;
-    uint8_t brightness_level;
-    char game_name[200];
+    char aap_name[200];
 };
+
 // Struct to save the battery level
 struct BATTERY_STATUS
 {
     uint8_t percentage;
     uint32_t voltage;
 };
+
+/************ Queue *************/
+extern QueueHandle_t modeQueue;
+extern QueueHandle_t batteryQueue;
+
+extern SYSTEM_MODE management;        // Only declare here
+extern APPS app;                      // Only declare here
+extern BATTERY_STATUS battery_status; // Only declare here
 
 // Variables to save machine data
 extern char app_version[32];
