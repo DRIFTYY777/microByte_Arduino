@@ -6,7 +6,6 @@
 #include <stddef.h>
 
 #define MOUNT_POINT "/sdcard"
-#define SPI_DMA_CHAN 2
 
 extern struct sd_card_info sd_card_info;
 

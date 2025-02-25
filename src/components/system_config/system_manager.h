@@ -63,6 +63,11 @@ struct SYSTEM_MODE
     char game_name[200];
 };
 
+struct DISPLAY_CONFIG
+{
+    uint8_t brightness;
+};
+
 struct APPS
 {
     uint8_t mode;
@@ -91,8 +96,10 @@ extern BATTERY_STATUS battery_status; // Only declare here
 extern char app_version[32];
 extern char idf_version[32];
 extern char cpu_version[32];
-extern uint32_t RAM_size;
-extern uint32_t FLASH_size;
+extern uint32_t RAM_SIZE;
+extern uint32_t FLASH_SIZE;
+extern uint32_t FREE_RAM;
+
 
 class SystemManager
 {

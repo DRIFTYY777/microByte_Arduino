@@ -1,24 +1,27 @@
 #include "user_input.h"
 #include <esp32-hal-log.h>
 #include <components/system_config/system_manager.h>
-
+#include <components/system_config/system_config.h>
 #include "TCA9555.h"
 
 static const char *TAG = "user_input";
 
+TCA9555 TCA(TCA_dev_address);
+
 void UserInput::input_init(void)
 {
-    ESP_LOGI(TAG, "Initalization of GPIO mux driver");
-    tca9555.TCA955_init();
-}
+    Wire.begin(I2C_SDA, I2C_SCL, TCA_CLK_SPEED);
+    TCA.begin();
+    Wire.setClock(TCA_CLK_SPEED);
 
+    // GND___________---__________IOEXPANDER
+}
 uint16_t UserInput::input_read(void)
 {
-    // Get the mux values
-    uint16_t inputs_value = tca9555.TCA9555_readInputs();
+    uint16_t input_value = TCA.read16();
 
     // Check if the menu button it was pushed
-    if (!((inputs_value >> 11) & 0x01))
+    if (!((input_value >> 11) & 0x01))
     { // Temporary workaround !((inputs_value >>11) & 0x01) is the real button
 
         struct SYSTEM_MODE management;
@@ -27,7 +30,7 @@ uint16_t UserInput::input_read(void)
         uint32_t actual_time = xTaskGetTickCount() / portTICK_PERIOD_MS;
 
         // Check if any of the special buttons was pushed
-        if (!((inputs_value >> 0) & 0x01))
+        if (!((input_value >> 0) & 0x01))
         {
             // Down arrow, volume down
             /*  int volume_aux = audio_volume_get();
@@ -39,7 +42,7 @@ uint16_t UserInput::input_read(void)
 
               if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");*/
         }
-        else if (!((inputs_value >> 2) & 0x01))
+        else if (!((input_value >> 2) & 0x01))
         {
             // UP arrow, volume UP
             /* int volume_aux = audio_volume_get();
@@ -51,7 +54,7 @@ uint16_t UserInput::input_read(void)
 
              if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");*/
         }
-        else if (!((inputs_value >> 1) & 0x01))
+        else if (!((input_value >> 1) & 0x01))
         {
             /*  // Right arrow, brightness up
               int brightness_aux = 0;//st7789_backlight_get();
@@ -63,7 +66,7 @@ uint16_t UserInput::input_read(void)
 
               if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");*/
         }
-        else if (!((inputs_value >> 3) & 0x01))
+        else if (!((input_value >> 3) & 0x01))
         {
             /*   // Left arrow, brightness down
                int brightness_aux = 0;//st7789_backlight_get();
@@ -92,7 +95,7 @@ uint16_t UserInput::input_read(void)
     }
     else
     {
-        return inputs_value;
+        return input_value;
     }
 }
 

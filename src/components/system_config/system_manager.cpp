@@ -28,8 +28,8 @@ BATTERY_STATUS battery_status; // Only declare here
 char app_version[32];
 char idf_version[32];
 char cpu_version[32];
-uint32_t RAM_size;
-uint32_t FLASH_size;
+uint32_t RAM_SIZE;
+uint32_t FLASH_SIZE;
 
 void SystemManager::system_info()
 {
@@ -62,14 +62,14 @@ void SystemManager::system_info()
     cpu_version[sizeof(cpu_version) - 1] = '\0'; // Ensure null-termination
 
     // Get RAM size
-    RAM_size = ESP.getFreeHeap() / (1024 * 1024); // Get RAM size in MB
-    if (RAM_size == 0)
+    RAM_SIZE = ESP.getFreeHeap() / (1024 * 1024); // Get RAM size in MB
+    if (RAM_SIZE == 0)
     {
-        RAM_size = 0; // No SPI RAM available
+        RAM_SIZE = 0; // No SPI RAM available
     }
 
     // Get Flash size
-    FLASH_size = ESP.getFlashChipSize() / (1024 * 1024); // Get Flash size in MB
+    FLASH_SIZE = ESP.getFlashChipSize() / (1024 * 1024); // Get Flash size in MB
 }
 
 int SystemManager::system_memory(uint8_t memory)

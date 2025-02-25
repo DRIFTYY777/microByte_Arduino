@@ -24,6 +24,7 @@
 #include <hal/spi_types.h>
 #include <SPI.h>
 #include <SD.h>
+#include <SD_MMC.h>
 
 static const char *TAG = "SD_CARD";
 
@@ -48,91 +49,43 @@ void SD_CARD::organize_list(char *list[30], uint8_t index)
 
 bool SD_CARD::sd_init()
 {
-    ESP_LOGI(TAG, "Init SD Card");
+    delay(1000);
+    pinMode(SD_CS, OUTPUT);
+    digitalWrite(SD_CS, 1);
 
-    // Initialize SPI bus for SD card communication
-    SPI.begin(VSPI_CLK, VSPI_MISO, VSPI_MOSI, SD_CS0); // Pins for SPI communication
-
-    if (!SD.begin(SD_CS0, SPI, SD_SPEED))
+    SD_MMC.setPins(VSPI_CLK, VSPI_MOSI, VSPI_MISO);
+    if (!SD_MMC.begin("/sdcard", true))
     {
-        ESP_LOGE(TAG, "SD card initialization failed.");
+        Serial.println("Card Mount Failed");
         return false;
     }
+    uint8_t cardType = SD_MMC.cardType();
 
-    ESP_LOGI(TAG, "SD Card initialized successfully");
-
-    // Check if the folder tree exists. If not create it.
-    struct stat st;
-    if (stat("/sdcard/NES", &st) == -1)
+    if (cardType == CARD_NONE)
     {
-        ESP_LOGI(TAG, "No NES folder found, creating it");
-        mkdir("/sdcard/NES", 0700);
-        mkdir("/sdcard/NES/Save_Data", 0700);
-    }
-    if (stat("/sdcard/GameBoy_Color", &st) == -1)
-    {
-        ESP_LOGI(TAG, "No GameBoy Color folder found, creating it");
-        mkdir("/sdcard/GameBoy_Color", 0700);
-        mkdir("/sdcard/GameBoy_Color/Save_Data", 0700);
-    }
-    if (stat("/sdcard/GameBoy", &st) == -1)
-    {
-        ESP_LOGI(TAG, "No GameBoy folder found, creating it");
-        mkdir("/sdcard/GameBoy", 0700);
-        mkdir("/sdcard/GameBoy/Save_Data", 0700);
-    }
-    if (stat("/sdcard/SNES", &st) == -1)
-    {
-        ESP_LOGI(TAG, "No SNES folder found, creating it");
-        mkdir("/sdcard/SNES", 0700);
-        mkdir("/sdcard/SNES/Save_Data", 0700);
-    }
-    if (stat("/sdcard/Master_System", &st) == -1)
-    {
-        ESP_LOGI(TAG, "No Master_System folder found, creating it");
-        mkdir("/sdcard/Master_System", 0700);
-        mkdir("/sdcard/Master_System/Save_Data", 0700);
-    }
-    if (stat("/sdcard/Game_Gear", &st) == -1)
-    {
-        ESP_LOGI(TAG, "No Game_Gear folder found, creating it");
-        mkdir("/sdcard/Game_Gear", 0700);
-        mkdir("/sdcard/Game_Gear/Save_Data", 0700);
-    }
-    if (stat("/sdcard/apps", &st) == -1)
-    {
-        ESP_LOGI(TAG, "No apps folder found, creating it");
-        mkdir("/sdcard/apps", 0700);
-    }
-
-    SD_mount = true;
-
-    // Get data from the SD card
-    File card = SD.open("/");
-    if (!card)
-    {
-        ESP_LOGE(TAG, "Failed to open SD card.");
+        Serial.println("No SD card attached");
         return false;
     }
-
-    sd_card_info.card_size = SD.cardSize() / (1024 * 1024); // Size in MB
-    strcpy(sd_card_info.card_name, "SDCard");
-
-    sd_card_info.card_speed = 25000; // Set a default speed (adjust as necessary)
-    sd_card_info.card_type = SD.cardType();
-
-    if (SD.cardType() == CARD_NONE)
+    Serial.print("SD Card Type: ");
+    if (cardType == CARD_MMC)
     {
-        ESP_LOGE(TAG, "No SD card attached");
-        return false;
+        Serial.println("MMC");
+    }
+    else if (cardType == CARD_SD)
+    {
+        Serial.println("SDSC");
+    }
+    else if (cardType == CARD_SDHC)
+    {
+        Serial.println("SDHC");
     }
     else
     {
-        ESP_LOGI(TAG, "SD Card detected:\n -Name: %s\n -Capacity: %i MB\n -Speed: %i Khz\n -Type: %i",
-                 sd_card_info.card_name, sd_card_info.card_size, sd_card_info.card_speed, sd_card_info.card_type);
+        Serial.println("UNKNOWN");
     }
-
-    return true;
+    uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+    Serial.printf("SD Card Size: %lluMB\n", cardSize);
+    delay(500);
 }
 
 uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)

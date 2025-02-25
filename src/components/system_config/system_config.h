@@ -10,16 +10,16 @@
 #define HSPI_CLK 12  // CLK
 
 // VPSI pin configuration
-#define VSPI_MOSI 35 // SDA or MOSI
-#define VSPI_MISO 37 // SCL or MISO
-#define VSPI_CLK 36  // CLK
+#define VSPI_MOSI 41 // SDA or MOSI
+#define VSPI_MISO 38 // SCL or MISO
+#define VSPI_CLK 40  // CLK
 
 // I2C pin configuration
-#define I2C_SDA 8 // SDA
-#define I2C_SCL 9 // SCL
+#define I2C_SDA 18 // SDA
+#define I2C_SCL 8  // SCL
 
 // SD Card pin configuration
-#define SD_CS0 39
+#define SD_CS 39
 #define SD_SPEED 4000000 // 4Mhz
 
 // Sound pin configuration (MAX98357AETE)
