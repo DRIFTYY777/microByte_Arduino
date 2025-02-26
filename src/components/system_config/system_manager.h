@@ -51,6 +51,7 @@
 #define SYS_VOLUME 0x01
 #define SYS_GUI_COLOR 0x02
 #define SYS_STATE_SAV_BTN 0x03
+#define SYS_VIBRATION 0x04
 
 /************ Queue *************/
 extern QueueHandle_t modeQueue;

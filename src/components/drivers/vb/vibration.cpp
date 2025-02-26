@@ -29,15 +29,11 @@ void VIBRATION::vibration_init()
 
     // Enable LEDC Fade
     ledc_fade_func_install(0);
-
-    // // Test fading effect
-    // ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 8191, 2000);
-    // ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_NO_WAIT);
 }
 
 void VIBRATION::vibration_set(uint8_t level, uint8_t duration)
 {
-    if (management.vib_status == ONN)
+    if (sys_manager.system_get_config(SYS_VIBRATION) == ONN)
     {
         if (level < 1 || level > 100)
         {
@@ -52,6 +48,7 @@ void VIBRATION::vibration_set(uint8_t level, uint8_t duration)
 void VIBRATION::vibration_on()
 {
     management.vib_status = ONN;
+    sys_manager.system_save_config(SYS_VIBRATION, management.vib_status);
     ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, 8191);
     ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
 }
@@ -59,6 +56,7 @@ void VIBRATION::vibration_on()
 void VIBRATION::vibration_off()
 {
     management.vib_status = OFF;
+    sys_manager.system_save_config(SYS_VIBRATION, management.vib_status);
     ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, 0);
     ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
 }

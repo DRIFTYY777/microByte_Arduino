@@ -126,7 +126,10 @@ void SystemManager::system_save_config(uint8_t config, int8_t value)
     else if (config == SYS_STATE_SAV_BTN)
     {
         preferences.putChar("Save_State", (char)value);
-        Serial.printf("Set save_State value %i\r\n", value);
+    }
+    else if (config == SYS_VIBRATION)
+    {
+        preferences.putChar("vibration", (char)value);
     }
 }
 
@@ -153,7 +156,10 @@ int8_t SystemManager::system_get_config(uint8_t config)
     else if (config == SYS_STATE_SAV_BTN)
     {
         value = (int8_t)preferences.getChar("Save_State", -1);
-        Serial.printf("Value get %i\r\n", value);
+    }
+    else if (config == SYS_VIBRATION)
+    {
+        value = (int8_t)preferences.getChar("vibration", -1);
     }
 
     return value;

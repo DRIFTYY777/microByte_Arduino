@@ -1,5 +1,4 @@
 #include "ui.h"
-#include "lvgl.h"
 
 // driver
 #include <components/drivers/backlight/backlight.h>
@@ -13,6 +12,9 @@
 #include <components/drivers/vb/vibration.h>
 #include <components/drivers/time/time.h>
 
+#include "settings.h"
+#include "helpers.h"
+
 /*
     LVGL Version: 8.3.9
 */
@@ -21,61 +23,12 @@
 #define LV_TICK_PERIOD_MS 10
 #define DISP_BUF_SIZE 240 * 25 // width * 2
 
-// Create a semaphore
-bool sub_menu = false;
-
 static void lv_tick_task(void *arg);
 static lv_disp_drv_t disp_drv;
 
-// Group of interactive objects
-lv_indev_drv_t kb_drv;
-lv_indev_t *kb_indev;
-lv_group_t *group_interact;
-
-// Notification bar container objects
-static lv_obj_t *notification_cont;
-static lv_obj_t *battery_bar;
-static lv_obj_t *battery_label;
-static lv_obj_t *WIFI_label;
-static lv_obj_t *BT_label;
-static lv_obj_t *SD_label;
-static lv_obj_t *Charging_label;
-
-// Main menu objects
-static lv_obj_t *tab_main_menu;
-static lv_obj_t *tab_ext_app_manager;
-static lv_obj_t *tab_bt_controller;
-static lv_obj_t *tab_config;
-
-// External app menu objects
-static lv_obj_t *btn_ext_app;
-static lv_obj_t *list_external_app;
-
-// Configuration menu objects
-static lv_obj_t *config_btn;
-static lv_obj_t *list_config;
-static lv_obj_t *list_fw_update;
-static lv_obj_t *mbox_about;
-static lv_obj_t *mbox_color;
-
-//
-static lv_obj_t *label;
-
 static void user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data);
-// External app menu
-void external_app_menu(lv_obj_t *parent);
-static void external_app_cb(lv_event_t *e);
-static void app_execute_cb(lv_obj_t *parent, lv_event_t e);
-// internal app menu
-void apps_menu(lv_obj_t *parent);
-static void apps_cb(lv_event_t *e);
-static void app_execute_cb(lv_obj_t *parent, lv_event_t e);
 
-// settings_cb
-static void settings(lv_event_t *e);
-static void settings_menu(lv_event_t *e);
-static void mbox_config_cb(lv_obj_t *parent, lv_event_t e);
-static void fw_update_cb(lv_obj_t *parent, lv_event_t e);
+void MainMenuList(lv_obj_t *parent);
 
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
@@ -129,106 +82,6 @@ static void lv_tick_task(void *arg)
     lv_tick_inc(LV_TICK_PERIOD_MS);
 }
 
-static void event_handler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-    lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
-    if (code == LV_EVENT_CLICKED)
-    {
-        LV_LOG_USER("Clicked: %s", lv_list_get_btn_text(list1, obj));
-        Serial.println("Clicked  awddwadawd");
-    }
-}
-
-void lv_example_list_1(lv_obj_t *parent)
-{
-    /*Create a list on parent*/
-    lv_obj_t *Menu = lv_list_create(parent);
-    lv_obj_set_size(Menu, 300, 180);
-
-    lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 20);
-
-    /*Add buttons to the list*/
-    lv_obj_t *btn;
-
-    btn = lv_list_add_btn(Menu, LV_SYMBOL_FILE, "Evil Apple");
-    lv_obj_add_event_cb(btn, event_handler, LV_EVENT_CLICKED, NULL);
-    lv_group_add_obj(group_interact, btn);
-
-    btn = lv_list_add_btn(Menu, LV_SYMBOL_DIRECTORY, "External App");
-    lv_obj_add_event_cb(btn, event_handler, LV_EVENT_CLICKED, NULL);
-    lv_group_add_obj(group_interact, btn);
-
-    btn = lv_list_add_btn(Menu, LV_SYMBOL_SAVE, "Settings");
-    lv_obj_add_event_cb(btn, settings, LV_EVENT_CLICKED, NULL);
-    lv_group_add_obj(group_interact, btn);
-}
-
-void notificationBar(lv_obj_t *parent)
-{
-
-    /* Device State Bar */
-    // This bar shows the battery status, if the SD card is attached
-    // or if any wireless communication is active.
-    notification_cont = lv_obj_create(lv_scr_act()); // Create on active screen
-    lv_obj_set_width(notification_cont, 300);
-    lv_obj_set_height(notification_cont, 35);
-    lv_obj_set_x(notification_cont, 3);
-    lv_obj_set_y(notification_cont, -100);
-    lv_obj_set_align(notification_cont, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(notification_cont, LV_OBJ_FLAG_SCROLLABLE);
-
-    // Create the battery bar
-    battery_bar = lv_bar_create(notification_cont);
-    lv_bar_set_value(battery_bar, 25, LV_ANIM_OFF);      // Set initial value for battery bar
-    lv_bar_set_start_value(battery_bar, 0, LV_ANIM_OFF); // Set starting value
-
-    lv_obj_set_width(battery_bar, 50);                  // Set width of battery bar
-    lv_obj_set_height(battery_bar, 15);                 // Set height of battery bar
-    lv_obj_align(battery_bar, LV_ALIGN_LEFT_MID, 0, 0); // Align battery bar to the left of the container
-
-    //// Define and apply style
-    lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_bg_color(&style, lv_color_hex(0x0CC62D));     // Set background color
-    lv_style_set_border_color(&style, LV_COLOR_MAKE(0, 0, 0)); // Set border color
-    lv_obj_add_style(battery_bar, &style, LV_PART_MAIN);       // Corrected call to add style to the bar
-
-    // SD Card Status
-    SD_label = lv_label_create(notification_cont);
-    lv_label_set_text(SD_label, LV_SYMBOL_SD_CARD);
-    lv_obj_align_to(SD_label, battery_bar, LV_ALIGN_OUT_RIGHT_MID, 15, 0); // 15px offset from battery bar
-
-    // Wi-Fi Status
-    WIFI_label = lv_label_create(notification_cont);
-    lv_label_set_text(WIFI_label, LV_SYMBOL_WIFI);
-    lv_obj_align_to(WIFI_label, SD_label, LV_ALIGN_OUT_RIGHT_MID, 15, 0); // 15px offset from SD card label
-
-    // Bluetooth Status
-    BT_label = lv_label_create(notification_cont);
-    lv_label_set_text(BT_label, LV_SYMBOL_BLUETOOTH);
-    lv_obj_align_to(BT_label, WIFI_label, LV_ALIGN_OUT_RIGHT_MID, 15, 0); // 15px offset from Wi-Fi label
-
-    // Charging Status
-    Charging_label = lv_label_create(notification_cont);
-    lv_label_set_text(Charging_label, LV_SYMBOL_CHARGE);
-    lv_obj_align_to(Charging_label, BT_label, LV_ALIGN_OUT_RIGHT_MID, 15, 0); // 15px offset from Bluetooth label
-
-    // Time Label,   get time from time.h
-
-    lv_obj_t *time_label = lv_label_create(notification_cont);
-    lv_label_set_text(time_label, "ww");
-    lv_obj_align_to(time_label, Charging_label, LV_ALIGN_OUT_RIGHT_MID, 50, 0); // 30px offset from Charging label
-
-    // Optional: Adjust the height of the labels if necessary
-    lv_obj_set_height(SD_label, 20);
-    lv_obj_set_height(WIFI_label, 20);
-    lv_obj_set_height(BT_label, 20);
-    lv_obj_set_height(Charging_label, 20);
-    lv_obj_set_height(time_label, 20);
-}
-
 void GUI_frontend()
 {
     // Create a group for interactive objects
@@ -236,23 +89,11 @@ void GUI_frontend()
     kb_drv.type = LV_INDEV_TYPE_KEYPAD;
     kb_drv.read_cb = user_input_task;
     kb_indev = lv_indev_drv_register(&kb_drv);
-    // Create a notification bar
-    notificationBar(lv_scr_act());
-
     // Create a group for interactive objects
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
 
-    lv_example_list_1(lv_scr_act());
-    lv_obj_t *list1 = lv_obj_get_child(lv_scr_act(), 1);
-    if (list1)
-    {
-        lv_obj_t *first_button = lv_obj_get_child(list1, 0);
-        if (first_button)
-        {
-            lv_group_focus_obj(first_button);
-        }
-    }
+    MainMenuList(lv_scr_act());
 
     lv_task_handler();
 }
@@ -369,15 +210,20 @@ void user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
         buttonPressed[5] = false;
     }
     // Menu button. index 11
-    if (!((inputs_value >> 11) & 0x01))
+    if (!((inputs_value >> 5) & 0x01))
     {
         if (!buttonPressed[6] && (currentTime - lastPressTime[6] > DEBOUNCE_DELAY))
         {
             Serial.println("Menu pressed");
-            data->state = LV_INDEV_STATE_PR;
+            // data->state = LV_INDEV_STATE_PR;
             lastPressTime[6] = currentTime;
             buttonPressed[6] = true;
-            sub_menu = false;
+
+            if (!isInMenu)
+            {
+                lv_obj_clean(lv_scr_act());
+                MainMenuList(lv_scr_act());
+            }
         }
     }
     else
@@ -386,167 +232,77 @@ void user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
     }
 }
 
-void settings(lv_event_t *e)
+static void SettingsEventHandler(lv_event_t *e)
 {
-    sub_menu = true;
-
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
 
     if (code == LV_EVENT_CLICKED)
     {
-        /*Create a list on parent*/
-        lv_obj_t *Menu = lv_list_create(lv_scr_act());
-        lv_obj_set_size(Menu, 300, 180);
-        lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 20);
-
-        /*Add buttons to the list*/
-        lv_obj_t *btn;
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_BARS, "About this device");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        /*System config options */
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_VIDEO, "Brightness");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_VOLUME_MAX, "Volume");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_SETTINGS, "Vibration");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_BATTERY_FULL, "Battery");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_WIFI, "Wi-Fi");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_BLUETOOTH, "Bluetooth");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_SD_CARD, "SD Card");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        /* Add back button*/
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
+        // clear this screen and goes to the settings screen
+        lv_obj_clean(lv_scr_act());
+        createSettingScreen(lv_scr_act(), e);
     }
 }
 
-static void mbox_config_cb(lv_event_t *e)
+static void ExternalAppEventHandler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
+    lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
 
-    if (code == LV_EVENT_CANCEL || code == LV_EVENT_CLICKED)
+    if (code == LV_EVENT_CLICKED)
     {
-        char *aux_text = (char *)lv_obj_get_user_data(obj); // Retrieve aux_text
-        if (aux_text != NULL)
-        {
-            free(aux_text); // Free aux_text
-        }
-        lv_obj_del(obj);
+        // print log
+        Serial.println("External Clicked");
     }
 }
 
-static lv_obj_t *brightness_label = NULL;
-static lv_obj_t *brightness_slider = NULL;
-void brightness_slider_event_cb(lv_event_t *e)
+static void EvilAppleEventHandler(lv_event_t *e)
 {
-    lv_obj_t *slider = lv_event_get_target(e);
-    int brightness = lv_slider_get_value(slider);
-    // Prevent brightness from going below 10
-    if (brightness < 10)
-    {
-        brightness = 10;
-        lv_slider_set_value(slider, brightness, LV_ANIM_OFF); // Force update
-    }
-    // Convert brightness value to string
-    char brightnessStr[4];
-    sprintf(brightnessStr, "%d", brightness);
-    // Update the label
-    if (brightness_label)
-        lv_label_set_text(brightness_label, brightnessStr);
-    // Set backlight brightness
-    backlight.backlight_set((uint8_t)brightness);
-}
-
-void settings_menu(lv_event_t *e)
-{
+    lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
-    const char *btn_text = lv_list_get_btn_text(lv_obj_get_parent(obj), obj);
+    lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
 
-    if (strcmp(btn_text, "About this device") == 0)
+    if (code == LV_EVENT_CLICKED)
     {
-        Serial.println("About this device");
+        // print log
+        Serial.println("Evil Apple Clicked");
     }
-    else if (strcmp(btn_text, "Brightness") == 0)
+}
+
+void MainMenuList(lv_obj_t *parent)
+{
+    isInMenu = true;
+    /*Create a list on parent*/
+    lv_obj_t *Menu = lv_list_create(parent);
+    lv_obj_set_size(Menu, 300, 180);
+
+    lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 20);
+
+    /*Add buttons to the list*/
+    lv_obj_t *btn;
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_FILE, "Evil Apple");
+    lv_obj_add_event_cb(btn, EvilAppleEventHandler, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_DIRECTORY, "External App");
+    lv_obj_add_event_cb(btn, ExternalAppEventHandler, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_SAVE, "Settings");
+    lv_obj_add_event_cb(btn, SettingsEventHandler, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    lv_obj_t *list1 = lv_obj_get_child(lv_scr_act(), 1);
+    if (list1)
     {
-        lv_obj_clean(lv_scr_act());
-
-        // Create a window
-        lv_obj_t *window = lv_obj_create(lv_scr_act());
-        lv_obj_set_size(window, 300, 180);
-        lv_obj_align(window, LV_ALIGN_CENTER, 0, 20);
-        lv_obj_clear_flag(window, LV_OBJ_FLAG_SCROLLABLE);
-
-        // Get stored brightness level
-        int8_t brightness = sys_manager.system_get_config(SYS_BRIGHT);
-        if (brightness < 5 || brightness > 100)
-            brightness = 50; // Default
-
-        // Create slider
-        brightness_slider = lv_slider_create(window);
-        lv_obj_set_width(brightness_slider, 200);
-        lv_obj_align(brightness_slider, LV_ALIGN_CENTER, 0, 0);
-        lv_slider_set_range(brightness_slider, 0, 100);
-        lv_slider_set_value(brightness_slider, brightness, LV_ANIM_OFF);
-        lv_obj_add_event_cb(brightness_slider, brightness_slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-
-        // Create label
-        brightness_label = lv_label_create(window);
-        lv_label_set_text_fmt(brightness_label, "%d", brightness);
-        lv_obj_align_to(brightness_label, brightness_slider, LV_ALIGN_OUT_TOP_MID, 0, -15);
-
-        // Add to input group
-        lv_group_add_obj(group_interact, brightness_slider);
-        lv_group_focus_obj(brightness_slider);
-
-        // Back button
-        lv_obj_t *back_btn = lv_btn_create(window);
-        lv_obj_set_size(back_btn, 80, 30);
-        lv_obj_align(back_btn, LV_ALIGN_BOTTOM_MID, 0, -10);
-        lv_obj_t *back_label = lv_label_create(back_btn);
-        lv_label_set_text(back_label, "Back");
-        lv_obj_center(back_label);
-
-        // Back button event
-        lv_obj_add_event_cb(back_btn, [](lv_event_t *e)
-                            {
-            lv_obj_clean(lv_scr_act());
-            lv_example_list_1(lv_scr_act());
-            lv_obj_t *list1 = lv_obj_get_child(lv_scr_act(), 1);
-            if (list1)
-            {
-                lv_obj_t *first_button = lv_obj_get_child(list1, 0);
-                if (first_button)
-                {
-                    lv_group_focus_obj(first_button);
-                }
-            } }, LV_EVENT_CLICKED, NULL);
-
-        lv_group_add_obj(group_interact, back_btn);
+        lv_obj_t *first_button = lv_obj_get_child(list1, 0);
+        if (first_button)
+        {
+            lv_group_focus_obj(first_button);
+        }
     }
-    
 }
