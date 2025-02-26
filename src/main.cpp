@@ -1,3 +1,11 @@
+
+/*
+
+https://maximeborges.github.io/esp-stacktrace-decoder/
+*/
+
+
+
 #include <Arduino.h>
 #include <esp32-hal-log.h>
 #include <Wire.h>
@@ -30,24 +38,14 @@ TimerHandle_t timer;
 bool boot_screen_ani = true;
 static const char *TAG = "Main";
 
-void buttons_init()
-{
-    pinMode(5, INPUT_PULLDOWN);
-    pinMode(17, INPUT_PULLDOWN);
-    pinMode(16, INPUT_PULLDOWN);
-    pinMode(15, INPUT_PULLDOWN);
-    pinMode(7, INPUT_PULLDOWN);
-    pinMode(6, INPUT_PULLDOWN);
-}
 void setup()
 {
     Serial.begin(115200);
-    buttons_init();
     // local_time.begin();
 
     /**************** Basic initialization **************/
     sys_manager.system_init_config();
-
+    sys_manager.system_info();
     led_notification.LED_init();
     led_notification.LED_mode(LED_FADE_ON);
 
@@ -56,19 +54,17 @@ void setup()
              sys_manager.system_memory(MEMORY_SPIRAM), sys_manager.system_memory(MEMORY_INTERNAL), sys_manager.system_memory(MEMORY_DMA));
 
     backlight.backlight_init();
-    backlight.backlight_set(70);
+    backlight.backlight_set(sys_manager.system_get_config(SYS_BRIGHT));
 
     ui_init();
-
-    xTaskCreatePinnedToCore(GUI_task, "GUI_task", 6096, NULL, 1, &gui_handler, 1);
-
+    xTaskCreatePinnedToCore(GUI_task, "GUI_task", 1024 * 6, NULL, 1, &gui_handler, 1);
     GUI_frontend();
 
     // sd_card.sd_init();
 
     user_input.input_init();
-    //   batteryQueue = xQueueCreate(1, sizeof(struct BATTERY_STATUS));
-    //   battery.battery_init();
+    // batteryQueue = xQueueCreate(1, sizeof(struct BATTERY_STATUS));
+    // battery.battery_init();
 }
 
 void loop()

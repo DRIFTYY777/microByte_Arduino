@@ -5,7 +5,8 @@
 
 ledc_channel_config_t backlight_led;
 
-void BACKLIGHT::backlight_init() {
+void BACKLIGHT::backlight_init()
+{
     // Configure LEDC Timer
     ledc_timer_config_t ledc0_timer = {
         .speed_mode = LEDC_LOW_SPEED_MODE,
@@ -30,12 +31,14 @@ void BACKLIGHT::backlight_init() {
     ledc_fade_func_install(0);
 
     // Test fading effect (increase brightness over 2 sec)
-    ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 8191, 2000); //use 8191 for maximum duty.
+    ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 8191, 2000); // use 8191 for maximum duty.
     ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, LEDC_FADE_NO_WAIT);
 }
 
-void BACKLIGHT::backlight_set(uint8_t level) {
-    if (level < 1 || level > 100) {
+void BACKLIGHT::backlight_set(uint8_t level)
+{
+    if (level < 1 || level > 100)
+    {
         return;
     }
 
@@ -47,7 +50,8 @@ void BACKLIGHT::backlight_set(uint8_t level) {
     sys_manager.system_save_config(SYS_BRIGHT, level);
 }
 
-uint8_t BACKLIGHT::backlight_get() {
+uint8_t BACKLIGHT::backlight_get()
+{
     return sys_manager.system_get_config(SYS_BRIGHT);
 }
 

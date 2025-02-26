@@ -52,6 +52,16 @@ void LED_NOTIFICATION::LED_mode(uint8_t mode)
         ESP_LOGE(TAG, "Queue send failed");
 }
 
+void LED_NOTIFICATION::LED_set(uint8_t state)
+{
+    // Set the LED state on or off
+    if (state)
+        ledc_set_duty(ledc.speed_mode, ledc.channel, 8191);
+    else
+        ledc_set_duty(ledc.speed_mode, ledc.channel, 0);
+    ledc_update_duty(ledc.speed_mode, ledc.channel);
+}
+
 // LED task function
 void LED_NOTIFICATION::LED_task(void *arg)
 {

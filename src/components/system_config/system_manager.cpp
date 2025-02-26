@@ -1,8 +1,5 @@
 #include "system_manager.h"
 
-#include "nvs_flash.h"
-#include "nvs.h"
-
 #include <multi_heap.h>
 #include <esp_heap_caps.h>
 #include <string.h>
@@ -10,13 +7,14 @@
 #include <esp_ota_ops.h>
 #include <esp32/spiram.h>
 
+#include <Preferences.h>
+
 #include "esp_system.h" // For esp_chip_info()
 #include <Esp.h>
-#include <SPIFFS.h>
 
 static const char *TAG = "SystemManager";
 
-// nvs_handle_t config_handle;
+Preferences preferences; // NVS storage handler
 
 QueueHandle_t modeQueue;
 QueueHandle_t batteryQueue;
@@ -28,8 +26,13 @@ BATTERY_STATUS battery_status; // Only declare here
 char app_version[32];
 char idf_version[32];
 char cpu_version[32];
-uint32_t RAM_SIZE;
-uint32_t FLASH_SIZE;
+
+uint32_t Internal_ram;
+uint32_t Used_Internal_ram;
+uint32_t SPI_ram;
+uint32_t Used_SPI_ram;
+uint32_t Free_Flash;
+uint32_t Flash_Size;
 
 void SystemManager::system_info()
 {
@@ -61,15 +64,17 @@ void SystemManager::system_info()
 
     cpu_version[sizeof(cpu_version) - 1] = '\0'; // Ensure null-termination
 
-    // Get RAM size
-    RAM_SIZE = ESP.getFreeHeap() / (1024 * 1024); // Get RAM size in MB
-    if (RAM_SIZE == 0)
-    {
-        RAM_SIZE = 0; // No SPI RAM available
-    }
+    // Get Internal RAM size
+    Internal_ram = heap_caps_get_total_size(MALLOC_CAP_INTERNAL);
+    Used_Internal_ram = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+
+    // Get SPI RAM size
+    SPI_ram = heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
+    Used_SPI_ram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
 
     // Get Flash size
-    FLASH_SIZE = ESP.getFlashChipSize() / (1024 * 1024); // Get Flash size in MB
+    Flash_Size = ESP.getFlashChipSize() / (1024 * 1024); // Get Flash size in MB
+    Free_Flash = ESP.getFreeSketchSpace();
 }
 
 int SystemManager::system_memory(uint8_t memory)
@@ -91,111 +96,66 @@ int SystemManager::system_memory(uint8_t memory)
 
 void SystemManager::system_init_config()
 {
-    // Initialize SPIFFS filesystem
-    if (!SPIFFS.begin(true))
-    {
-        ESP_LOGE(TAG, "Failed to mount file system");
-        return;
-    }
-    ESP_LOGE(TAG, "SPIFFS Initialized");
+    preferences.begin("nvs", false);
 }
 
 void SystemManager::system_set_state(int8_t state)
 {
-    File configFile = SPIFFS.open("/config.txt", "w");
-    if (configFile)
-    {
-        configFile.write(state);
-        configFile.close();
-    }
-    else
-    {
-        ESP_LOGE(TAG, "Failed to open config file for writing");
-    }
+    preferences.putChar("prev_state", (char)state);
 }
 
 int8_t SystemManager::system_get_state()
 {
-    File configFile = SPIFFS.open("/config.txt", "r");
-    if (configFile)
-    {
-        int8_t prev_state = configFile.read();
-        configFile.close();
-        return prev_state;
-    }
-    else
-    {
-        ESP_LOGE(TAG, "Failed to open config file for reading");
-        return -1;
-    }
+    return (int8_t)preferences.getChar("prev_state", -1); // -1 is default if not found
 }
 
 void SystemManager::system_save_config(uint8_t config, int8_t value)
 {
-    File configFile = SPIFFS.open("/config.txt", "w");
-    if (configFile)
+    if (config == SYS_BRIGHT && value <= 100)
     {
-        if (config == SYS_BRIGHT && value <= 100)
-        {
-            configFile.print("scr_bright=");
-            configFile.println(value);
-        }
-        else if (config == SYS_VOLUME && value <= 100)
-        {
-            configFile.print("sound_volume=");
-            configFile.println(value);
-        }
-        else if (config == SYS_GUI_COLOR)
-        {
-            configFile.print("GUI_color=");
-            configFile.println(value);
-        }
-        else if (config == SYS_STATE_SAV_BTN)
-        {
-            configFile.print("Save_State=");
-            configFile.println(value);
-        }
-        configFile.close();
+        preferences.putChar("scr_bright", (char)value);
     }
-    else
+    else if (config == SYS_VOLUME && value <= 100)
     {
-        ESP_LOGE(TAG, "Error saving config to file");
+        preferences.putChar("sound_volume", (char)value);
+    }
+    else if (config == SYS_GUI_COLOR)
+    {
+        preferences.putChar("GUI_color", (char)value);
+    }
+    else if (config == SYS_STATE_SAV_BTN)
+    {
+        preferences.putChar("Save_State", (char)value);
+        Serial.printf("Set save_State value %i\r\n", value);
     }
 }
 
 int8_t SystemManager::system_get_config(uint8_t config)
 {
-    File configFile = SPIFFS.open("/config.txt", "r");
-    int8_t value = -1;
+    int8_t value = -1; // Default value
 
-    if (configFile)
+    if (config == SYS_BRIGHT)
     {
-        while (configFile.available())
-        {
-            String line = configFile.readStringUntil('\n');
-            if (line.startsWith("scr_bright=") && config == SYS_BRIGHT)
-            {
-                value = line.substring(12).toInt();
-            }
-            else if (line.startsWith("sound_volume=") && config == SYS_VOLUME)
-            {
-                value = line.substring(14).toInt();
-            }
-            else if (line.startsWith("GUI_color=") && config == SYS_GUI_COLOR)
-            {
-                value = line.substring(10).toInt();
-            }
-            else if (line.startsWith("Save_State=") && config == SYS_STATE_SAV_BTN)
-            {
-                value = line.substring(11).toInt();
-            }
-        }
-        configFile.close();
+        value = (int8_t)preferences.getChar("scr_bright", 100); // Default 100
+        if (value < 1 || value > 100)
+            value = 100;
     }
-    else
+    else if (config == SYS_VOLUME)
     {
-        ESP_LOGE(TAG, "Error reading config file");
+        value = (int8_t)preferences.getChar("sound_volume", 80); // Default 80
+        if (value < 0 || value > 100)
+            value = 80;
     }
+    else if (config == SYS_GUI_COLOR)
+    {
+        value = (int8_t)preferences.getChar("GUI_color", -1); // Default -1
+    }
+    else if (config == SYS_STATE_SAV_BTN)
+    {
+        value = (int8_t)preferences.getChar("Save_State", -1);
+        Serial.printf("Value get %i\r\n", value);
+    }
+
     return value;
 }
 

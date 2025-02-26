@@ -17,6 +17,7 @@ class LED_NOTIFICATION
 public:
     void LED_init();
     void LED_mode(uint8_t mode);
+    void LED_set(uint8_t state);
 
 private:
     static void LED_task(void *arg);

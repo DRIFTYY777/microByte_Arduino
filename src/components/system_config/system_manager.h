@@ -52,6 +52,10 @@
 #define SYS_GUI_COLOR 0x02
 #define SYS_STATE_SAV_BTN 0x03
 
+/************ Queue *************/
+extern QueueHandle_t modeQueue;
+extern QueueHandle_t batteryQueue;
+
 struct SYSTEM_MODE
 {
     uint8_t mode;
@@ -60,13 +64,8 @@ struct SYSTEM_MODE
     uint8_t vib_status;
     uint8_t volume_level;
     uint8_t brightness_level;
-    char game_name[200];
 };
-
-struct DISPLAY_CONFIG
-{
-    uint8_t brightness;
-};
+extern SYSTEM_MODE management; // Only declare here
 
 struct APPS
 {
@@ -76,6 +75,7 @@ struct APPS
     uint8_t load_save_game;
     char aap_name[200];
 };
+extern APPS app; // Only declare here
 
 // Struct to save the battery level
 struct BATTERY_STATUS
@@ -83,23 +83,21 @@ struct BATTERY_STATUS
     uint8_t percentage;
     uint32_t voltage;
 };
-
-/************ Queue *************/
-extern QueueHandle_t modeQueue;
-extern QueueHandle_t batteryQueue;
-
-extern SYSTEM_MODE management;        // Only declare here
-extern APPS app;                      // Only declare here
 extern BATTERY_STATUS battery_status; // Only declare here
 
 // Variables to save machine data
 extern char app_version[32];
 extern char idf_version[32];
 extern char cpu_version[32];
-extern uint32_t RAM_SIZE;
-extern uint32_t FLASH_SIZE;
-extern uint32_t FREE_RAM;
 
+extern uint32_t Internal_ram;
+extern uint32_t Used_Internal_ram;
+
+extern uint32_t SPI_ram;
+extern uint32_t Used_SPI_ram;
+
+extern uint32_t Free_Flash;
+extern uint32_t Flash_Size;
 
 class SystemManager
 {

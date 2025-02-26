@@ -4,7 +4,7 @@
 // driver
 #include <components/drivers/backlight/backlight.h>
 #include <components/drivers/battery/battery.h>
-// #include <components/drivers/inputs/user_input.h>
+#include <components/drivers/inputs/user_input.h>
 #include <components/drivers/LED/LED_notification.h>
 #include <components/drivers/sd_card/sd_card.h>
 // #include <components/drivers/sound/sound.h>
@@ -17,7 +17,7 @@
     LVGL Version: 8.3.9
 */
 
-#define DEBOUNCE_DELAY 50 // Adjust as needed (in milliseconds)
+#define DEBOUNCE_DELAY 60 // Adjust as needed (in milliseconds)
 #define LV_TICK_PERIOD_MS 10
 #define DISP_BUF_SIZE 240 * 25 // width * 2
 
@@ -253,81 +253,136 @@ void GUI_frontend()
             lv_group_focus_obj(first_button);
         }
     }
-    // refresh display
-    // lv_task_handler();
+
+    lv_task_handler();
 }
 
 void user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
 {
-    static lv_key_t lastKey = 0;
-    static bool keyPressed = false;
-    static unsigned long lastPressTime = 0; // Debouncing variable
-
+    static unsigned long lastPressTime[8] = {0}; // Debounce for each button
+    static bool buttonPressed[8] = {false};
+    unsigned long currentTime = millis();
+    uint16_t inputs_value = user_input.input_read();
     data->state = LV_INDEV_STATE_REL; // Default state: Released
 
-    unsigned long currentTime = millis();
-
-    if (digitalRead(5) == HIGH)
-    { // Up button
-        if (currentTime - lastPressTime > DEBOUNCE_DELAY)
+    // Up button (index 0)
+    if (!((inputs_value >> 0) & 0x01))
+    {
+        if (!buttonPressed[0] && (currentTime - lastPressTime[0] > DEBOUNCE_DELAY))
         {
             Serial.println("Up Pressed");
             data->key = LV_KEY_UP;
             data->state = LV_INDEV_STATE_PR;
-            lv_group_focus_prev(group_interact); // Move focus to previous object
-            lastPressTime = currentTime;
+            lastPressTime[0] = currentTime;
+            buttonPressed[0] = true;
+            lv_group_focus_prev(group_interact);
         }
     }
-    else if (digitalRead(17) == HIGH)
-    { // Down button
-        if (currentTime - lastPressTime > DEBOUNCE_DELAY)
+    else
+    {
+        buttonPressed[0] = false;
+    }
+
+    // Down button (index 1)
+    if (!((inputs_value >> 1) & 0x01))
+    {
+        if (!buttonPressed[1] && (currentTime - lastPressTime[1] > DEBOUNCE_DELAY))
         {
             Serial.println("Down Pressed");
             data->key = LV_KEY_DOWN;
             data->state = LV_INDEV_STATE_PR;
-            lv_group_focus_next(group_interact); // Move focus to next object
-            lastPressTime = currentTime;
+            lastPressTime[1] = currentTime;
+            buttonPressed[1] = true;
+            lv_group_focus_next(group_interact);
         }
     }
-    else if (digitalRead(16) == HIGH)
-    { // Back button
-        if (currentTime - lastPressTime > DEBOUNCE_DELAY)
+    else
+    {
+        buttonPressed[1] = false;
+    }
+
+    // Back button (index 6)
+    if (!((inputs_value >> 6) & 0x01))
+    {
+        if (!buttonPressed[2] && (currentTime - lastPressTime[2] > DEBOUNCE_DELAY))
         {
             Serial.println("Back Pressed");
             data->key = LV_KEY_ESC;
             data->state = LV_INDEV_STATE_PR;
-            lastPressTime = currentTime;
+            lastPressTime[2] = currentTime;
+            buttonPressed[2] = true;
         }
     }
-    else if (digitalRead(15) == HIGH)
-    { // OK button
-        if (currentTime - lastPressTime > DEBOUNCE_DELAY)
+    else
+    {
+        buttonPressed[2] = false;
+    }
+
+    // Enter button (index 7)
+    if (!((inputs_value >> 7) & 0x01))
+    {
+        if (!buttonPressed[3] && (currentTime - lastPressTime[3] > DEBOUNCE_DELAY))
         {
             Serial.println("OK Pressed");
             data->key = LV_KEY_ENTER;
             data->state = LV_INDEV_STATE_PR;
-            lastPressTime = currentTime;
+            lastPressTime[3] = currentTime;
+            buttonPressed[3] = true;
         }
     }
-    else if (digitalRead(7) == HIGH)
-    { // Left button
-        if (currentTime - lastPressTime > DEBOUNCE_DELAY)
+    else
+    {
+        buttonPressed[3] = false;
+    }
+
+    // Left button (index 3)
+    if (!((inputs_value >> 3) & 0x01))
+    {
+        if (!buttonPressed[4] && (currentTime - lastPressTime[4] > DEBOUNCE_DELAY))
         {
             Serial.println("Left Pressed");
             data->key = LV_KEY_LEFT;
             data->state = LV_INDEV_STATE_PR;
-            lastPressTime = currentTime;
+            lastPressTime[4] = currentTime;
+            buttonPressed[4] = true;
         }
     }
-    else if (digitalRead(6) == HIGH)
-    { // Right button
-        if (currentTime - lastPressTime > DEBOUNCE_DELAY)
+    else
+    {
+        buttonPressed[4] = false;
+    }
+
+    // Right button (index 2)
+    if (!((inputs_value >> 2) & 0x01))
+    {
+        if (!buttonPressed[5] && (currentTime - lastPressTime[5] > DEBOUNCE_DELAY))
         {
             Serial.println("Right Pressed");
             data->key = LV_KEY_RIGHT;
             data->state = LV_INDEV_STATE_PR;
-            lastPressTime = currentTime;
+            lastPressTime[5] = currentTime;
+            buttonPressed[5] = true;
         }
+    }
+    else
+    {
+        buttonPressed[5] = false;
+    }
+    // Menu button. index 11
+    if (!((inputs_value >> 11) & 0x01))
+    {
+        if (!buttonPressed[6] && (currentTime - lastPressTime[6] > DEBOUNCE_DELAY))
+        {
+            Serial.println("Menu pressed");
+            data->state = LV_INDEV_STATE_PR;
+            lastPressTime[6] = currentTime;
+            buttonPressed[6] = true;
+            sub_menu = false;
+        }
+    }
+    else
+    {
+        buttonPressed[6] = false;
     }
 }
 
@@ -405,19 +460,31 @@ static void mbox_config_cb(lv_event_t *e)
     }
 }
 
-static void slider_event_cb(lv_event_t *e)
+static lv_obj_t *brightness_label = NULL;
+static lv_obj_t *brightness_slider = NULL;
+void brightness_slider_event_cb(lv_event_t *e)
 {
     lv_obj_t *slider = lv_event_get_target(e);
-
-    /*Refresh the text*/
-    lv_label_set_text_fmt(label, "%" LV_PRId32, lv_slider_get_value(slider));
-    lv_obj_align_to(label, slider, LV_ALIGN_OUT_TOP_MID, 0, -15); /*Align top of the slider*/
+    int brightness = lv_slider_get_value(slider);
+    // Prevent brightness from going below 10
+    if (brightness < 10)
+    {
+        brightness = 10;
+        lv_slider_set_value(slider, brightness, LV_ANIM_OFF); // Force update
+    }
+    // Convert brightness value to string
+    char brightnessStr[4];
+    sprintf(brightnessStr, "%d", brightness);
+    // Update the label
+    if (brightness_label)
+        lv_label_set_text(brightness_label, brightnessStr);
+    // Set backlight brightness
+    backlight.backlight_set((uint8_t)brightness);
 }
 
 void settings_menu(lv_event_t *e)
 {
     lv_obj_t *obj = lv_event_get_target(e);
-    // Get the button text
     const char *btn_text = lv_list_get_btn_text(lv_obj_get_parent(obj), obj);
 
     if (strcmp(btn_text, "About this device") == 0)
@@ -426,35 +493,37 @@ void settings_menu(lv_event_t *e)
     }
     else if (strcmp(btn_text, "Brightness") == 0)
     {
-        // Clear the screen to remove the settings menu
         lv_obj_clean(lv_scr_act());
 
-        // Create a window object to place brightness slider on it
+        // Create a window
         lv_obj_t *window = lv_obj_create(lv_scr_act());
         lv_obj_set_size(window, 300, 180);
         lv_obj_align(window, LV_ALIGN_CENTER, 0, 20);
         lv_obj_clear_flag(window, LV_OBJ_FLAG_SCROLLABLE);
 
-        // Create a slider
-        lv_obj_t *slider = lv_slider_create(window);
-        lv_obj_set_width(slider, 200);
-        lv_obj_align(slider, LV_ALIGN_CENTER, 0, 0);
-        lv_obj_add_event_cb(slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+        // Get stored brightness level
+        int8_t brightness = sys_manager.system_get_config(SYS_BRIGHT);
+        if (brightness < 5 || brightness > 100)
+            brightness = 50; // Default
 
-        // Create a label
-        label = lv_label_create(window);
-        lv_label_set_text(label, "0");
-        lv_obj_align_to(label, slider, LV_ALIGN_OUT_TOP_MID, 0, -15);
+        // Create slider
+        brightness_slider = lv_slider_create(window);
+        lv_obj_set_width(brightness_slider, 200);
+        lv_obj_align(brightness_slider, LV_ALIGN_CENTER, 0, 0);
+        lv_slider_set_range(brightness_slider, 0, 100);
+        lv_slider_set_value(brightness_slider, brightness, LV_ANIM_OFF);
+        lv_obj_add_event_cb(brightness_slider, brightness_slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
-        // Set the slider's value
-        lv_slider_set_value(slider, 50, LV_ANIM_OFF);
+        // Create label
+        brightness_label = lv_label_create(window);
+        lv_label_set_text_fmt(brightness_label, "%d", brightness);
+        lv_obj_align_to(brightness_label, brightness_slider, LV_ALIGN_OUT_TOP_MID, 0, -15);
 
-        // Make the slider focusable and user input enabled
-        lv_obj_set_user_data(slider, (void *)"Brightness");
-        lv_group_add_obj(group_interact, slider);
-        lv_group_focus_obj(slider);
+        // Add to input group
+        lv_group_add_obj(group_interact, brightness_slider);
+        lv_group_focus_obj(brightness_slider);
 
-        // Add a back button
+        // Back button
         lv_obj_t *back_btn = lv_btn_create(window);
         lv_obj_set_size(back_btn, 80, 30);
         lv_obj_align(back_btn, LV_ALIGN_BOTTOM_MID, 0, -10);
@@ -462,7 +531,7 @@ void settings_menu(lv_event_t *e)
         lv_label_set_text(back_label, "Back");
         lv_obj_center(back_label);
 
-        // Add back button event
+        // Back button event
         lv_obj_add_event_cb(back_btn, [](lv_event_t *e)
                             {
             lv_obj_clean(lv_scr_act());
@@ -479,4 +548,5 @@ void settings_menu(lv_event_t *e)
 
         lv_group_add_obj(group_interact, back_btn);
     }
+    
 }
