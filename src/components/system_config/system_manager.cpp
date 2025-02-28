@@ -5,12 +5,14 @@
 #include <string.h>
 #include <soc/soc.h>
 #include <esp_ota_ops.h>
-#include <esp32/spiram.h>
+// #include <esp32/spiram.h>
+#include <esp_spi_flash.h>
 
 #include <Preferences.h>
 
 #include "esp_system.h" // For esp_chip_info()
 #include <Esp.h>
+#include <esp_chip_info.h>
 
 static const char *TAG = "SystemManager";
 
@@ -22,6 +24,7 @@ QueueHandle_t batteryQueue;
 SYSTEM_MODE management;        // Only declare here
 APPS app;                      // Only declare here
 BATTERY_STATUS battery_status; // Only declare here
+SYSTEM_WIFI system_wifi;       // Only declare here
 
 char app_version[32];
 char idf_version[32];
@@ -97,6 +100,9 @@ int SystemManager::system_memory(uint8_t memory)
 void SystemManager::system_init_config()
 {
     preferences.begin("nvs", false);
+
+    // Initialize the wifi based on the saved state
+    system_wifi.status = (uint8_t)preferences.getChar("wifi", OFF);
 }
 
 void SystemManager::system_set_state(int8_t state)
@@ -131,6 +137,14 @@ void SystemManager::system_save_config(uint8_t config, int8_t value)
     {
         preferences.putChar("vibration", (char)value);
     }
+    else if (config == SYS_WIFI)
+    {
+        preferences.putChar("wifi", (char)value);
+    }
+    else if (config == SYS_BLUETOOTH)
+    {
+        preferences.putChar("bluetooth", (char)value);
+    }
 }
 
 int8_t SystemManager::system_get_config(uint8_t config)
@@ -159,7 +173,16 @@ int8_t SystemManager::system_get_config(uint8_t config)
     }
     else if (config == SYS_VIBRATION)
     {
+
         value = (int8_t)preferences.getChar("vibration", -1);
+    }
+    else if (config == SYS_WIFI)
+    {
+        value = (int8_t)preferences.getChar("wifi", -1);
+    }
+    else if (config == SYS_BLUETOOTH)
+    {
+        value = (int8_t)preferences.getChar("bluetooth", -1);
     }
 
     return value;

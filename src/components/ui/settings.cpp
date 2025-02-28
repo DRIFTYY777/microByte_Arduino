@@ -1,10 +1,25 @@
 #include "settings.h"
 #include "helpers.h"
+#include <WiFi.h>
 
 #include <Arduino.h>
 #include <components/system_config/system_manager.h>
 #include <components/drivers/backlight/backlight.h>
 #include <components/drivers/vb/vibration.h>
+#include <components/drivers/wifi/connections.h>
+
+/*
+                  W 300
+        |-----------------------|
+   H183 |________Center_________|
+        |          0            |
+        |         150           |
+        |                       |
+        |                       |
+        |_______________________|
+
+
+*/
 
 static lv_obj_t *brightness_label = NULL;
 static lv_obj_t *brightness_slider = NULL;
@@ -144,8 +159,9 @@ void aboutThisDevice()
     lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 20);
     lv_obj_set_style_pad_ver(Menu, 5, 0); // Add vertical padding to the list.
 
+    sys_manager.system_info();
     // Buffer for formatted strings
-    char buffer[100];
+    char buffer[200];
 
     // App Version
     sprintf(buffer, "App Version: %s", app_version);
@@ -183,6 +199,9 @@ void aboutThisDevice()
     // Add list scroll bar
     lv_obj_add_flag(Menu, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_scroll_snap_y(Menu, LV_SCROLL_SNAP_CENTER); // snap to the center of the elements.
+
+    // CLEAR THE char buffer[200]; FREE TEH RAM
+    memset(buffer, 0, sizeof(buffer));
 
     // Add a back button
     backButton(0, -10, 80, 30, lv_scr_act());
@@ -266,13 +285,56 @@ void vibrationSettings()
     backButton(0, 70, 80, 30, window); // Align back button to bottom center with offset
 }
 
+/// @brief Wifi Button Event Handler
+/// @param e
+/// @short Wifi Button Event Handler
+void WBEH(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *obj = lv_event_get_target(e);
+    if (code == LV_EVENT_VALUE_CHANGED)
+    {
+        LV_LOG_USER("State: %s\n", lv_obj_has_state(obj, LV_STATE_CHECKED) ? "On" : "Off");
+        if (lv_obj_has_state(obj, LV_STATE_CHECKED) == true)
+        {
+            // wifi.wifi_init();
+            WiFi.begin();
+        }
+        else
+        {
+            WiFi.disconnect();
+            // wifi.wifi_deinit();
+        }
+    }
+}
+
 void wifiSettings()
 {
-    // Create a window
-    lv_obj_t *window = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(window, 300, 180);
-    lv_obj_align(window, LV_ALIGN_CENTER, 0, 20);
-    lv_obj_clear_flag(window, LV_OBJ_FLAG_SCROLLABLE);
+    // title for wifi and on off button
+    lv_obj_t *title = lv_obj_create(lv_scr_act());
+    lv_obj_set_width(title, 300);
+    lv_obj_set_height(title, 35);
+    lv_obj_set_x(title, 3);
+    lv_obj_set_y(title, -100);
+    lv_obj_set_align(title, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(title, LV_OBJ_FLAG_SCROLLABLE);
+
+    // label
+    lv_obj_t *label = lv_label_create(title);
+    lv_label_set_text(label, "Wi-Fi");
+    lv_obj_align(label, LV_ALIGN_CENTER, -120, 0);
+
+    // Create a switch 
+    lv_obj_t *sw = lv_switch_create(title);
+    lv_obj_align(sw, LV_ALIGN_CENTER, 100, 0);
+    lv_group_add_obj(group_interact, sw);
+    lv_obj_add_state(sw, LV_STATE_CHECKED);
+    lv_obj_add_event_cb(sw, WBEH, LV_EVENT_VALUE_CHANGED, NULL);
+
+    // create a lsit view
+    lv_obj_t *list = lv_list_create(lv_scr_act());
+    lv_obj_set_size(list, 300, 190);
+    lv_obj_align(list, LV_ALIGN_CENTER, 0, 40);
 }
 
 void settings_menu(lv_event_t *e)
@@ -304,14 +366,16 @@ void settings_menu(lv_event_t *e)
     {
         Serial.println("Working on battery settings");
     }
-    // Battery
     else if (strcmp(btn_text, "Wi-Fi") == 0)
     {
-        Serial.println("Working on Wi-Fi settings");
+        lv_obj_clean(lv_scr_act());
+        wifiSettings();
     }
     else if (strcmp(btn_text, "Back") == 0)
     {
-        // go to main menu
+        // Clean the screen
         lv_obj_clean(lv_scr_act());
+        // go to main menu
+        createSettingScreen(lv_scr_act(), e);
     }
 }

@@ -7,19 +7,17 @@ void LocalTime::begin()
     ntp.begin();
 }
 
-void LocalTime::syncWithNTP()
+bool LocalTime::syncWithNTP()
 {
-    if (WiFi.status() == WL_CONNECTED)
+    if (!WiFi.isConnected())
     {
-        ntp.update();
-        unsigned long epochTime = ntp.getEpochTime();
-        time.setTime(epochTime);
-    }
-    else
-    {
-        // Serial.println("WiFi not connected. Cannot sync with NTP.");
         ESP_LOGD(TAG, "WiFi not connected. Cannot sync with NTP.");
+        return false;
     }
+    ntp.update();
+    unsigned long epochTime = ntp.getEpochTime();
+    time.setTime(epochTime);
+    return true;
 }
 
 void LocalTime::setDate(unsigned long date, unsigned long month, unsigned long year)

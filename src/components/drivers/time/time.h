@@ -19,7 +19,7 @@ public:
     {
     }
     void begin();
-    void syncWithNTP();
+    bool syncWithNTP();
     void setDate(unsigned long date, unsigned long month, unsigned long year);
     void setTime(unsigned long hour, unsigned long minute, unsigned long second);
 

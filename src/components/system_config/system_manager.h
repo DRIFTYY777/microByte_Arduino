@@ -16,6 +16,8 @@
 // clear the mode
 #define MODE_NONE 0x00
 
+
+// just onn off
 #define ONN 0x01
 #define OFF 0x00
 
@@ -53,6 +55,9 @@
 #define SYS_STATE_SAV_BTN 0x03
 #define SYS_VIBRATION 0x04
 
+#define SYS_WIFI 0x05
+#define SYS_BLUETOOTH 0x06
+
 /************ Queue *************/
 extern QueueHandle_t modeQueue;
 extern QueueHandle_t batteryQueue;
@@ -85,6 +90,14 @@ struct BATTERY_STATUS
     uint32_t voltage;
 };
 extern BATTERY_STATUS battery_status; // Only declare here
+
+struct SYSTEM_WIFI
+{
+    char ssid[32];
+    char password[32];
+    uint8_t status;
+};
+extern SYSTEM_WIFI system_wifi; // Only declare here
 
 // Variables to save machine data
 extern char app_version[32];

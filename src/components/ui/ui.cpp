@@ -2,7 +2,7 @@
 
 // driver
 #include <components/drivers/backlight/backlight.h>
-#include <components/drivers/battery/battery.h>
+// #include <components/drivers/battery/battery.h>
 #include <components/drivers/inputs/user_input.h>
 #include <components/drivers/LED/LED_notification.h>
 #include <components/drivers/sd_card/sd_card.h>
@@ -19,9 +19,41 @@
     LVGL Version: 8.3.9
 */
 
+/*
+    #define DISP_BUF_SIZE (240 * 10) // width * 2
+    And single buffer in psram
+
+    -SPI_RAM: 8386019 Bytes
+    -INTERNAL_RAM: 276912 Bytes
+    -DMA_RAM: 276912 Bytes
+    PSRAM initialized successfully!
+    Total PSRAM: 8386263
+    Free PSRAM: 8381203
+    PSRAM memory allocated successfully!
+    Stored string in PSRAM: Forum
+*/
+
+/*
+    #define DISP_BUF_SIZE (240 * 40) // width * 2
+
+    and using 2 bugegr allocated in psram
+
+
+    -SPI_RAM: 8386019 Bytes
+    -INTERNAL_RAM: 276896 Bytes
+    -DMA_RAM: 276896 Bytes
+
+    PSRAM initialized successfully!
+    Total PSRAM: 8386247
+    Free PSRAM: 8347587
+    PSRAM memory allocated successfully!
+    Stored string in PSRAM: Forum
+
+*/
+
 #define DEBOUNCE_DELAY 60 // Adjust as needed (in milliseconds)
 #define LV_TICK_PERIOD_MS 10
-#define DISP_BUF_SIZE 240 * 25 // width * 2
+#define DISP_BUF_SIZE (240 * 20) // width * 2
 
 static void lv_tick_task(void *arg);
 static lv_disp_drv_t disp_drv;
@@ -47,10 +79,20 @@ void ui_init()
     tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
     lv_init();
-    static EXT_RAM_ATTR lv_color_t *buf1[DISP_BUF_SIZE];
-    static lv_disp_draw_buf_t draw_buf;
+
     int32_t size_in_px = DISP_BUF_SIZE;
-    lv_disp_draw_buf_init(&draw_buf, buf1, NULL, size_in_px); // Reduced buffer size for non-PSRAM boards
+    // static EXT_RAM_BSS_ATTR lv_color_t *buf1[DISP_BUF_SIZE];
+    static lv_disp_draw_buf_t draw_buf;
+
+    static lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    static lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+
+
+    // buffer without psram
+   // static lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_INTERNAL);
+
+    lv_disp_draw_buf_init(&draw_buf, buf1, buf2, size_in_px); // Reduced buffer size for non-PSRAM boards
+
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = 320;
     disp_drv.ver_res = 240;

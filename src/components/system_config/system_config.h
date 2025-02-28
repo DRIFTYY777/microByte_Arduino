@@ -52,5 +52,8 @@
 #define LED_PIN 2
 
 // Vibraion Motor pin configuration
-// #define VIBRATION_PIN 42
 #define VIBRATION_PIN 1
+
+// WiFi Configuration
+#define WIFI_SSID "Dhiman"
+#define WIFI_PASS "niggainthehood"
