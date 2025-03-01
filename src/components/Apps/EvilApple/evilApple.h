@@ -15,7 +15,6 @@ class EvilApple
 {
 public:
     void begin();
-    void printDsp();
     void startAdvertising();
     void stopAdvertising();
 

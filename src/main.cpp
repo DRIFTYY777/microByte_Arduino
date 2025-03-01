@@ -21,7 +21,10 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 
 #include "components/ui/ui.h"
 
+#include <components/Apps/EvilApple/evilApple.h>
+
 #include <TFT_eSPI.h>
+#include <SD.h>
 
 /*
     LVGL Version: 8.3.9
@@ -100,25 +103,37 @@ void setup()
 
     // local_time.begin();
 
-    /**************** Basic initialization **************/
+    /* System Init for hardware state */
     sys_manager.system_init_config();
     sys_manager.system_info();
-    // led_notification.LED_init();
-    // led_notification.LED_mode(LED_FADE_ON);
+
+    /* Init LED for Notification */
+    led_notification.LED_init();
+    led_notification.LED_mode(LED_FADE_ON);
 
     ESP_LOGE(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n",
              sys_manager.system_memory(MEMORY_SPIRAM), sys_manager.system_memory(MEMORY_INTERNAL), sys_manager.system_memory(MEMORY_DMA));
 
+    /* Init of Display Backlight */
     backlight.backlight_init();
     backlight.backlight_set(100);
+
+    /* Display and Lvgl driver init */
     ui_init();
+    xTaskCreatePinnedToCore(GUI_task, "GUI_task", 4086, NULL, 1, &gui_handler, 0);
+
+    /* Init of GUI */
     GUI_frontend();
 
-    xTaskCreatePinnedToCore(GUI_task, "GUI_task", 1024 * 6, NULL, 1, &gui_handler, 1);
-
     user_input.input_init();
+    delay(1000);
 
-    sd_card.sd_init();
+    // if (!sd_card.sd_init())
+    //{
+    //     ESP_LOGE(TAG, "SD Card not mounted");
+    // }
+
+    modeQueue = xQueueCreate(1, sizeof(app));
 }
 
 /*
@@ -134,4 +149,16 @@ factory,  app,  factory, 0x210000,  5M,
 
 void loop()
 {
+    if (xQueueReceive(modeQueue, &app, portMAX_DELAY) == pdTRUE)
+    {
+        if (app.mode == MODE_APPLEJUICE)
+        {
+            if (app.status == STATUS_RUNNING)
+            {
+                while (app.status == STATUS_RUNNING)
+                    evilApple.startAdvertising();
+            }
+            evilApple.stopAdvertising();
+        }
+    }
 }

@@ -5,17 +5,33 @@
 #include "stdbool.h"
 #include <stddef.h>
 
+/*
+  begin sd card with default
+  #define VSPI_MOSI 41 // SDA or MOSI
+  #define VSPI_MISO 38 // SCL or MISO
+  #define VSPI_CLK 40  // CLK
+  #define SD_CS 39
+  #define SD_SPEED 4000000 // 4Mhz
+*/
+
 #define MOUNT_POINT "/sdcard"
 
-extern struct sd_card_info sd_card_info;
+#define SDIO 0x00
+#define MMC 0x01
+#define SDHC 0x02
+#define SDSC 0x03
 
-struct sd_card_info
+struct SD_CARD_INFO
 {
-    char card_name[32];
-    uint8_t card_type;
-    uint16_t card_size;
-    uint32_t card_speed;
+    uint8_t card_type = 0;
+    uint16_t card_size = 0;
+    uint8_t card_status = 0;
+    uint8_t card_mounted = 0;
+    uint8_t total_space = 0;
+    uint8_t free_space = 0;
+    uint8_t used_space = 0;
 };
+extern SD_CARD_INFO sd_card_info;
 
 class SD_CARD
 {
@@ -23,9 +39,21 @@ class SD_CARD
 private:
     bool SD_mount = false;
     static void organize_list(char *list[30], uint8_t index);
+    /* Emulator Directory Handler */
+    void emulator_dir();
+    /* System Directory Handler*/
+    void system_dir();
 
 public:
     bool sd_init();
+    bool sd_default();
+
+    /* Emulators Function */
+};
+
+class Emulator
+{
+
     uint8_t sd_game_list(char *game_list[100], uint8_t console);
     uint8_t sd_app_list(char *app_list[100], bool update);
     size_t sd_file_size(const char *path);

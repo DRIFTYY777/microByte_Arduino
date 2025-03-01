@@ -1,12 +1,14 @@
 #include "settings.h"
 #include "helpers.h"
-#include <WiFi.h>
 
+#include <WiFi.h>
 #include <Arduino.h>
+
 #include <components/system_config/system_manager.h>
 #include <components/drivers/backlight/backlight.h>
 #include <components/drivers/vb/vibration.h>
 #include <components/drivers/wifi/connections.h>
+#include <components/drivers/sd_card/sd_card.h>
 
 /*
                   W 300
@@ -25,7 +27,6 @@ static lv_obj_t *brightness_label = NULL;
 static lv_obj_t *brightness_slider = NULL;
 
 void settings_menu(lv_event_t *e);
-void createSettingScreen(lv_obj_t *parent, lv_event_t *e);
 
 void SettingsEventHandler(lv_event_t *e);
 void brightness_slider_event_cb(lv_event_t *e);
@@ -155,8 +156,8 @@ void aboutThisDevice()
 {
     /*Create a list on parent*/
     lv_obj_t *Menu = lv_list_create(lv_scr_act());
-    lv_obj_set_size(Menu, 300, 180);
-    lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 20);
+    lv_obj_set_size(Menu, 320, 240);
+    lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_pad_ver(Menu, 5, 0); // Add vertical padding to the list.
 
     sys_manager.system_info();
@@ -192,6 +193,31 @@ void aboutThisDevice()
     sprintf(buffer, "Flash: %.2f / %.2f MB", (float)Free_Flash / (1024 * 1024), (float)Flash_Size / (1024 * 1024));
     lv_obj_t *FlashLabel = lv_label_create(Menu);
     lv_label_set_text(FlashLabel, buffer);
+
+    // Details of sd card card_mounted
+    sprintf(buffer, "SD Card: %s", sd_card_info.card_mounted ? "Mounted" : "Not Mounted");
+    lv_obj_t *SdCardLabel = lv_label_create(Menu);
+    lv_label_set_text(SdCardLabel, buffer);
+
+    // Details of card_size
+    sprintf(buffer, "SD Card Size: %d MB", sd_card_info.card_size);
+    lv_obj_t *SdCardSizeLabel = lv_label_create(Menu);
+    lv_label_set_text(SdCardSizeLabel, buffer);
+
+    // Details of card_type
+    sprintf(buffer, "SD Card Type: %d", sd_card_info.card_type);
+    lv_obj_t *SdCardTypeLabel = lv_label_create(Menu);
+    lv_label_set_text(SdCardTypeLabel, buffer);
+
+    // free_space
+    sprintf(buffer, "Free Space: %d MB", sd_card_info.free_space);
+    lv_obj_t *FreeSpaceLabel = lv_label_create(Menu);
+    lv_label_set_text(FreeSpaceLabel, buffer);
+
+    // used_space
+    sprintf(buffer, "Used Space: %d MB", sd_card_info.used_space);
+    lv_obj_t *UsedSpaceLabel = lv_label_create(Menu);
+    lv_label_set_text(UsedSpaceLabel, buffer);
 
     // Refresh the list to apply the padding.
     lv_obj_refresh_ext_draw_size(Menu);
@@ -324,7 +350,7 @@ void wifiSettings()
     lv_label_set_text(label, "Wi-Fi");
     lv_obj_align(label, LV_ALIGN_CENTER, -120, 0);
 
-    // Create a switch 
+    // Create a switch
     lv_obj_t *sw = lv_switch_create(title);
     lv_obj_align(sw, LV_ALIGN_CENTER, 100, 0);
     lv_group_add_obj(group_interact, sw);

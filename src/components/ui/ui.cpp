@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "helpers.h"
 
 // driver
 #include <components/drivers/backlight/backlight.h>
@@ -12,8 +13,10 @@
 #include <components/drivers/vb/vibration.h>
 #include <components/drivers/time/time.h>
 
+// internal apps
+#include <components/Apps/EvilApple/ui/evilAppleUI.h>
+
 #include "settings.h"
-#include "helpers.h"
 
 /*
     LVGL Version: 8.3.9
@@ -81,15 +84,10 @@ void ui_init()
     lv_init();
 
     int32_t size_in_px = DISP_BUF_SIZE;
-    // static EXT_RAM_BSS_ATTR lv_color_t *buf1[DISP_BUF_SIZE];
     static lv_disp_draw_buf_t draw_buf;
 
     static lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
     static lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
-
-
-    // buffer without psram
-   // static lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_INTERNAL);
 
     lv_disp_draw_buf_init(&draw_buf, buf1, buf2, size_in_px); // Reduced buffer size for non-PSRAM boards
 
@@ -113,7 +111,7 @@ void GUI_task(void *arg)
     while (1)
     {
         lv_task_handler();
-        vTaskDelay(pdMS_TO_TICKS(10)); // Add a delay to yield CPU time
+        vTaskDelay(pdMS_TO_TICKS(15)); // Add a delay to yield CPU time
     }
     vTaskDelete(NULL);
 }
@@ -263,6 +261,9 @@ void user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
 
             if (!isInMenu)
             {
+                app.mode = MODE_NONE;
+                app.status = STATUS_STOPPED;
+
                 lv_obj_clean(lv_scr_act());
                 MainMenuList(lv_scr_act());
             }
@@ -282,6 +283,8 @@ static void SettingsEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
+        delay(10);
+
         // clear this screen and goes to the settings screen
         lv_obj_clean(lv_scr_act());
         createSettingScreen(lv_scr_act(), e);
@@ -296,6 +299,8 @@ static void ExternalAppEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
+        delay(10);
+
         // print log
         Serial.println("External Clicked");
     }
@@ -309,8 +314,11 @@ static void EvilAppleEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        // print log
-        Serial.println("Evil Apple Clicked");
+        delay(10);
+        // clear this screen and goes to the Evil Apple screen
+        lv_obj_clean(lv_scr_act());
+
+        createEVIL_APPLEScreen(lv_scr_act(), e);
     }
 }
 

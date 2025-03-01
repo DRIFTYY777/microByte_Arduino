@@ -1,9 +1,10 @@
 #include "evilApple.h"
-
-const char *Tag = "EvilApple";
+#include <esp_log.h>
+#include <esp32-hal-log.h>
 
 void EvilApple::begin()
 {
+
     BLEDevice::init("AirPods 69");
     // Increase the BLE Power to 21dBm (MAX)
     // https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/bluetooth/controller_vhci.html
@@ -16,11 +17,6 @@ void EvilApple::begin()
     // seems we need to init it with an address in setup() step.
     esp_bd_addr_t null_addr = {0xFE, 0xED, 0xC0, 0xFF, 0xEE, 0x69};
     pAdvertising->setDeviceAddress(null_addr, BLE_ADDR_TYPE_RANDOM);
-}
-
-void EvilApple::printDsp()
-{
-    // clear the screen
 }
 
 void EvilApple::startAdvertising()
