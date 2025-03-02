@@ -132,9 +132,9 @@ void GUI_frontend()
     // Create a group for interactive objects
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
-
+    // Main screen
     MainMenuList(lv_scr_act());
-
+    // for refreshing the screen making it unglichy
     lv_task_handler();
 }
 
@@ -283,8 +283,7 @@ static void SettingsEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        delay(10);
-
+        delay(10); // preventing sudden crash
         // clear this screen and goes to the settings screen
         lv_obj_clean(lv_scr_act());
         createSettingScreen(lv_scr_act(), e);
@@ -299,7 +298,7 @@ static void ExternalAppEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        delay(10);
+        delay(10); // preventing sudden crash
 
         // print log
         Serial.println("External Clicked");
@@ -314,11 +313,24 @@ static void EvilAppleEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        delay(10);
+        delay(10); // preventing sudden crash
         // clear this screen and goes to the Evil Apple screen
         lv_obj_clean(lv_scr_act());
-
         createEVIL_APPLEScreen(lv_scr_act(), e);
+    }
+}
+
+static void FirmwareEventHandler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *obj = lv_event_get_target(e);
+    lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
+
+    if (code == LV_EVENT_CLICKED)
+    {
+        delay(10); // preventing sudden crash
+        // print log
+        Serial.println("Firmware Clicked");
     }
 }
 
@@ -340,6 +352,10 @@ void MainMenuList(lv_obj_t *parent)
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_DIRECTORY, "External App");
     lv_obj_add_event_cb(btn, ExternalAppEventHandler, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_SETTINGS, "Update Firmware");
+    lv_obj_add_event_cb(btn, FirmwareEventHandler, LV_EVENT_CLICKED, NULL);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_SAVE, "Settings");

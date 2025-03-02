@@ -23,6 +23,9 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 
 #include <components/Apps/EvilApple/evilApple.h>
 
+#include <components/ota/update_firmware.h>
+#include <components/external_app/external_app.h>
+
 #include <TFT_eSPI.h>
 #include <SD.h>
 
@@ -97,6 +100,8 @@ void printRam()
     }
 }
 
+
+
 void setup()
 {
     Serial.begin(115200);
@@ -125,15 +130,26 @@ void setup()
     /* Init of GUI */
     GUI_frontend();
 
+    /* Responsibile for User Input */
     user_input.input_init();
-    delay(1000);
 
-    // if (!sd_card.sd_init())
-    //{
-    //     ESP_LOGE(TAG, "SD Card not mounted");
-    // }
+    delay(1000); // let cpu to settle down
 
+    /* SD Crad */
+    if (!sd_card.sd_init())
+    {
+        ESP_LOGE(TAG, "SD Card not mounted");
+    }
+
+    /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
+
+    // WiFI.begin(WIFI_PASS, WIFI_SSID);
+    // delay(1000);
+    // if (WiFi.status() != WL_CONNECTED)
+    // {
+    //     ESP_LOGE(TAG, "WiFi not connected");
+    // }
 }
 
 /*

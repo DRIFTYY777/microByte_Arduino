@@ -36,7 +36,7 @@
     #define LV_VER_RES_MAX          (CONFIG_LVGL_DISPLAY_HEIGHT)
 #else
     #define LV_HOR_RES_MAX          (240)
-    #define LV_VER_RES_MAX          (240)
+    #define LV_VER_RES_MAX          (320)
 #endif
 
 /* Color depth:
@@ -55,7 +55,7 @@
 
 /* Swap the 2 bytes of RGB565 color.
  * Useful if the display has a 8 bit interface (e.g. SPI)*/
-#if defined CONFIG_LVGL_TFT_DISPLAY_CONTROLLER_ILI9341
+#if defined CONFIG_LVGL_TFT_DISPLAY_CONTROLLER_ST7789
 #define LV_COLOR_16_SWAP   1
 #elif defined CONFIG_LVGL_TFT_DISPLAY_CONTROLLER_ILI9488
 #define LV_COLOR_16_SWAP   0
@@ -456,7 +456,7 @@ typedef void * lv_font_user_data_t;
  * texts and borders will be black and the background will be
  * white. Else the colors are inverted.
  * No flags. Set LV_THEME_DEFAULT_FLAG 0 */
- #define LV_USE_THEME_MONO        CONFIG_LVGL_THEME_MONO
+#define LV_USE_THEME_MONO        CONFIG_LVGL_THEME_MONO
 
 #define LV_THEME_DEFAULT_INCLUDE            <stdint.h>      /*Include a header for the init. function*/
 
@@ -469,7 +469,7 @@ typedef void * lv_font_user_data_t;
 #elif defined (CONFIG_LVGL_THEME_DEFAULT_INIT_MONO)
     #define LV_THEME_DEFAULT_INIT               lv_theme_mono_init
 #else
-    #define LV_THEME_DEFAULT_INIT               lv_theme_mono_init   /// modify this line
+    #define LV_THEME_DEFAULT_INIT               lv_theme_template_init   /// modify this line
 #endif
 
 #if !defined (CONFIG_LVGL_THEME_MONO)

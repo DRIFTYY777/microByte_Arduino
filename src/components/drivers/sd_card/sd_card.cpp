@@ -27,6 +27,7 @@ bool SD_CARD::sd_init()
         return false;
     }
 
+    delay(100);
     uint8_t cardType = SD_MMC.cardType();
     if (cardType == CARD_NONE)
     {
@@ -154,6 +155,12 @@ void SD_CARD::system_dir()
     {
         ESP_LOGI(TAG, "No External_Apps folder found, creating it");
         mkdir("/sdcard/External_Apps", 0700);
+    }
+    // Firmware
+    if (stat("/sdcard/Firmware", &st) == -1)
+    {
+        ESP_LOGI(TAG, "No Firmware folder found, creating it");
+        mkdir("/sdcard/Firmware", 0700);
     }
 }
 
