@@ -9,6 +9,8 @@
 #include "esp_system.h"
 #include "esp_ota_ops.h"
 
+// example.bin only 
+
 static const char *TAG = "EXTERNAL_APP";
 
 void EXTERNAL_APP::external_app_init(const char *app_name)
@@ -38,7 +40,7 @@ void EXTERNAL_APP::external_app_init(const char *app_name)
 
     FILE *fd = NULL;
     char name_aux[256];
-    sprintf(name_aux, "/sdcard/External Apps/%s", app_name);
+    sprintf(name_aux, "/sdcard/External_Apps/%s", app_name);
 
     fd = fopen(name_aux, "rb");
     if (fd == NULL)

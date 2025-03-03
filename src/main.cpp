@@ -31,13 +31,7 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 
 /*
     LVGL Version: 8.3.9
-
-
-    old
-    name=TFT_eSPI
-    version=2.5.43
-
-
+    old TFT_eSPI: 2.5.43 // not stable
 */
 
 TFT_eSPI tft = TFT_eSPI();
@@ -100,8 +94,6 @@ void printRam()
     }
 }
 
-
-
 void setup()
 {
     Serial.begin(115200);
@@ -136,10 +128,15 @@ void setup()
     delay(1000); // let cpu to settle down
 
     /* SD Crad */
-    if (!sd_card.sd_init())
-    {
-        ESP_LOGE(TAG, "SD Card not mounted");
-    }
+    //if (!sd_card.sd_init())
+    //{
+    //    ESP_LOGE(TAG, "SD Card not mounted");
+    //}
+
+    char *app_list[100];
+    uint8_t app_num = sd_card.sd_app_list(app_list, false);
+
+    ESP_LOGE(TAG, "Found %i applications", app_num);
 
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
@@ -175,6 +172,20 @@ void loop()
                     evilApple.startAdvertising();
             }
             evilApple.stopAdvertising();
+        }
+        else if (app.mode == MODE_EXT_APP)
+        {
+            if (app.status == STATUS_RUNNING)
+            {
+                ESP_LOGI(TAG, "Loading external App");
+                vTaskSuspend(gui_handler);
+                vTaskDelay(1000 / portTICK_RATE_MS);
+                external_app.external_app_init(app.aap_name);
+                vTaskDelay(250 / portTICK_RATE_MS);
+                esp_restart();
+                vTaskDelay(250 / portTICK_RATE_MS);
+                esp_restart();
+            }
         }
     }
 }

@@ -48,6 +48,10 @@ public:
     bool sd_init();
     bool sd_default();
 
+    uint8_t sd_app_list(char *app_list[100],bool update);
+
+
+
     /* Emulators Function */
 };
 

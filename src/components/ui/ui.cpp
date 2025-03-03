@@ -16,6 +16,8 @@
 // internal apps
 #include <components/Apps/EvilApple/ui/evilAppleUI.h>
 
+#include <components/external_app/externalAppUI.h>
+
 #include "settings.h"
 
 /*
@@ -134,8 +136,6 @@ void GUI_frontend()
     lv_indev_set_group(kb_indev, group_interact);
     // Main screen
     MainMenuList(lv_scr_act());
-    // for refreshing the screen making it unglichy
-    lv_task_handler();
 }
 
 void user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
@@ -283,7 +283,7 @@ static void SettingsEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        delay(10); // preventing sudden crash
+        delay(20); // preventing sudden crash
         // clear this screen and goes to the settings screen
         lv_obj_clean(lv_scr_act());
         createSettingScreen(lv_scr_act(), e);
@@ -299,9 +299,8 @@ static void ExternalAppEventHandler(lv_event_t *e)
     if (code == LV_EVENT_CLICKED)
     {
         delay(10); // preventing sudden crash
-
-        // print log
-        Serial.println("External Clicked");
+        lv_obj_clean(lv_scr_act());
+        createExternalAppScreen(lv_scr_act(), e);
     }
 }
 
@@ -358,7 +357,7 @@ void MainMenuList(lv_obj_t *parent)
     lv_obj_add_event_cb(btn, FirmwareEventHandler, LV_EVENT_CLICKED, NULL);
     lv_group_add_obj(group_interact, btn);
 
-    btn = lv_list_add_btn(Menu, LV_SYMBOL_SAVE, "Settings");
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_SETTINGS, "Settings");
     lv_obj_add_event_cb(btn, SettingsEventHandler, LV_EVENT_CLICKED, NULL);
     lv_group_add_obj(group_interact, btn);
 

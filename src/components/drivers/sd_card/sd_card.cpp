@@ -7,6 +7,7 @@
 
 #include <SD.h>
 #include <SD_MMC.h>
+#include <sys/dirent.h>
 
 static const char *TAG = "SD_CARD";
 
@@ -63,7 +64,7 @@ bool SD_CARD::sd_init()
     sd_card_info.card_mounted = 1;
     sd_card_info.card_status = 1; // Assume status OK
     SD_mount = true;
-
+    
     system_dir();
     emulator_dir();
 
@@ -84,6 +85,36 @@ bool SD_CARD::sd_default()
     emulator_dir();
     system_dir();
     return true;
+}
+
+uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
+{
+    struct dirent *entry;
+    DIR *dir = NULL;
+    if (update)
+        dir = opendir("/sdcard/Firmware");
+    else
+        dir = opendir("/sdcard/External_Apps");
+
+    if (!dir)
+    {
+        ESP_LOGE(TAG, "Failed to open directory");
+        return 0;
+    }
+    // Only find .bin file on the apps folder
+    uint8_t i = 0;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        size_t nameLength = strlen(entry->d_name);
+        app_list[i] = (char *)malloc(nameLength + 1);
+        if (strcmp(entry->d_name + (nameLength - 4), ".bin") == 0)
+        {
+            sprintf(app_list[i], "%s", entry->d_name);
+            ESP_LOGI(TAG, "Found %s ", app_list[i]);
+            i++;
+        }
+    }
+    return i;
 }
 
 void SD_CARD::emulator_dir()
