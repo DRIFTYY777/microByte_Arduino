@@ -1,0 +1,3 @@
+[submodule "ExternalApp"]
+	path = ExternalApp
+	url = https://github.com/DRIFTYY777/ExternalApp.git
