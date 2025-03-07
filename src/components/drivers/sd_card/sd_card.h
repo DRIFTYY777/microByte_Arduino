@@ -48,24 +48,13 @@ public:
     bool sd_init();
     bool sd_default();
 
-    uint8_t sd_app_list(char *app_list[100],bool update);
-
-
+    uint8_t sd_app_list(char *app_list[100], bool update);
 
     /* Emulators Function */
-};
-
-class Emulator
-{
-
     uint8_t sd_game_list(char *game_list[100], uint8_t console);
-    uint8_t sd_app_list(char *app_list[100], bool update);
-    size_t sd_file_size(const char *path);
-    void sd_get_file(const char *path, void *data);
-    char *sd_get_file_flash(const char *path);
-    bool sd_mounted();
     bool sd_sav_exist(char *file_name, uint8_t emulator);
     void sd_sav_remove(char *file_name, uint8_t emulator);
+
 };
 
 extern SD_CARD sd_card;

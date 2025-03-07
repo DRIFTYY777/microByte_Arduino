@@ -33,6 +33,13 @@ void BACKLIGHT::backlight_init()
     // Test fading effect (increase brightness over 2 sec)
     ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 8191, 2000); // use 8191 for maximum duty.
     ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, LEDC_FADE_NO_WAIT);
+
+    // return sys_manager.system_get_config(SYS_BRIGHT);
+    //if (sys_manager.system_get_config(SYS_BRIGHT) == 0)
+    //{
+    //    sys_manager.system_save_config(SYS_BRIGHT, 50);
+    //    backlight_set(50);
+    //}
 }
 
 void BACKLIGHT::backlight_set(uint8_t level)

@@ -64,7 +64,7 @@ bool SD_CARD::sd_init()
     sd_card_info.card_mounted = 1;
     sd_card_info.card_status = 1; // Assume status OK
     SD_mount = true;
-    
+
     system_dir();
     emulator_dir();
 
@@ -117,6 +117,126 @@ uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
     return i;
 }
 
+uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)
+{
+    struct dirent *entry;
+
+    // Open the folder of the specific console
+    DIR *dir = NULL;
+    if (console == NES)
+        dir = opendir("/sdcard/Emulator/NES");
+    else if (console == GAMEBOY)
+        dir = opendir("/sdcard/Emulator/GameBoy");
+    else if (console == GAMEBOY_COLOR)
+        dir = opendir("/sdcard/Emulator/GameBoy_Color");
+    else if (console == SNES)
+        dir = opendir("/sdcard/Emulator/SNES");
+    else if (console == SMS)
+        dir = opendir("/sdcard/Emulator/Master_System");
+    else if (console == GG)
+        dir = opendir("/sdcard/Emulator/Game_Gear");
+
+    if (!dir)
+    {
+        ESP_LOGE(TAG, "Failed to stat dir : 0x%02x", console);
+        return 0;
+    }
+    // Loop to find the game of each console base on the file extension
+    uint8_t i = 0;
+    while ((entry = readdir(dir)) != NULL)
+    {
+
+        size_t nameLength = strlen(entry->d_name);
+
+        // TODO: Rework game list maker, set by alphabetical order
+        if ((strcmp(entry->d_name + (nameLength - 4), ".nes") == 0) && console == NES)
+        {
+            game_list[i] = (char *)malloc(256);
+            sprintf(game_list[i], "%s", entry->d_name);
+            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
+            // if(i>0) organize_list(game_list, i);
+            i++;
+        }
+        else if ((strcmp(entry->d_name + (nameLength - 3), ".gb") == 0) && console == GAMEBOY)
+        {
+            game_list[i] = (char *)malloc(256);
+            sprintf(game_list[i], "%s", entry->d_name);
+            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
+            // if(i>0) organize_list(game_list, i);
+            i++;
+        }
+        else if ((strcmp(entry->d_name + (nameLength - 4), ".gbc") == 0) && console == GAMEBOY_COLOR)
+        {
+            game_list[i] = (char *)malloc(256);
+            sprintf(game_list[i], "%s", entry->d_name);
+            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
+            // if(i>0) organize_list(game_list, i);
+            i++;
+        }
+        else if ((strcmp(entry->d_name + (nameLength - 4), ".sms") == 0) && console == SMS)
+        {
+            game_list[i] = (char *)malloc(256);
+            sprintf(game_list[i], "%s", entry->d_name);
+            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
+            // if(i>0) organize_list(game_list, i);
+            i++;
+        }
+        else if ((strcmp(entry->d_name + (nameLength - 3), ".gg") == 0) && console == GG)
+        {
+            game_list[i] = (char *)malloc(256);
+            sprintf(game_list[i], "%s", entry->d_name);
+            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
+            // if(i>0) organize_list(game_list, i);
+            i++;
+        }
+    }
+
+    // Return the number of files
+    return i;
+}
+
+bool SD_CARD::sd_sav_exist(char *file_name, uint8_t emulator)
+{
+
+    char *file_route = (char *)malloc(256);
+    if (emulator == GAMEBOY)
+        sprintf(file_route, "/sdcard/Emulator/GameBoy/Save_Data/%s.sav", file_name);
+    else if (emulator == GAMEBOY_COLOR)
+        sprintf(file_route, "/sdcard/Emulator/GameBoy_Color/Save_Data/%s.sav", file_name);
+    else if (emulator == NES)
+        sprintf(file_route, "/sdcard/Emulator/NES/Save_Data/%s.sav", file_name);
+    else if (emulator == SMS)
+        sprintf(file_route, "/sdcard/Emulator/Master_System/Save_Data/%s.sav", file_name);
+    else if (emulator == GG)
+        sprintf(file_route, "/sdcard/Emulator/Game_Gear/Save_Data/%s.sav", file_name);
+
+    struct stat st;
+    if (stat(file_route, &st) == -1)
+    {
+        free(file_route);
+        return false;
+    }
+    free(file_route);
+    return true;
+}
+
+void SD_CARD::sd_sav_remove(char *file_name, uint8_t emulator)
+{
+    char *file_route = (char *)malloc(256);
+    if (emulator == GAMEBOY)
+        sprintf(file_route, "/sdcard/Emulator/GameBoy/Save_Data/%s.sav", file_name);
+    else if (emulator == GAMEBOY_COLOR)
+        sprintf(file_route, "/sdcard/Emulator/GameBoy_Color/Save_Data/%s.sav", file_name);
+    else if (emulator == NES)
+        sprintf(file_route, "/sdcard/Emulator/NES/Save_Data/%s.sav", file_name);
+    else if (emulator == SMS)
+        sprintf(file_route, "/sdcard/Emulator/Master_System/Save_Data/%s.sav", file_name);
+    else if (emulator == GG)
+        sprintf(file_route, "/sdcard/Emulator/Game_Gear/Save_Data/%s.sav", file_name);
+
+    remove(file_route);
+}
+
 void SD_CARD::emulator_dir()
 {
     // Check if the emulator folders exist and create them if they don't
@@ -162,19 +282,20 @@ void SD_CARD::emulator_dir()
         mkdir("/sdcard/Emulator/Game_Gear", 0700);
         mkdir("/sdcard/Emulator/Game_Gear/Save_Data", 0700);
     }
+    // Master System
+    if (stat("/sdcard/Emulator/Master_System", &st) == -1)
+    {
+        ESP_LOGI(TAG, "No Master_System folder found, creating it");
+        mkdir("/sdcard/Emulator/Master System", 0700);
+        mkdir("/sdcard/Emulator/Master System/Save_Data", 0700);
+    }
 }
 
 void SD_CARD::system_dir()
 {
     // Check if the system folders exist and create them if they don't
     struct stat st;
-    // System
-    if (stat("/sdcard/Master System", &st) == -1)
-    {
-        ESP_LOGI(TAG, "No Master_System folder found, creating it");
-        mkdir("/sdcard/Master System", 0700);
-        mkdir("/sdcard/Master System/Save_Data", 0700);
-    }
+
     // Apps
     if (stat("/sdcard/Internal Apps", &st) == -1)
     {

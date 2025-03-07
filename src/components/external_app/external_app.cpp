@@ -8,14 +8,13 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_ota_ops.h"
-
-// example.bin only 
+#include <Arduino.h>
 
 static const char *TAG = "EXTERNAL_APP";
 
 void EXTERNAL_APP::external_app_init(const char *app_name)
 {
-    ESP_LOGI(TAG, "Starting external App installation");
+    ESP_LOGI(TAG, "Starting external App installation and boot");
     esp_err_t err;
 
     esp_ota_handle_t update_handle = 0;
@@ -41,13 +40,6 @@ void EXTERNAL_APP::external_app_init(const char *app_name)
     FILE *fd = NULL;
     char name_aux[256];
     sprintf(name_aux, "/sdcard/External_Apps/%s", app_name);
-
-    fd = fopen(name_aux, "rb");
-    if (fd == NULL)
-    {
-        ESP_LOGE(TAG, "Opening error with: %s", name_aux);
-        return;
-    }
 
     fd = fopen(name_aux, "rb");
     if (fd == NULL)
@@ -82,12 +74,19 @@ void EXTERNAL_APP::external_app_init(const char *app_name)
             ESP_LOGE(TAG, "Image validation failed, image is corrupted");
         }
         ESP_LOGE(TAG, "esp_ota_end failed (%s)!", esp_err_to_name(err));
+        Serial.println("esp_ota_end failed");
     }
+    fclose(fd);
 
     err = esp_ota_set_boot_partition(update_partition);
     if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Restarting into external app...");
+        esp_restart();
     }
 }
 

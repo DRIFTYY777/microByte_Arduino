@@ -13,6 +13,9 @@
 #include <components/drivers/vb/vibration.h>
 #include <components/drivers/time/time.h>
 
+// emulators
+#include <components/emulators/EmulatorUI.h>
+
 // internal apps
 #include <components/Apps/EvilApple/ui/evilAppleUI.h>
 
@@ -62,6 +65,7 @@
 
 static void lv_tick_task(void *arg);
 static lv_disp_drv_t disp_drv;
+static SemaphoreHandle_t xGuiSemaphore;
 
 static void user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data);
 
@@ -80,6 +84,8 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
 
 void ui_init()
 {
+    xGuiSemaphore = xSemaphoreCreateMutex();
+
     tft.begin();
     tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
@@ -107,13 +113,20 @@ void ui_init()
     ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, LV_TICK_PERIOD_MS * 1000));
 }
+
 void GUI_task(void *arg)
 {
-
     while (1)
     {
-        lv_task_handler();
-        vTaskDelay(pdMS_TO_TICKS(15)); // Add a delay to yield CPU time
+        if (xGuiSemaphore != NULL)
+        {
+            if (xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
+            {
+                lv_task_handler();
+                xSemaphoreGive(xGuiSemaphore);
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(20)); // Adjust tick rate as needed
     }
     vTaskDelete(NULL);
 }
@@ -298,7 +311,7 @@ static void ExternalAppEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        delay(10); // preventing sudden crash
+        delay(20); // preventing sudden crash
         lv_obj_clean(lv_scr_act());
         createExternalAppScreen(lv_scr_act(), e);
     }
@@ -312,7 +325,7 @@ static void EvilAppleEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        delay(10); // preventing sudden crash
+        delay(20); // preventing sudden crash
         // clear this screen and goes to the Evil Apple screen
         lv_obj_clean(lv_scr_act());
         createEVIL_APPLEScreen(lv_scr_act(), e);
@@ -327,9 +340,22 @@ static void FirmwareEventHandler(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        delay(10); // preventing sudden crash
+        delay(20); // preventing sudden crash
         // print log
         Serial.println("Firmware Clicked");
+    }
+}
+static void EmulatorEventHandler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *obj = lv_event_get_target(e);
+    lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
+
+    if (code == LV_EVENT_CLICKED)
+    {
+        delay(20); // preventing sudden crash
+        lv_obj_clean(lv_scr_act());
+        // createEmulatorScreen(lv_scr_act(), e);
     }
 }
 
@@ -347,6 +373,10 @@ void MainMenuList(lv_obj_t *parent)
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_FILE, "Evil Apple");
     lv_obj_add_event_cb(btn, EvilAppleEventHandler, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_PLAY, "Emulator");
+    lv_obj_add_event_cb(btn, EmulatorEventHandler, LV_EVENT_CLICKED, NULL);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_DIRECTORY, "External App");

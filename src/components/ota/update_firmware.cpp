@@ -10,6 +10,7 @@
 #include "esp_system.h"
 #include "esp_ota_ops.h"
 #include <esp32-hal-log.h>
+#include <esp_app_format.h>
 
 static const char *TAG = "FW_UPDATE";
 
@@ -93,6 +94,7 @@ int UPDATE_FIRMWARE::update_init(char *fw_name)
     size_t data_header = fread(temp_buffer, 1, 1024, fd);
 
     if (data_header > sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t))
+    // if (data_header > sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t))  //; platform = espressif32 @ 6.5.0
     {
         memcpy(&update_fw, &temp_buffer[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
 

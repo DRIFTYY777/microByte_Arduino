@@ -16,7 +16,6 @@
 // clear the mode
 #define MODE_NONE 0x00
 
-
 // just onn off
 #define ONN 0x01
 #define OFF 0x00
