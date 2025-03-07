@@ -41,12 +41,7 @@ void EXTERNAL_APP::external_app_init(const char *app_name)
     char name_aux[256];
     sprintf(name_aux, "/sdcard/External_Apps/%s", app_name);
 
-    fd = fopen(name_aux, "rb");
-    if (fd == NULL)
-    {
-        ESP_LOGE(TAG, "Opening error with: %s", name_aux);
-        return;
-    }
+    
 
     static char write_buffer[512 + 1] = {0};
     int binary_file_length = 0;
