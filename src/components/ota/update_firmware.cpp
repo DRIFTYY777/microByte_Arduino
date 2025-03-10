@@ -30,7 +30,7 @@ void UPDATE_FIRMWARE::update_check()
     }
 }
 
-int UPDATE_FIRMWARE::update_init(char *fw_name)
+int UPDATE_FIRMWARE::update_init(const char *fw_name)
 {
     ESP_LOGI(TAG, "Firmware update process");
 
@@ -161,3 +161,5 @@ int UPDATE_FIRMWARE::update_init(char *fw_name)
 
     return 1;
 }
+
+UPDATE_FIRMWARE update_firmware;

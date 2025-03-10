@@ -23,7 +23,9 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 
 #include <components/Apps/EvilApple/evilApple.h>
 #include <components/ota/update_firmware.h>
+
 #include <components/external_app/external_app.h>
+#include <components/ota/update_firmware.h>
 
 #include <components/drivers/sd_card/formatSD.h>
 
@@ -129,6 +131,20 @@ void loop()
                 vTaskSuspend(gui_handler);
                 vTaskDelay(1000 / portTICK_RATE_MS);
                 external_app.external_app_init(app.aap_name);
+                vTaskDelay(250 / portTICK_RATE_MS);
+                esp_restart();
+                vTaskDelay(250 / portTICK_RATE_MS);
+                esp_restart();
+            }
+        }
+        else if (app.mode == MODE_UPDATE)
+        {
+            if (app.status == STATUS_RUNNING)
+            {
+                ESP_LOGI(TAG, "Loading OTA");
+                vTaskSuspend(gui_handler);
+                vTaskDelay(1000 / portTICK_RATE_MS);
+                update_firmware.update_init(app.aap_name);
                 vTaskDelay(250 / portTICK_RATE_MS);
                 esp_restart();
                 vTaskDelay(250 / portTICK_RATE_MS);

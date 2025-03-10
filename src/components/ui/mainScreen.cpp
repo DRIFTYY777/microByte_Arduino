@@ -5,6 +5,8 @@
 #include <components/Apps/EvilApple/ui/evilAppleUI.h>
 #include <components/external_app/externalAppUI.h>
 
+#include <components/ota/otaUI.h>
+
 // ui components
 #include "helpers.h"
 #include "notificationBar.h"
@@ -37,7 +39,9 @@ static void EventHandler(lv_event_t *e)
         }
         else if (strcmp(text, "Update Firmware") == 0)
         {
-            Serial.println("Update Firmware");
+            isInMenu = false;
+            clear_group_focus();
+            createOTAScreen();
         }
         else if (strcmp(text, "USB") == 0)
         {
