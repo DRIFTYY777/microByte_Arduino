@@ -6,10 +6,13 @@
 
 extern TFT_eSPI tft;
 
+/* Initilization of Display Drivers and LVGL drivers */
 void ui_init();
+
+/* Initilization of screens (GUI) */
 void GUI_frontend();
 
-// GUI_task
+/* GUI Tasks with UserInput tasks */
 void GUI_task(void *pvParameters);
 
 #endif // UI_H

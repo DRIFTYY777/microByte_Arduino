@@ -87,6 +87,11 @@ bool SD_CARD::sd_default()
     return true;
 }
 
+bool SD_CARD::is_card_mounted()
+{
+    return SD_mount;
+}
+
 uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
 {
     struct dirent *entry;

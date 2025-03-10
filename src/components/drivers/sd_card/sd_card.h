@@ -47,6 +47,7 @@ private:
 public:
     bool sd_init();
     bool sd_default();
+    bool is_card_mounted();
 
     uint8_t sd_app_list(char *app_list[100], bool update);
 

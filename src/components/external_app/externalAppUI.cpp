@@ -2,24 +2,18 @@
 
 #include <Arduino.h>
 
-#include <components/drivers/sd_card/sd_card.h>
+#include <components/ui/notificationBar.h>
 #include <components/ui/helpers.h>
+
+#include <components/drivers/sd_card/sd_card.h>
 #include <components/system_config/system_manager.h>
 
 static const char *TAG = "EXTERNAL_APP_UI";
-
-void backButtonEvent(lv_event_t *e)
-{
-    lv_obj_t *obj = lv_event_get_target(e);
-    lv_obj_t *parent = lv_obj_get_parent(obj);
-    app.mode = MODE_NONE;
-}
 
 void ExternalAppEvientHandler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
-    lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
 
     if (code == LV_EVENT_CLICKED)
     {
@@ -35,52 +29,59 @@ void ExternalAppEvientHandler(lv_event_t *e)
             Serial.println("Successfully sent modeQueue");
         }
         // clear all
-        lv_obj_clean(lv_scr_act());
+        clear_group_focus();
+        delay(50);
     }
 }
 
-void createExternalAppScreen(lv_obj_t *parent, lv_event_t *e)
+void createExternalAppScreen()
 {
     isInMenu = false;
     app.mode = MODE_EXT_APP;
 
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-    lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
+    // Create a new screen
+    lv_obj_t *new_screen = lv_obj_create(NULL);
+    lv_obj_set_size(new_screen, 320, 240);
+    lv_obj_align(new_screen, LV_ALIGN_CENTER, 0, 0);
 
-    if (code == LV_EVENT_CLICKED)
+    // title bar
+    notificationBar(new_screen, false, "External Apps");
+
+    /*Create a list on parent*/
+    lv_obj_t *Menu = lv_list_create(new_screen);
+    lv_obj_set_size(Menu, 300, 180);
+    lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 20);
+
+    char *app_list[100];
+    uint8_t app_num = sd_card.sd_app_list(app_list, false);
+
+    ESP_LOGI(TAG, "Found %i applications", app_num);
+
+    lv_obj_t *btn;
+    if (app_num > 0)
     {
-        /*Create a list on parent*/
-        lv_obj_t *Menu = lv_list_create(lv_scr_act());
-        lv_obj_set_size(Menu, 300, 180);
-        lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 20);
-
-        char *app_list[100];
-        uint8_t app_num = sd_card.sd_app_list(app_list, false);
-
-        ESP_LOGI(TAG, "Found %i applications", app_num);
-
-        lv_obj_t *btn;
-        if (app_num > 0)
+        for (uint8_t i = 0; i < app_num; i++)
         {
-            for (uint8_t i = 0; i < app_num; i++)
-            {
-                btn = lv_list_add_btn(Menu, LV_SYMBOL_FILE, app_list[i]);
-                lv_obj_add_event_cb(btn, ExternalAppEvientHandler, LV_EVENT_CLICKED, NULL);
-                lv_group_add_obj(group_interact, btn); // Add button to group for interaction
-            }
-            // add back button to list
-            btn = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
-            lv_obj_add_event_cb(btn, backButtonEvent, LV_EVENT_CLICKED, NULL);
-            lv_group_add_obj(group_interact, btn); // Add back button to group
+            btn = lv_list_add_btn(Menu, LV_SYMBOL_FILE, app_list[i]);
+            lv_obj_add_event_cb(btn, ExternalAppEvientHandler, LV_EVENT_CLICKED, NULL);
+            lv_group_add_obj(group_interact, btn); // Add button to group for interaction
         }
-        else
-        {
-            // add back button to list
-            btn = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
-            lv_obj_add_event_cb(btn, backButtonEvent, LV_EVENT_CLICKED, NULL);
-            lv_group_add_obj(group_interact, btn); // Add back button to group
-        }
-        lv_group_focus_obj(lv_group_get_focused(group_interact)); // ensure focus starts on a valid object.
+        // add back button to list
+        btn = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
+        lv_obj_add_event_cb(btn, backToMenu, LV_EVENT_CLICKED, NULL);
+        lv_group_add_obj(group_interact, btn); // Add back button to group
     }
+    else
+    {
+        // add back button to list
+        btn = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
+        lv_obj_add_event_cb(btn, backToMenu, LV_EVENT_CLICKED, NULL);
+        lv_group_add_obj(group_interact, btn); // Add back button to group
+    }
+    lv_group_focus_obj(lv_group_get_focused(group_interact)); // ensure focus starts on a valid object.
+    // add scrolable flag
+    // lv_obj_add_flag(Menu, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Safely switch to the new screen
+    lv_scr_load(new_screen);
 }

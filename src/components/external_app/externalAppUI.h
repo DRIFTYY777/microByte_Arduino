@@ -3,6 +3,6 @@
 
 #include <lvgl.h>
 
-void createExternalAppScreen(lv_obj_t *parent, lv_event_t *e);
+void createExternalAppScreen();
 
 #endif // EXTRENAL_APP_UI_H

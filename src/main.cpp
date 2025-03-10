@@ -35,6 +35,10 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
     old TFT_eSPI: 2.5.43 // not stable
 */
 
+/// add blue ducky
+
+/// arduboy
+
 TFT_eSPI tft = TFT_eSPI();
 
 TaskHandle_t gui_handler;
@@ -54,6 +58,10 @@ void setup()
     sys_manager.system_init_config();
     sys_manager.system_info();
 
+    delay(200);
+    /* SD Crad */
+    sd_card.sd_init();
+
     /* Init LED for Notification */
     led_notification.LED_init();
     led_notification.LED_mode(LED_FADE_ON);
@@ -65,22 +73,15 @@ void setup()
     backlight.backlight_init();
     backlight.backlight_set(100);
 
-    // pinMode(3, OUTPUT);
-    // digitalWrite(3, HIGH);
-
     /* Display and Lvgl driver init */
     ui_init();
-    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 12, NULL, 1, &gui_handler, 0);
+    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 10, NULL, 1, &gui_handler, 0);
 
     /* Init of GUI */
     GUI_frontend();
 
     /* Responsibile for User Input */
     user_input.input_init();
-
-    delay(1000); // let cpu to settle down
-    /* SD Crad */
-    sd_card.sd_init();
 
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));

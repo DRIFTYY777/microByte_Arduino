@@ -1,59 +1,41 @@
 #include "settings.h"
+
+#include <Arduino.h>
+#include <WiFi.h>
+
+#include "notificationBar.h"
 #include "helpers.h"
 
-#include <WiFi.h>
-#include <Arduino.h>
-
+/* Drivers */
 #include <components/system_config/system_manager.h>
 #include <components/drivers/backlight/backlight.h>
-#include <components/drivers/vb/vibration.h>
-#include <components/drivers/wifi/connections.h>
 #include <components/drivers/sd_card/sd_card.h>
+#include <components/drivers/sd_card/formatSD.h>
+#include <components/drivers/vb/vibration.h>
 
 /*
                   W 300
         |-----------------------|
    H183 |________Center_________|
         |          0            |
-        |         150           |
+    x   |         150           |
         |                       |
         |                       |
         |_______________________|
-
-
+                    Y
 */
 
 static lv_obj_t *brightness_label = NULL;
 static lv_obj_t *brightness_slider = NULL;
 
-void settings_menu(lv_event_t *e);
-
-void SettingsEventHandler(lv_event_t *e);
-void brightness_slider_event_cb(lv_event_t *e);
-
-void backButton(lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_obj_t *parent);
-
-lv_obj_t *lv_switch(lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_obj_t *parent);
-
-void SettingsEventHandler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-    lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
-
-    if (code == LV_EVENT_CLICKED)
-    {
-        // print log
-        Serial.println("Settings Clicked");
-    }
-}
+const static char *TAG = "SETTINGS_UI";
 
 void backButtonEventHandler(lv_event_t *e)
 {
-    lv_obj_t *obj = lv_event_get_target(e);
-    lv_obj_t *parent = lv_obj_get_parent(obj);
-    lv_obj_clean(parent);
-    createSettingScreen(parent, e);
+    clear_group_focus();
+    delay(50);
+    lv_obj_clean(lv_scr_act());
+    createSettingScreen();
 }
 
 void backButton(lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_obj_t *parent)
@@ -68,88 +50,6 @@ void backButton(lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_obj_t
     lv_obj_add_event_cb(back_btn, backButtonEventHandler, LV_EVENT_CLICKED, NULL);
     lv_group_add_obj(group_interact, back_btn);
     lv_group_focus_obj(back_btn);
-}
-
-lv_obj_t *lv_switch(lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_obj_t *parent)
-{
-    // Create a switch
-    lv_obj_t *sw = lv_switch_create(parent);
-    lv_obj_set_size(sw, w, h);
-    lv_obj_align(sw, LV_ALIGN_BOTTOM_MID, x, y);
-    lv_group_add_obj(group_interact, sw);
-    lv_group_focus_obj(sw);
-    return sw;
-}
-
-void createSettingScreen(lv_obj_t *parent, lv_event_t *e)
-{
-    isInMenu = false;
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-    lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
-
-    if (code == LV_EVENT_CLICKED)
-    {
-        /*Create a list on parent*/
-        lv_obj_t *Menu = lv_list_create(lv_scr_act());
-        lv_obj_set_size(Menu, 300, 180);
-        lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 20);
-
-        /*Add buttons to the list*/
-        lv_obj_t *btn;
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_BARS, "About this device");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        /*System config options */
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_VIDEO, "Brightness");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_VOLUME_MAX, "Volume");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_SETTINGS, "Vibration");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_BATTERY_FULL, "Battery");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_WIFI, "Wi-Fi");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_BLUETOOTH, "Bluetooth");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-
-        btn = lv_list_add_btn(Menu, LV_SYMBOL_SD_CARD, "SD Card");
-        lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
-        lv_group_add_obj(group_interact, btn);
-    }
-}
-void brightness_slider_event_cb(lv_event_t *e)
-{
-    lv_obj_t *slider = lv_event_get_target(e);
-    int brightness = lv_slider_get_value(slider);
-    // Prevent brightness from going below 10
-    if (brightness < 10)
-    {
-        brightness = 10;
-        lv_slider_set_value(slider, brightness, LV_ANIM_OFF); // Force update
-    }
-    // Convert brightness value to string
-    char brightnessStr[4];
-    sprintf(brightnessStr, "%d", brightness);
-    // Update the label
-    if (brightness_label)
-        lv_label_set_text(brightness_label, brightnessStr);
-    // Set backlight brightness
-    backlight.backlight_set((uint8_t)brightness);
 }
 
 void aboutThisDevice()
@@ -226,13 +126,32 @@ void aboutThisDevice()
     lv_obj_add_flag(Menu, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_scroll_snap_y(Menu, LV_SCROLL_SNAP_CENTER); // snap to the center of the elements.
 
-    // CLEAR THE char buffer[200]; FREE TEH RAM
-    memset(buffer, 0, sizeof(buffer));
-
     // Add a back button
     backButton(0, -10, 80, 30, lv_scr_act());
+
+    // CLEAR THE char buffer[200]; FREE TEH RAM
+    memset(buffer, 0, sizeof(buffer));
 }
 
+void brightness_slider_event_cb(lv_event_t *e)
+{
+    lv_obj_t *slider = lv_event_get_target(e);
+    int brightness = lv_slider_get_value(slider);
+    // Prevent brightness from going below 10
+    if (brightness < 10)
+    {
+        brightness = 10;
+        lv_slider_set_value(slider, brightness, LV_ANIM_OFF); // Force update
+    }
+    // Convert brightness value to string
+    char brightnessStr[4];
+    sprintf(brightnessStr, "%d", brightness);
+    // Update the label
+    if (brightness_label)
+        lv_label_set_text(brightness_label, brightnessStr);
+    // Set backlight brightness
+    backlight.backlight_set((uint8_t)brightness);
+}
 void brightnessSettings()
 {
     // Create a window
@@ -240,6 +159,9 @@ void brightnessSettings()
     lv_obj_set_size(window, 300, 180);
     lv_obj_align(window, LV_ALIGN_CENTER, 0, 20);
     lv_obj_clear_flag(window, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Title bar
+    notificationBar(lv_scr_act(), false, "Brightness");
 
     // Get stored brightness level
     int8_t brightness = sys_manager.system_get_config(SYS_BRIGHT);
@@ -295,6 +217,9 @@ void vibrationSettings()
     lv_obj_align(window, LV_ALIGN_CENTER, 0, 20);
     lv_obj_clear_flag(window, LV_OBJ_FLAG_SCROLLABLE);
 
+    // Title bar
+    notificationBar(lv_scr_act(), false, "Vibration");
+
     // Creating a label of the switch vibration on/off
     lv_obj_t *label = lv_label_create(window);
     sys_manager.system_get_config(SYS_VIBRATION) == 1 ? lv_label_set_text(label, "Vibration: On") : lv_label_set_text(label, "Vibration: Off");
@@ -308,7 +233,7 @@ void vibrationSettings()
     lv_obj_add_event_cb(sw, VBEH, LV_EVENT_VALUE_CHANGED, NULL);
 
     // Create a button
-    backButton(0, 70, 80, 30, window); // Align back button to bottom center with offset
+    backButton(0, -10, 80, 30, window);
 }
 
 /// @brief Wifi Button Event Handler
@@ -333,7 +258,6 @@ void WBEH(lv_event_t *e)
         }
     }
 }
-
 void wifiSettings()
 {
     // title for wifi and on off button
@@ -363,6 +287,60 @@ void wifiSettings()
     lv_obj_align(list, LV_ALIGN_CENTER, 0, 40);
 }
 
+/// @brief SD Card Event Handler
+/// @param e
+/// @short SD Card  Event Handler
+void SDEH(lv_event_t *e)
+{
+    lv_obj_t *obj = lv_event_get_target(e);
+    const char *btn_text = lv_list_get_btn_text(lv_obj_get_parent(obj), obj);
+    if (strcmp(btn_text, "Reset") == 0)
+    {
+        if (sd_card.sd_default())
+        {
+            notificationBar(lv_scr_act(), false, "SD Card Reset Done");
+        }
+        else
+        {
+            notificationBar(lv_scr_act(), false, "SD Card Reset Failed");
+        }
+    }
+    else if (strcmp(btn_text, "Format") == 0)
+    {
+        format_sdcard();
+    }
+}
+
+void sdCardSettings()
+{
+    /*Create a list on parent*/
+    lv_obj_t *Menu = lv_list_create(lv_scr_act());
+    lv_obj_set_size(Menu, 320, 240);
+    lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_pad_ver(Menu, 5, 0); // Add vertical padding to the list.
+
+    notificationBar(Menu, false, "SD Card");
+
+    // create a list for sd card
+    // sd_default
+    lv_obj_t *sd_default = lv_list_add_btn(Menu, LV_SYMBOL_OK, "Reset");
+    lv_obj_add_event_cb(sd_default, SDEH, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, sd_default);
+
+    // sd_format
+    lv_obj_t *sd_format = lv_list_add_btn(Menu, LV_SYMBOL_REFRESH, "Format");
+    lv_obj_add_event_cb(sd_format, SDEH, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, sd_format);
+
+    // back
+    lv_obj_t *back = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
+    lv_obj_add_event_cb(back, backButtonEventHandler, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, back);
+
+    // make first button focused
+    lv_group_focus_obj(sd_default);
+}
+
 void settings_menu(lv_event_t *e)
 {
     lv_obj_t *obj = lv_event_get_target(e);
@@ -370,38 +348,96 @@ void settings_menu(lv_event_t *e)
 
     if (strcmp(btn_text, "About this device") == 0)
     {
-        lv_obj_clean(lv_scr_act());
+        clear_group_focus();
+        delay(50);
+        lv_obj_clean(lv_scr_act()); // Clean previous screen before loading
         aboutThisDevice();
     }
     else if (strcmp(btn_text, "Brightness") == 0)
     {
+        clear_group_focus();
+        delay(50);
         lv_obj_clean(lv_scr_act());
         brightnessSettings();
     }
-    else if (strcmp(btn_text, "Volume") == 0)
-    {
-        // Serial.println("Volume");
-        Serial.println("Working on volume settings");
-    }
     else if (strcmp(btn_text, "Vibration") == 0)
     {
+        clear_group_focus();
+        delay(50);
         lv_obj_clean(lv_scr_act());
         vibrationSettings();
     }
-    else if (strcmp(btn_text, "Battery") == 0)
+    else if (strcmp(btn_text, "Wi-Fi") == 0) // possible bug
     {
-        Serial.println("Working on battery settings");
+        // clear_group_focus();
+        // delay(50);
+        // lv_obj_clean(lv_scr_act());
+        // wifiSettings();
     }
-    else if (strcmp(btn_text, "Wi-Fi") == 0)
+    else if (strcmp(btn_text, "SD Card") == 0) // possible bug
     {
-        lv_obj_clean(lv_scr_act());
-        wifiSettings();
+        // clear_group_focus();
+        // delay(50);
+        // lv_obj_clean(lv_scr_act());
+        // sdCardSettings();
     }
-    else if (strcmp(btn_text, "Back") == 0)
-    {
-        // Clean the screen
-        lv_obj_clean(lv_scr_act());
-        // go to main menu
-        createSettingScreen(lv_scr_act(), e);
-    }
+}
+
+void createSettingScreen()
+{
+    // Create a new screen
+    lv_obj_t *new_screen = lv_obj_create(NULL);
+    lv_obj_set_size(new_screen, 320, 240);
+    lv_obj_align(new_screen, LV_ALIGN_CENTER, 0, 0);
+
+    // title bar
+    notificationBar(new_screen, false, "Settings");
+
+    /*Create a list on parent*/
+    lv_obj_t *Menu = lv_list_create(new_screen);
+    lv_obj_set_size(Menu, 300, 180);
+    lv_obj_align(Menu, LV_ALIGN_CENTER, 0, 20);
+
+    /*Add buttons to the list*/
+    lv_obj_t *btn;
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
+    lv_obj_add_event_cb(btn, backToMenu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_BARS, "About this device");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    /*System config options */
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_VIDEO, "Brightness");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_VOLUME_MAX, "Volume");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_SETTINGS, "Vibration");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_BATTERY_FULL, "Battery");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_WIFI, "Wi-Fi");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_BLUETOOTH, "Bluetooth");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_SD_CARD, "SD Card");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    // Safely switch to the new screen
+    lv_scr_load(new_screen);
 }

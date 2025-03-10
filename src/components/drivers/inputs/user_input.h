@@ -24,14 +24,13 @@
 #define USER_INPUT_H
 
 #include <cstdint>
+#include <lvgl.h>
 
 class UserInput
 {
 public:
-    uint32_t menu_btn_time = 0;
-
     void input_init(void);
-    uint16_t input_read(void);
+    static void user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data);
 };
 
 extern UserInput user_input;
