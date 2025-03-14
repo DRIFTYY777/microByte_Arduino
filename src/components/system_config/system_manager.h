@@ -5,6 +5,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
+#include "freertos/timers.h"
 
 // Apps modes
 #define MODE_APPLEJUICE 0x66
@@ -60,6 +61,8 @@
 /************ Queue *************/
 extern QueueHandle_t modeQueue;
 extern QueueHandle_t batteryQueue;
+extern QueueHandle_t vidQueue;
+extern TimerHandle_t timer;
 
 struct SYSTEM_MODE
 {

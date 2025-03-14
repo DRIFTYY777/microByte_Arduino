@@ -375,6 +375,16 @@
     "thread": "cpp",
     "cinttypes": "cpp",
     "typeinfo": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "event.h": "c",
+    "gui.h": "c",
+    "nofconfig.h": "c",
+    "osd.h": "c",
+    "timers.h": "c",
+    "nesmanager.h": "c",
+    "tca9555.h": "c",
+    "user_input.h": "c",
+    "shared.h": "c",
+    "ioapi.h": "c"
   }
 }

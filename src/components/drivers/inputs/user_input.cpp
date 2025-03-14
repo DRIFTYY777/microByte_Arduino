@@ -35,7 +35,7 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
     {
         if (!buttonPressed[0] && (currentTime - lastPressTime[0] > DEBOUNCE_DELAY))
         {
-            Serial.println("Up Pressed");
+            ESP_LOGI(TAG, "Up Pressed");
             data->key = LV_KEY_UP;
             data->state = LV_INDEV_STATE_PR;
             lastPressTime[0] = currentTime;
@@ -53,7 +53,7 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
     {
         if (!buttonPressed[1] && (currentTime - lastPressTime[1] > DEBOUNCE_DELAY))
         {
-            Serial.println("Down Pressed");
+            ESP_LOGI(TAG, "Down Pressed");
             data->key = LV_KEY_DOWN;
             data->state = LV_INDEV_STATE_PR;
             lastPressTime[1] = currentTime;
@@ -65,13 +65,11 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
     {
         buttonPressed[1] = false;
     }
-
-    // Back button (index 6)
     if (!((inputs_value >> 6) & 0x01))
     {
         if (!buttonPressed[2] && (currentTime - lastPressTime[2] > DEBOUNCE_DELAY))
         {
-            Serial.println("Back Pressed");
+            ESP_LOGI(TAG, "Back Pressed");
             data->key = LV_KEY_ESC;
             data->state = LV_INDEV_STATE_PR;
             lastPressTime[2] = currentTime;
@@ -82,13 +80,11 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
     {
         buttonPressed[2] = false;
     }
-
-    // Enter button (index 7)
     if (!((inputs_value >> 7) & 0x01))
     {
         if (!buttonPressed[3] && (currentTime - lastPressTime[3] > DEBOUNCE_DELAY))
         {
-            Serial.println("OK Pressed");
+            ESP_LOGI(TAG, "Enter Pressed");
             data->key = LV_KEY_ENTER;
             data->state = LV_INDEV_STATE_PR;
             lastPressTime[3] = currentTime;
@@ -99,13 +95,11 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
     {
         buttonPressed[3] = false;
     }
-
-    // Left button (index 3)
     if (!((inputs_value >> 3) & 0x01))
     {
         if (!buttonPressed[4] && (currentTime - lastPressTime[4] > DEBOUNCE_DELAY))
         {
-            Serial.println("Left Pressed");
+            ESP_LOGI(TAG, "Left Pressed");
             data->key = LV_KEY_LEFT;
             data->state = LV_INDEV_STATE_PR;
             lastPressTime[4] = currentTime;
@@ -117,12 +111,11 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
         buttonPressed[4] = false;
     }
 
-    // Right button (index 2)
     if (!((inputs_value >> 2) & 0x01))
     {
         if (!buttonPressed[5] && (currentTime - lastPressTime[5] > DEBOUNCE_DELAY))
         {
-            Serial.println("Right Pressed");
+            ESP_LOGI(TAG, "Right Pressed");
             data->key = LV_KEY_RIGHT;
             data->state = LV_INDEV_STATE_PR;
             lastPressTime[5] = currentTime;
@@ -133,12 +126,11 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
     {
         buttonPressed[5] = false;
     }
-    // Menu button. index 11
     if (!((inputs_value >> 5) & 0x01))
     {
         if (!buttonPressed[6] && (currentTime - lastPressTime[6] > DEBOUNCE_DELAY))
         {
-            Serial.println("Menu pressed");
+            ESP_LOGI(TAG, "A Pressed");
             // data->state = LV_INDEV_STATE_PR;
             lastPressTime[6] = currentTime;
             buttonPressed[6] = true;
@@ -148,6 +140,11 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
     {
         buttonPressed[6] = false;
     }
+}
+
+uint16_t UserInput::input_read(void)
+{
+    return TCA.read16();
 }
 
 UserInput user_input;

@@ -62,4 +62,38 @@ String LocalTime::time24()
     return String(buffer);
 }
 
+char *LocalTime::getDateTime()
+{
+    static char buffer[20];
+    snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d",
+             time.getYear(), time.getMonth(), time.getDay(),
+             time.getHour(), time.getMinute(), time.getSecond());
+    return buffer;
+}
+
+char *LocalTime::getDate()
+{
+    static char buffer[20];
+    snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d",
+             time.getYear(), time.getMonth(), time.getDay());
+    return buffer;
+}
+
+char *LocalTime::getTime()
+{
+
+    static char buffer[20];
+    snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d",
+             time.getHour(), time.getMinute(), time.getSecond());
+    return buffer;
+}
+
+char *LocalTime::getFormattedDate()
+{
+    static char buffer[20];
+    snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d",
+             time.getYear(), time.getMonth(), time.getDay());
+    return buffer;
+}
+
 LocalTime local_time;

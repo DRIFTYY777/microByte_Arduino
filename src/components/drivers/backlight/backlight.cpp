@@ -2,6 +2,7 @@
 #include <driver/ledc.h>
 #include <components/system_config/system_config.h>
 #include <components/system_config/system_manager.h>
+#include <stdexcept>
 
 ledc_channel_config_t backlight_led;
 
@@ -34,18 +35,22 @@ void BACKLIGHT::backlight_init()
     ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 8191, 2000); // use 8191 for maximum duty.
     ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, LEDC_FADE_NO_WAIT);
 
-    // return sys_manager.system_get_config(SYS_BRIGHT);
-    //if (sys_manager.system_get_config(SYS_BRIGHT) == 0)
-    //{
-    //    sys_manager.system_save_config(SYS_BRIGHT, 50);
-    //    backlight_set(50);
-    //}
+    if (sys_manager.system_get_config(SYS_BRIGHT) == 0)
+    {
+        sys_manager.system_save_config(SYS_BRIGHT, 50);
+    }
+    else
+    {
+        // Set the last saved value
+        backlight_set(sys_manager.system_get_config(SYS_BRIGHT));
+    }
 }
 
 void BACKLIGHT::backlight_set(uint8_t level)
 {
     if (level < 1 || level > 100)
     {
+        throw std::invalid_argument("Invalid backlight level value (1-100)");
         return;
     }
 

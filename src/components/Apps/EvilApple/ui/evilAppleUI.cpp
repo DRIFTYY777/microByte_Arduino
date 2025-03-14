@@ -19,7 +19,6 @@ void start_event(lv_event_t *e)
     if (xQueueSend(modeQueue, &app, (TickType_t)10) == pdTRUE)
     {
         ESP_LOGI(TAG, "Successfully sent modeQueue");
-        
     }
     else
     {

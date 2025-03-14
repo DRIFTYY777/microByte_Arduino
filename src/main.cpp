@@ -16,20 +16,21 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/drivers/sound/sound.h>
 #include <components/drivers/vb/vibration.h>
 #include <components/drivers/time/time.h>
+#include <components/drivers/sd_card/formatSD.h>
+
 #include <components/system_config/system_config.h>
 #include <components/system_config/system_manager.h>
 
 #include "components/ui/ui.h"
 
 #include <components/Apps/EvilApple/evilApple.h>
-#include <components/ota/update_firmware.h>
 
 #include <components/external_app/external_app.h>
 #include <components/ota/update_firmware.h>
 
-#include <components/drivers/sd_card/formatSD.h>
+// #include <components/emulators/NES/NesManager.h>
+// #include <components/emulators/GBC/GboyManager.h>
 
-#include <TFT_eSPI.h>
 #include <SD.h>
 
 /*
@@ -41,20 +42,30 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 
 /// arduboy
 
-TFT_eSPI tft = TFT_eSPI();
-
 TaskHandle_t gui_handler;
 TaskHandle_t intro_handler;
-TimerHandle_t timer;
+// TimerHandle_t timer;
 
-bool boot_screen_ani = true;
 static const char *TAG = "Main";
+
+uint8_t console_running;
+bool boot_screen_ani = true;
+bool game_running = false;
+bool game_executed = false;
+
+static void timer_isr(void)
+{
+    printf("save\r\n");
+    app.mode = MODE_SAVE_GAME;
+    if (xQueueSend(modeQueue, &app, (TickType_t)10) != pdPASS)
+    {
+        ESP_LOGE(TAG, "modeQueue send error");
+    }
+}
 
 void setup()
 {
     Serial.begin(115200);
-
-    // local_time.begin();
 
     /* System Init for hardware state */
     sys_manager.system_init_config();
@@ -73,11 +84,10 @@ void setup()
 
     /* Init of Display Backlight */
     backlight.backlight_init();
-    backlight.backlight_set(100);
-
+ 
     /* Display and Lvgl driver init */
     ui_init();
-    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 10, NULL, 1, &gui_handler, 0);
+    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 12, NULL, 1, &gui_handler, 0);
 
     /* Init of GUI */
     GUI_frontend();
@@ -94,21 +104,10 @@ void setup()
     // {
     //     ESP_LOGE(TAG, "WiFi not connected");
     // }
+
+    // print local time
+    ESP_LOGI(TAG, "Local Time: %s", local_time.getFormattedTime().c_str());
 }
-
-/*
-
-nvs,      data, nvs,     0x9000,  0x4000,
-otadata,  data, ota,     0xd000,  0x2000,
-phy_init, data, phy,     0xf000,  0x1000,
-ota_0,    app,  ota_0,   0x10000, 1M,
-ota_1,    app,  ota_1,   0x110000, 1M,
-factory,  app,  factory, 0x210000,  5M,
-
-
-factory,  app,  factory, 0x410000,  0xBF0000,
-
-*/
 
 void loop()
 {
@@ -141,7 +140,7 @@ void loop()
         {
             if (app.status == STATUS_RUNNING)
             {
-                ESP_LOGI(TAG, "Loading OTA");
+                ESP_LOGE(TAG, "Loading OTA");
                 vTaskSuspend(gui_handler);
                 vTaskDelay(1000 / portTICK_RATE_MS);
                 update_firmware.update_init(app.aap_name);

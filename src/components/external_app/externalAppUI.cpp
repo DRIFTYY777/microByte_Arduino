@@ -18,7 +18,9 @@ void ExternalAppEvientHandler(lv_event_t *e)
     if (code == LV_EVENT_CLICKED)
     {
         delay(10); // preventing sudden crash
+
         ESP_LOGI(TAG, "Loading: %s", (char *)lv_list_get_btn_text(obj));
+
         app.status = STATUS_RUNNING;
         strcpy(app.aap_name, lv_list_get_btn_text(lv_obj_get_parent(obj), obj));
 

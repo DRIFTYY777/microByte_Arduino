@@ -27,6 +27,12 @@ public:
     bool isWiFiConnected();
     String timeAMPM();
     String time24();
+
+    char *getDateTime();
+    char *getDate();
+    char *getTime();
+    char *getFormattedDate();
+    
 };
 extern LocalTime local_time;
 

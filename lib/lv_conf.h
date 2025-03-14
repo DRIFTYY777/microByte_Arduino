@@ -119,7 +119,7 @@ typedef int16_t lv_coord_t;
  * The graphical objects and other related data are stored here. */
 
 /* 1: use custom malloc/free, 0: use the built-in `lv_mem_alloc` and `lv_mem_free` */
-#define LV_MEM_CUSTOM      1 // DEFAULT: 0
+#define LV_MEM_CUSTOM      0 // DEFAULT: 0
 #if LV_MEM_CUSTOM == 0
 /* Size of the memory used by `lv_mem_alloc` in bytes (>= 2kB)*/
 #  define LV_MEM_SIZE    ( 32 * 1024U)
@@ -363,7 +363,7 @@ typedef void * lv_indev_drv_user_data_t;            /*Type of user data in the i
 #define LV_USE_ASSERT_OBJ       0
 
 /*Check if the styles are properly initialized. (Fast)*/
-#define LV_USE_ASSERT_STYLE     0
+#define LV_USE_ASSERT_STYLE     1 // default: 0
 
 #endif /*LV_USE_DEBUG*/
 

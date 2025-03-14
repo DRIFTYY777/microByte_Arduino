@@ -97,7 +97,7 @@ void ui_init()
     ESP_LOGI("LVGL", "Total PSRAM: %d", heap_caps_get_total_size(MALLOC_CAP_SPIRAM));
     ESP_LOGI("LVGL", "Free PSRAM: %d", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
 
-    lv_disp_draw_buf_init(&draw_buf, buf1, NULL, size_in_px); // Reduced buffer size for non-PSRAM boards
+    lv_disp_draw_buf_init(&draw_buf, buf2, NULL, size_in_px); // Reduced buffer size for non-PSRAM boards
 
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = 320;
@@ -148,6 +148,6 @@ void GUI_frontend()
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
     // main screen
-    // mainScreen(lv_scr_act());
-    mainScreen();
+    // mainScreen();
+    backToMenu(NULL);
 }

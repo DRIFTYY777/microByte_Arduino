@@ -6,6 +6,7 @@
 #include <components/external_app/externalAppUI.h>
 
 #include <components/ota/otaUI.h>
+#include <components/emulators/EmulatorUI.h>
 
 // ui components
 #include "helpers.h"
@@ -35,7 +36,9 @@ static void EventHandler(lv_event_t *e)
         }
         else if (strcmp(text, "Emulator") == 0)
         {
-            Serial.println("Emulator");
+            isInMenu = false;
+            clear_group_focus();
+            createEmulatorScreen();
         }
         else if (strcmp(text, "Update Firmware") == 0)
         {

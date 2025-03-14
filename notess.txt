@@ -20,3 +20,7 @@ line 22
 44   // GUI_frontend();
 
 55 // async_battery_alert
+
+
+nes.c
+559   //osd_getsoundinfo(&osd_sound);

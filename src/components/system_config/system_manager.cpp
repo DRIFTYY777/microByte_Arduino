@@ -20,6 +20,8 @@ Preferences preferences; // NVS storage handler
 
 QueueHandle_t modeQueue;
 QueueHandle_t batteryQueue;
+QueueHandle_t vidQueue;
+TimerHandle_t timer = NULL;
 
 SYSTEM_MODE management;        // Only declare here
 APPS app;                      // Only declare here

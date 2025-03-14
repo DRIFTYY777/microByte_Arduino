@@ -7,6 +7,6 @@ static void on_game_menu(lv_event_t e);
 
 static void executeGame(lv_event_t *e);
 
-void createEmulatorScreen(lv_obj_t *parent, lv_event_t *e);
+void createEmulatorScreen();
 
 #endif // EMULATORS_EMULATORUI_H
