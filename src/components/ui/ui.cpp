@@ -1,8 +1,5 @@
 #include "ui.h"
 
-
-
-
 // UI Components
 #include "helpers.h"
 #include "mainScreen.h"
@@ -13,6 +10,7 @@
 
 // driver
 #include <components/drivers/backlight/backlight.h>
+#include <components/drivers/display/displayHal.h>
 // #include <components/drivers/battery/battery.h>
 #include <components/drivers/inputs/user_input.h>
 #include <components/drivers/LED/LED_notification.h>
@@ -64,23 +62,10 @@ static void lv_tick_task(void *arg);
 static lv_disp_drv_t disp_drv;
 static SemaphoreHandle_t xGuiSemaphore;
 
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
-{
-    uint16_t w = area->x2 - area->x1 + 1;
-    uint16_t h = area->y2 - area->y1 + 1;
-    tft.startWrite();
-    tft.setAddrWindow(area->x1, area->y1, w, h);
-    tft.pushColors((uint16_t *)&color_p->full, w * h, true);
-    tft.endWrite();
-    lv_disp_flush_ready(disp);
-}
-
 void ui_init()
 {
     xGuiSemaphore = xSemaphoreCreateMutex();
-    tft.begin();
-    tft.setRotation(1);
-    tft.fillScreen(TFT_BLACK);
+
     lv_init();
 
     int32_t size_in_px = DISP_BUF_SIZE;
@@ -103,7 +88,7 @@ void ui_init()
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = 320;
     disp_drv.ver_res = 240;
-    disp_drv.flush_cb = my_disp_flush;
+    disp_drv.flush_cb = display_HAL_flush;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
     // Create timer for LVGL system ticks

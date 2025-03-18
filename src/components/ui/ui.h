@@ -3,7 +3,6 @@
 
 #include <lvgl.h>
 // #include <TFT_eSPI.h>
-#include <components/drivers/display/display_hal.h>
 
 // extern TFT_eSPI tft;
 

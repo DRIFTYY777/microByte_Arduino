@@ -10,6 +10,7 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <WiFi.h>
 
 #include <components/drivers/backlight/backlight.h>
+#include <components/drivers/display/displayHal.h>
 // #include <components/drivers/battery/battery.h>
 #include <components/drivers/inputs/user_input.h>
 #include <components/drivers/LED/LED_notification.h>
@@ -71,6 +72,8 @@ void setup()
     /* System Init for hardware state */
     sys_manager.system_init_config();
     sys_manager.system_info();
+
+    display_hall_init();
 
     /* Init of Time */
     // if (WiFi.status())
