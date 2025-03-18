@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
+/* UI */
 #include "notificationBar.h"
 #include "helpers.h"
 
@@ -12,6 +13,7 @@
 #include <components/drivers/sd_card/sd_card.h>
 #include <components/drivers/sd_card/formatSD.h>
 #include <components/drivers/vb/vibration.h>
+#include <components/drivers/LED/LED_notification.h>
 
 /*
                   W 300
@@ -34,7 +36,7 @@ void backButtonEventHandler(lv_event_t *e)
 {
     clear_group_focus();
     delay(50);
-    lv_obj_clean(lv_scr_act());
+    // lv_obj_clean(lv_scr_act());
     createSettingScreen();
 }
 
@@ -341,6 +343,67 @@ void sdCardSettings()
     lv_group_focus_obj(sd_default);
 }
 
+/// @brief Notificaiton Led Event Handler
+/// @param e
+static void NLEH(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *obj = lv_event_get_target(e);
+    if (code == LV_EVENT_VALUE_CHANGED)
+    {
+        switch (lv_dropdown_get_selected(obj))
+        {
+        case 0:
+            led_notification.LED_mode(LED_BLINK_HS);
+            break;
+        case 1:
+            led_notification.LED_mode(LED_BLINK_LS);
+            break;
+        case 2:
+            led_notification.LED_mode(LED_TURN_ON);
+            break;
+        case 3:
+            led_notification.LED_mode(LED_TURN_OFF);
+            break;
+        case 4:
+            led_notification.LED_mode(LED_FADE_ON);
+            break;
+        case 5:
+            led_notification.LED_mode(LED_FADE_OFF);
+            break;
+        }
+    }
+}
+void LED(void)
+{
+    // Create a window
+    lv_obj_t *window = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(window, 300, 180);
+    lv_obj_align(window, LV_ALIGN_CENTER, 0, 20);
+    lv_obj_clear_flag(window, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Title bar
+    notificationBar(lv_scr_act(), false, "LED");
+
+    /*Create a normal drop down list*/
+    lv_obj_t *dd = lv_dropdown_create(window);
+    lv_dropdown_set_options(dd, "Blink HS\n"
+                                "Blink LS\n"
+                                "Led On\n"
+                                "Led Off\n"
+                                "Fade On\n"
+                                "Fade Off");
+
+    lv_obj_align(dd, LV_ALIGN_TOP_MID, 0, 20);
+    lv_obj_add_event_cb(dd, NLEH, LV_EVENT_ALL, NULL);
+
+    // Add a back button
+    backButton(0, -10, 80, 30, window);
+
+    // make it focus
+    lv_group_add_obj(group_interact, dd);
+}
+
 void settings_menu(lv_event_t *e)
 {
     lv_obj_t *obj = lv_event_get_target(e);
@@ -350,36 +413,31 @@ void settings_menu(lv_event_t *e)
     {
         clear_group_focus();
         delay(50);
-        lv_obj_clean(lv_scr_act()); // Clean previous screen before loading
         aboutThisDevice();
     }
     else if (strcmp(btn_text, "Brightness") == 0)
     {
         clear_group_focus();
         delay(50);
-        lv_obj_clean(lv_scr_act());
         brightnessSettings();
     }
     else if (strcmp(btn_text, "Vibration") == 0)
     {
         clear_group_focus();
         delay(50);
-        lv_obj_clean(lv_scr_act());
         vibrationSettings();
     }
-    else if (strcmp(btn_text, "Wi-Fi") == 0) // possible bug
+    else if (strcmp(btn_text, "LED") == 0) // possible bug
     {
-        // clear_group_focus();
-        // delay(50);
-        // lv_obj_clean(lv_scr_act());
-        // wifiSettings();
+        clear_group_focus();
+        delay(50);
+        LED();
     }
     else if (strcmp(btn_text, "SD Card") == 0) // possible bug
     {
-        // clear_group_focus();
-        // delay(50);
-        // lv_obj_clean(lv_scr_act());
-        // sdCardSettings();
+        clear_group_focus();
+        delay(50);
+        sdCardSettings();
     }
 }
 
@@ -411,6 +469,10 @@ void createSettingScreen()
 
     /*System config options */
     btn = lv_list_add_btn(Menu, LV_SYMBOL_VIDEO, "Brightness");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_SETTINGS, "LED");
     lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
     lv_group_add_obj(group_interact, btn);
 

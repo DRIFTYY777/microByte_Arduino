@@ -1,8 +1,7 @@
 #include "LED_notification.h"
-#include <components/system_config/system_config.h>
-
-#include "LED_notification.h"
 #include <driver/ledc.h>
+#include <components/system_config/system_config.h>
+#include <components/system_config/system_manager.h>
 
 static const char *TAG = "LED notifications";
 
@@ -43,11 +42,25 @@ void LED_NOTIFICATION::LED_init()
 
     // Start the LED task
     xTaskCreate(LED_task, "LED Task", 1024, NULL, 1, NULL);
+
+    // Check if the brightness is set to 0, if so set it to 50
+    if (sys_manager.system_get_config(SYS_LED) == 0)
+    {
+        sys_manager.system_save_config(SYS_LED, LED_FADE_ON);
+    }
+    else
+    {
+        // Set the last saved value
+        LED_mode(sys_manager.system_get_config(SYS_LED));
+    }
 }
 
 // Function to set LED mode
 void LED_NOTIFICATION::LED_mode(uint8_t mode)
 {
+    // Save the LED mode to NVS
+    sys_manager.system_save_config(SYS_LED, mode);
+    // Send the LED mode to the queue
     if (xQueueSend(LEDQueue, &mode, (TickType_t)10) != pdPASS)
         ESP_LOGE(TAG, "Queue send failed");
 }

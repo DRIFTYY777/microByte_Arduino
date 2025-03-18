@@ -7,6 +7,7 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <Arduino.h>
 #include <esp32-hal-log.h>
 #include <Wire.h>
+#include <WiFi.h>
 
 #include <components/drivers/backlight/backlight.h>
 // #include <components/drivers/battery/battery.h>
@@ -15,7 +16,7 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/drivers/sd_card/sd_card.h>
 #include <components/drivers/sound/sound.h>
 #include <components/drivers/vb/vibration.h>
-#include <components/drivers/time/time.h>
+#include <components/drivers/time/LocalTime.h>
 #include <components/drivers/sd_card/formatSD.h>
 
 #include <components/system_config/system_config.h>
@@ -39,7 +40,7 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 */
 
 /// add blue ducky
-
+/// MAX9814 mic
 /// arduboy
 
 TaskHandle_t gui_handler;
@@ -71,20 +72,26 @@ void setup()
     sys_manager.system_init_config();
     sys_manager.system_info();
 
+    /* Init of Time */
+    // if (WiFi.status())
+    //{
+    //     local_time.init();
+    // }
+
     delay(200);
+
     /* SD Crad */
     sd_card.sd_init();
 
     /* Init LED for Notification */
     led_notification.LED_init();
-    led_notification.LED_mode(LED_FADE_ON);
 
     ESP_LOGE(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n",
              sys_manager.system_memory(MEMORY_SPIRAM), sys_manager.system_memory(MEMORY_INTERNAL), sys_manager.system_memory(MEMORY_DMA));
 
     /* Init of Display Backlight */
     backlight.backlight_init();
- 
+
     /* Display and Lvgl driver init */
     ui_init();
     xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 12, NULL, 1, &gui_handler, 0);
@@ -105,8 +112,10 @@ void setup()
     //     ESP_LOGE(TAG, "WiFi not connected");
     // }
 
+    // local_time.setDateTime("2021-09-01 12:00:00"); // set date time
+
     // print local time
-    ESP_LOGI(TAG, "Local Time: %s", local_time.getFormattedTime().c_str());
+    // ESP_LOGI(TAG, "Local Time: %s", local_time.getFormattedTime().c_str());
 }
 
 void loop()

@@ -1,11 +1,9 @@
 #include "system_manager.h"
 
-#include <multi_heap.h>
 #include <esp_heap_caps.h>
 #include <string.h>
 #include <soc/soc.h>
 #include <esp_ota_ops.h>
-// #include <esp32/spiram.h>
 #include <esp_spi_flash.h>
 
 #include <Preferences.h>
@@ -147,6 +145,10 @@ void SystemManager::system_save_config(uint8_t config, int8_t value)
     {
         preferences.putChar("bluetooth", (char)value);
     }
+    else if (config == SYS_LED)
+    {
+        preferences.putChar("led", (char)value);
+    }
 }
 
 int8_t SystemManager::system_get_config(uint8_t config)
@@ -175,7 +177,6 @@ int8_t SystemManager::system_get_config(uint8_t config)
     }
     else if (config == SYS_VIBRATION)
     {
-
         value = (int8_t)preferences.getChar("vibration", -1);
     }
     else if (config == SYS_WIFI)
@@ -185,6 +186,10 @@ int8_t SystemManager::system_get_config(uint8_t config)
     else if (config == SYS_BLUETOOTH)
     {
         value = (int8_t)preferences.getChar("bluetooth", -1);
+    }
+    else if (config == SYS_LED)
+    {
+        value = (int8_t)preferences.getChar("led", -1);
     }
 
     return value;

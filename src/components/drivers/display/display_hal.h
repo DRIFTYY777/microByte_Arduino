@@ -6,5 +6,4 @@
 
 extern TFT_eSPI tft; // Declare tft as an external variable
 
-
 #endif

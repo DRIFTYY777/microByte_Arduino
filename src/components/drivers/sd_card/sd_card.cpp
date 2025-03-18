@@ -56,6 +56,8 @@ bool SD_CARD::sd_init()
     }
 
     uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+    uint64_t usedSpace = cardSize - (SD_MMC.usedBytes() / (1024 * 1024));
+
     ESP_LOGE(TAG, "SD Card Size: %lluMB", cardSize);
 
     // Update struct info
@@ -63,6 +65,9 @@ bool SD_CARD::sd_init()
     sd_card_info.card_size = static_cast<uint16_t>(cardSize);
     sd_card_info.card_mounted = 1;
     sd_card_info.card_status = 1; // Assume status OK
+    sd_card_info.used_space = static_cast<uint8_t>(usedSpace);
+    sd_card_info.free_space = static_cast<uint8_t>(cardSize - usedSpace);
+
     SD_mount = true;
 
     system_dir();

@@ -26,6 +26,7 @@ void BACKLIGHT::backlight_init()
     backlight_led.duty = 0; // Start with 0 brightness
     backlight_led.hpoint = 0;
 
+    // Configure the LEDC Channel
     ledc_channel_config(&backlight_led);
 
     // Enable LEDC Fade
@@ -35,6 +36,7 @@ void BACKLIGHT::backlight_init()
     ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 8191, 2000); // use 8191 for maximum duty.
     ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, LEDC_FADE_NO_WAIT);
 
+    // Check if the brightness is set to 0, if so set it to 50
     if (sys_manager.system_get_config(SYS_BRIGHT) == 0)
     {
         sys_manager.system_save_config(SYS_BRIGHT, 50);

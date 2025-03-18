@@ -3,12 +3,11 @@
 
 #include <cstdint>
 
-
 /// @brief Class for controlling the backlight of the screen
 class BACKLIGHT
 {
 public:
-    /// @brief Initialize the backlight
+    /// @brief Initialize the backlight. PWM
     /// @details Get the last saved value from the NVS and set the backlight to that value
     void backlight_init();
 

@@ -54,6 +54,7 @@
 #define SYS_GUI_COLOR 0x02
 #define SYS_STATE_SAV_BTN 0x03
 #define SYS_VIBRATION 0x04
+#define SYS_LED 0x05
 
 #define SYS_WIFI 0x05
 #define SYS_BLUETOOTH 0x06

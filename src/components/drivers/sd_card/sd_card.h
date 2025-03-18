@@ -27,7 +27,6 @@ struct SD_CARD_INFO
     uint16_t card_size = 0;
     uint8_t card_status = 0;
     uint8_t card_mounted = 0;
-    uint8_t total_space = 0;
     uint8_t free_space = 0;
     uint8_t used_space = 0;
 };
@@ -55,7 +54,6 @@ public:
     uint8_t sd_game_list(char *game_list[100], uint8_t console);
     bool sd_sav_exist(char *file_name, uint8_t emulator);
     void sd_sav_remove(char *file_name, uint8_t emulator);
-
 };
 
 extern SD_CARD sd_card;
