@@ -8,6 +8,7 @@
 #include <sys/param.h>
 
 #include "ST7789_driver.h"
+#include "ST7789_regs.h"
 
 #include "driver/gpio.h"
 
@@ -293,7 +294,7 @@ void ST7789_rotate_display(st7789_driver_t *driver, uint8_t rotation)
 	ST7789_fill_area(driver, 0x0000, 0, 0, driver->display_width, driver->display_height);
 }
 
-void drawPixel(st7789_driver_t *driver, int16_t x, int16_t y, uint16_t color)
+void ST7789_drawPixel(st7789_driver_t *driver, int16_t x, int16_t y, uint16_t color)
 {
 	if ((x < 0) || (x >= driver->display_width) || (y < 0) || (y >= driver->display_height))
 	{
@@ -303,7 +304,7 @@ void drawPixel(st7789_driver_t *driver, int16_t x, int16_t y, uint16_t color)
 	ST7789_fill_area(driver, color, x, y, 1, 1);
 }
 
-void drawCircle(st7789_driver_t *driver, int16_t x0, int16_t y0, int16_t r, uint16_t color)
+void ST7789_drawCircle(st7789_driver_t *driver, int16_t x0, int16_t y0, int16_t r, uint16_t color)
 {
 	int16_t f = 1 - r;
 	int16_t ddF_x = 1;
@@ -311,10 +312,10 @@ void drawCircle(st7789_driver_t *driver, int16_t x0, int16_t y0, int16_t r, uint
 	int16_t x = 0;
 	int16_t y = r;
 
-	drawPixel(driver, x0, y0 + r, color);
-	drawPixel(driver, x0, y0 - r, color);
-	drawPixel(driver, x0 + r, y0, color);
-	drawPixel(driver, x0 - r, y0, color);
+	ST7789_drawPixel(driver, x0, y0 + r, color);
+	ST7789_drawPixel(driver, x0, y0 - r, color);
+	ST7789_drawPixel(driver, x0 + r, y0, color);
+	ST7789_drawPixel(driver, x0 - r, y0, color);
 
 	while (x < y)
 	{
@@ -328,14 +329,14 @@ void drawCircle(st7789_driver_t *driver, int16_t x0, int16_t y0, int16_t r, uint
 		ddF_x += 2;
 		f += ddF_x;
 
-		drawPixel(driver, x0 + x, y0 + y, color);
-		drawPixel(driver, x0 - x, y0 + y, color);
-		drawPixel(driver, x0 + x, y0 - y, color);
-		drawPixel(driver, x0 - x, y0 - y, color);
-		drawPixel(driver, x0 + y, y0 + x, color);
-		drawPixel(driver, x0 - y, y0 + x, color);
-		drawPixel(driver, x0 + y, y0 - x, color);
-		drawPixel(driver, x0 - y, y0 - x, color);
+		ST7789_drawPixel(driver, x0 + x, y0 + y, color);
+		ST7789_drawPixel(driver, x0 - x, y0 + y, color);
+		ST7789_drawPixel(driver, x0 + x, y0 - y, color);
+		ST7789_drawPixel(driver, x0 - x, y0 - y, color);
+		ST7789_drawPixel(driver, x0 + y, y0 + x, color);
+		ST7789_drawPixel(driver, x0 - y, y0 + x, color);
+		ST7789_drawPixel(driver, x0 + y, y0 - x, color);
+		ST7789_drawPixel(driver, x0 - y, y0 - x, color);
 	}
 }
 /**********************

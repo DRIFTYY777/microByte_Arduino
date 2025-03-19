@@ -37,8 +37,8 @@
 
 // Display Resolution: 240*RGB (H) *320(V) (ST7789)
 #define SCR_MODEL ST7789
-#define SCR_WIDTH 320
-#define SCR_HEIGHT 240
+#define SCR_WIDTH 240
+#define SCR_HEIGHT 320
 #define SCR_BUFFER_SIZE SCR_WIDTH *SCR_HEIGHT * 2
 
 // Display pin configuration

@@ -26,9 +26,7 @@
     LVGL Version: 8.3.9
     LV_USE_LOG 0
 
-*/
 
-/*
     #define DISP_BUF_SIZE (240 * 10) // width * 2
     And single buffer in psram
     -SPI_RAM: 8386019 Bytes
@@ -39,9 +37,9 @@
     Free PSRAM: 8381203
     PSRAM memory allocated successfully!
     Stored string in PSRAM: Forum
-*/
 
-/*
+//////////////////////////////////////////
+
     #define DISP_BUF_SIZE (240 * 40) // width * 2
     and using 2 bugegr allocated in psram
     -SPI_RAM: 8386019 Bytes
@@ -52,7 +50,6 @@
     Free PSRAM: 8347587
     PSRAM memory allocated successfully!
     Stored string in PSRAM: Forum
-
 */
 
 #define LV_TICK_PERIOD_MS 10
@@ -61,6 +58,27 @@
 static void lv_tick_task(void *arg);
 static lv_disp_drv_t disp_drv;
 static SemaphoreHandle_t xGuiSemaphore;
+
+void set_custom_theme()
+{
+    static lv_theme_t *theme;
+
+    /* Custom primary and secondary colors */
+    lv_color_t primary = lv_color_make(255, 0, 0);   // Red
+    lv_color_t secondary = lv_color_make(0, 255, 0); // Green
+
+    /* Set the new theme */
+    theme = lv_theme_default_init(
+        lv_disp_get_default(),                   // Display
+        lv_palette_main(LV_PALETTE_DEEP_PURPLE), // Primary color
+        lv_palette_main(LV_PALETTE_BLUE),        // Secondary color
+        LV_USE_THEME_MONO,                       // Dark or Light mode
+        &lv_font_montserrat_14                   // Default font
+    );
+
+    /* Apply the theme */
+    lv_disp_set_theme(lv_disp_get_default(), theme);
+}
 
 void ui_init()
 {
@@ -98,6 +116,7 @@ void ui_init()
     esp_timer_handle_t periodic_timer;
     ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, LV_TICK_PERIOD_MS * 1000));
+    //set_custom_theme();
 }
 
 void GUI_task(void *arg)
@@ -133,7 +152,6 @@ void GUI_frontend()
     // Create a group for interactive objects
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
-    // main screen
-    // mainScreen();
+    // Create a group for non-interactive objects
     backToMenu(NULL);
 }

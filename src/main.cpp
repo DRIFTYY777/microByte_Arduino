@@ -30,6 +30,11 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/external_app/external_app.h>
 #include <components/ota/update_firmware.h>
 
+extern "C"
+{
+#include <components/boot/boot_screen.h>
+}
+
 // #include <components/emulators/NES/NesManager.h>
 // #include <components/emulators/GBC/GboyManager.h>
 
@@ -94,6 +99,21 @@ void setup()
 
     /* Init of Display Backlight */
     backlight.backlight_init();
+
+    int32_t status = sys_manager.system_get_state();
+
+    if (status == SYS_SOFT_RESET)
+    {
+        boot_screen_ani = false;
+        sys_manager.system_set_state(SYS_NORMAL_STATE);
+    }
+    xTaskCreatePinnedToCore(boot_screen_task, "intro_task", 3048, (void *)boot_screen_ani, 1, &intro_handler, 0);
+
+    if (boot_screen_ani)
+        vTaskDelay(2000 / portTICK_RATE_MS);
+    vTaskDelete(intro_handler);
+    boot_screen_free();
+    display_HAL_change_endian();
 
     /* Display and Lvgl driver init */
     ui_init();

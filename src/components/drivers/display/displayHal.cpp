@@ -25,6 +25,7 @@ st7789_driver_t display = {
 void display_hall_init()
 {
     ST7789_init(&display);
+    // ST7789_invert_display(&display, false);
     clear_screen();
     ST7789_rotate_display(&display, 1);
 }
@@ -32,6 +33,30 @@ void display_hall_init()
 void clear_screen()
 {
     ST7789_fill_area(&display, 0x0000, 0, 0, display.display_width, display.display_height);
+}
+
+uint16_t *display_HAL_get_buffer()
+{
+    return display.current_buffer;
+}
+
+size_t display_HAL_get_buffer_size()
+{
+    return display.buffer_size;
+}
+
+void display_HAL_boot_frame(uint16_t *buffer)
+{
+    // The boot animation to the buffer
+    display.current_buffer = buffer;
+
+    // Send to the driver layer and change the buffer
+    ST7789_swap_buffers(&display);
+}
+
+void display_HAL_change_endian()
+{
+    ST7789_set_endian(&display);
 }
 
 void display_HAL_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)

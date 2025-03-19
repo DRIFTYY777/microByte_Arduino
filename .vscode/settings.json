@@ -385,6 +385,8 @@
     "tca9555.h": "c",
     "user_input.h": "c",
     "shared.h": "c",
-    "ioapi.h": "c"
+    "ioapi.h": "c",
+    "backimage.c": "cpp",
+    "displayhal.h": "c"
   }
 }
