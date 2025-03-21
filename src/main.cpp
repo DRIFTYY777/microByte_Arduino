@@ -30,6 +30,8 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/external_app/external_app.h>
 #include <components/ota/update_firmware.h>
 
+#include <components/emulators/NES/NesManager.h>
+
 extern "C"
 {
 #include <components/boot/boot_screen.h>
@@ -78,42 +80,39 @@ void setup()
     sys_manager.system_init_config();
     sys_manager.system_info();
 
+    /* Display Drivers Init.. */
     display_hall_init();
-
-    /* Init of Time */
-    // if (WiFi.status())
-    //{
-    //     local_time.init();
-    // }
-
-    delay(200);
 
     /* SD Crad */
     sd_card.sd_init();
+
+    /* 1 Sec Delay */
+    vTaskDelay(1000 / portTICK_RATE_MS);
 
     /* Init LED for Notification */
     led_notification.LED_init();
 
     ESP_LOGE(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n",
-             sys_manager.system_memory(MEMORY_SPIRAM), sys_manager.system_memory(MEMORY_INTERNAL), sys_manager.system_memory(MEMORY_DMA));
+             sys_manager.system_memory(MEMORY_SPIRAM),
+             sys_manager.system_memory(MEMORY_INTERNAL),
+             sys_manager.system_memory(MEMORY_DMA));
 
     /* Init of Display Backlight */
     backlight.backlight_init();
 
-    int32_t status = sys_manager.system_get_state();
-
-    if (status == SYS_SOFT_RESET)
-    {
-        boot_screen_ani = false;
-        sys_manager.system_set_state(SYS_NORMAL_STATE);
-    }
-    xTaskCreatePinnedToCore(boot_screen_task, "intro_task", 3048, (void *)boot_screen_ani, 1, &intro_handler, 0);
-
-    if (boot_screen_ani)
-        vTaskDelay(2000 / portTICK_RATE_MS);
-    vTaskDelete(intro_handler);
-    boot_screen_free();
-    display_HAL_change_endian();
+    // int32_t status = sys_manager.system_get_state();
+    // if (status == SYS_SOFT_RESET)
+    //{
+    //     boot_screen_ani = false;
+    //     sys_manager.system_set_state(SYS_NORMAL_STATE);
+    // }
+    ///* Boot Screen Animation */
+    // xTaskCreatePinnedToCore(boot_screen_task, "intro_task", 3048, (void *)boot_screen_ani, 1, &intro_handler, 0);
+    // if (boot_screen_ani)
+    //     vTaskDelay(2000 / portTICK_RATE_MS);
+    // vTaskDelete(intro_handler);
+    // boot_screen_free();
+    // display_HAL_change_endian();
 
     /* Display and Lvgl driver init */
     ui_init();
@@ -127,18 +126,6 @@ void setup()
 
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
-
-    // WiFI.begin(WIFI_PASS, WIFI_SSID);
-    // delay(1000);
-    // if (WiFi.status() != WL_CONNECTED)
-    // {
-    //     ESP_LOGE(TAG, "WiFi not connected");
-    // }
-
-    // local_time.setDateTime("2021-09-01 12:00:00"); // set date time
-
-    // print local time
-    // ESP_LOGI(TAG, "Local Time: %s", local_time.getFormattedTime().c_str());
 }
 
 void loop()
@@ -180,6 +167,25 @@ void loop()
                 esp_restart();
                 vTaskDelay(250 / portTICK_RATE_MS);
                 esp_restart();
+            }
+        }
+        else if (app.mode == MODE_GAME)
+        {
+            if (app.console == NES)
+            {
+                if (app.status == STATUS_RUNNING)
+                {
+                    vTaskSuspend(gui_handler);
+                    display_set_NES();
+                    NES_start(app.aap_name);
+                    if (app.load_save_game)
+                    {
+                        vTaskDelay(1500 / portTICK_RATE_MS);
+                        NES_load_game();
+                    }
+                    game_executed = true;
+                    game_running = true;
+                }
             }
         }
     }

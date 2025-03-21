@@ -75,7 +75,7 @@
 #define LV_COLOR_16_SWAP   0
 #endif
 
-#define LV_COLOR_16_SWAP   0  // DEFAULT: 0
+#define LV_COLOR_16_SWAP   0 // DEFAULT: 0
 
 /* 1: Enable screen transparency.
  * Useful for OSD or other overlapping GUIs.
@@ -511,7 +511,7 @@ typedef void * lv_font_user_data_t;
     #elif defined CONFIG_LVGL_THEME_DEFAULT_PRIMARY_COLOR_ORANGE
         #define LV_THEME_DEFAULT_COLOR_PRIMARY      LV_COLOR_ORANGE
     #else
-        #define LV_THEME_DEFAULT_COLOR_PRIMARY      LV_COLOR_OLIVE  /// modify this line
+        #define LV_THEME_DEFAULT_COLOR_PRIMARY      LV_COLOR_BLACK  /// modify this line
     #endif
 
     /* LV_THEME_DEFAULT_COLOR_SECONDARY */
@@ -552,7 +552,7 @@ typedef void * lv_font_user_data_t;
     #elif defined CONFIG_LVGL_THEME_DEFAULT_SECONDARY_COLOR_ORANGE
         #define LV_THEME_DEFAULT_COLOR_SECONDARY      LV_COLOR_ORANGE
     #else
-        #define LV_THEME_DEFAULT_COLOR_SECONDARY      LV_COLOR_PURPLE /// modify this line
+        #define LV_THEME_DEFAULT_COLOR_SECONDARY      LV_COLOR_WHITE /// modify this line
     #endif
 #elif defined (CONFIG_LVGL_THEME_MONO)
     #if defined (CONFIG_LVGL_THEME_DEFAULT_COLOR_BLACK)

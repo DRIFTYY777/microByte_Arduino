@@ -88,7 +88,6 @@ void boot_screen_free()
 
 void boot_screen_task(void *arg)
 {
-
 	// Get the display buffer to save the partial render imagen
 	uint16_t *buffer = display_HAL_get_buffer();
 
@@ -188,7 +187,7 @@ void boot_screen_task(void *arg)
 
 			animation_step++;
 		}
-		//font_face_destroy(&font_face);
+		// font_face_destroy(&font_face);
 	}
 }
 
@@ -222,7 +221,7 @@ static void plasma_animation(uint16_t *buffer, uint16_t y, draw_event_param_t *p
 		{
 			if (param->frame > 1200 - 240)
 			{
-				//font_render_destroy(&font_render);
+				// font_render_destroy(&font_render);
 			}
 		}
 		return;

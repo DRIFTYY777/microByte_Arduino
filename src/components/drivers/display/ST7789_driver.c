@@ -179,19 +179,25 @@ void ST7789_write_pixels(st7789_driver_t *driver, st7789_color_t *pixels, size_t
 	driver->queue_fill++;
 }
 
+// void ST7789_write_lines(st7789_driver_t *driver, int ypos, int xpos, int width, uint16_t *linedata, int lineCount)
+// {
+// 	int size = width * 2 * 8 * lineCount;
+// 	driver->buffer_size = 240 * 40;
+// 	ST7789_set_window(driver, 0, ypos, 240, ypos + 20);
+// 	ST7789_swap_buffers(driver);
+// }
+
 void ST7789_write_lines(st7789_driver_t *driver, int ypos, int xpos, int width, uint16_t *linedata, int lineCount)
 {
-	// ST7789_set_window(driver,xpos,ypos,240,ypos +20);
-	int size = width * 2 * 8 * lineCount;
-
-	// driver->buffer_secondary = linedata;
-	// driver->current_buffer = driver->buffer_secondary;
-
-	// ST7789_write_pixels(driver, driver->buffer_primary, size);
-	driver->buffer_size = 240 * 20;
-	ST7789_set_window(driver, 0, ypos, 240, ypos + 20);
-	// ST7789_write_pixels(driver, driver->current_buffer, driver->buffer_size);
-	ST7789_swap_buffers(driver);
+	int size = width * lineCount * sizeof(uint16_t);
+	int max_size = 4096;
+	ST7789_set_window(driver, xpos, ypos, xpos + width - 1, ypos + lineCount - 1);
+	for (int i = 0; i < size; i += max_size)
+	{
+		int chunk_size = (size - i > max_size) ? max_size : (size - i);
+		ST7789_write_pixels(driver, &linedata[i / 2], chunk_size);
+	}
+	ST7789_swap_buffers(driver); // Swap only after writing pixels
 }
 
 void ST7789_swap_buffers(st7789_driver_t *driver)
@@ -224,13 +230,22 @@ void ST7789_set_window(st7789_driver_t *driver, uint16_t start_x, uint16_t start
 	ST7789_multi_cmd(driver, sequence);
 }
 
-void ST7789_set_endian(st7789_driver_t *driver)
+void ST7789_little_endian(st7789_driver_t *driver)
 {
-	const st7789_command_t init_sequence2[] = {
-		{ST7789_CMD_RAMCTRL, 0, 2, (const uint8_t *)"\x00\xc0"},
+	const st7789_command_t init_sequence[] = {
+		{ST7789_CMD_RAMCTRL, 0, 2, (const uint8_t *)"\x00\xc8"},
 		{ST7789_CMDLIST_END, 0, 0, NULL},
 	};
-	ST7789_multi_cmd(driver, init_sequence2);
+	ST7789_multi_cmd(driver, init_sequence);
+}
+
+void ST7789_big_endian(st7789_driver_t *driver)
+{
+	const st7789_command_t init_sequence[] = {
+		{ST7789_CMD_RAMCTRL, 0, 2, (const uint8_t *)"\x00\x00"},
+		{ST7789_CMDLIST_END, 0, 0, NULL},
+	};
+	ST7789_multi_cmd(driver, init_sequence);
 }
 
 void ST7789_invert_display(st7789_driver_t *driver, bool invert)

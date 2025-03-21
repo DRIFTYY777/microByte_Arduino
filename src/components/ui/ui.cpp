@@ -72,7 +72,7 @@ void set_custom_theme()
         lv_disp_get_default(),                   // Display
         lv_palette_main(LV_PALETTE_DEEP_PURPLE), // Primary color
         lv_palette_main(LV_PALETTE_BLUE),        // Secondary color
-        LV_USE_THEME_MONO,                       // Dark or Light mode
+        LV_THEME_DEFAULT_DARK,                   // Dark or Light mode
         &lv_font_montserrat_14                   // Default font
     );
 
@@ -104,8 +104,9 @@ void ui_init()
     lv_disp_draw_buf_init(&draw_buf, buf2, NULL, size_in_px); // Reduced buffer size for non-PSRAM boards
 
     lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res = 320;
+    disp_drv.hor_res = 320;  // height
     disp_drv.ver_res = 240;
+
     disp_drv.flush_cb = display_HAL_flush;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
@@ -116,7 +117,6 @@ void ui_init()
     esp_timer_handle_t periodic_timer;
     ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, LV_TICK_PERIOD_MS * 1000));
-    //set_custom_theme();
 }
 
 void GUI_task(void *arg)
