@@ -33,7 +33,7 @@ void display_hall_init()
 {
     ST7789_init(&display);
     clear_screen();
-    ST7789_rotate_display(&display, 1);
+    ST7789_rotate_display(&display, 3);
 }
 
 void clear_screen()
@@ -91,32 +91,34 @@ void display_HAL_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
     lv_disp_flush_ready(disp_drv);
 }
 
+/*
+W 320
+H 240
+
+*/
+
 void display_HAL_NES_frame(const uint8_t *data)
 {
     uint16_t calc_line = 0;
     uint16_t sending_line = 0;
-
     if (data == NULL)
     {
         for (uint16_t y = 0; y < SCR_HEIGHT; y++)
         {
-
             for (uint16_t x = 0; x < SCR_WIDTH; x++)
             {
                 display.current_buffer[x] = 0;
             }
-
             sending_line = calc_line;
             calc_line = (calc_line == 1) ? 0 : 1;
-            ST7789_write_lines(&display, y, 0, SCR_WIDTH, line[sending_line], 1);
+            ST7789_write_lines(&display, y, 40, 240, line[sending_line], 1);
         }
     }
     else
     {
         short outputHeight = 240;
-        short outputWidth = 240 + (240 - 240);
-        short xpos = (240 - outputWidth) / 2;
-
+        short outputWidth = 240;
+        short xpos = (320 - outputWidth) / 2; // Centering horizontally
         for (int y = 0; y < outputHeight; y += LINE_COUNT)
         {
             for (int i = 0; i < LINE_COUNT; ++i)
@@ -131,21 +133,17 @@ void display_HAL_NES_frame(const uint8_t *data)
                     display.current_buffer[index++] = myPalette[getPixelNES(data, x, (y + i), outputWidth, outputHeight)];
                 }
             }
-
             sending_line = calc_line;
             calc_line = (calc_line == 1) ? 0 : 1;
             ST7789_write_lines(&display, y, xpos, outputWidth, line[sending_line], LINE_COUNT);
         }
     }
 }
-
 static uint8_t getPixelNES(const uint8_t *bufs, uint16_t x, uint16_t y, uint16_t w2, uint16_t h2)
 {
-
     int x_diff, y_diff, xv, yv, red, green, blue, col, a, b, c, d, index;
-    
     int x_ratio = (int)(((NES_FRAME_WIDTH - 1) << 16) / w2) + 1;
-    int y_ratio = (int)(((NES_FRAME_HEIGHT - 1) << 16) / h2) ;
+    int y_ratio = (int)(((NES_FRAME_HEIGHT - 1) << 16) / h2) + 1;
 
     xv = (int)((x_ratio * x) >> 16);
     yv = (int)((y_ratio * y) >> 16);

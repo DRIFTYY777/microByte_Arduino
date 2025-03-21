@@ -3,14 +3,14 @@
 **
 **
 ** This program is free software; you can redistribute it and/or
-** modify it under the terms of version 2 of the GNU Library General 
+** modify it under the terms of version 2 of the GNU Library General
 ** Public License as published by the Free Software Foundation.
 **
-** This program is distributed in the hope that it will be useful, 
+** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-** Library General Public License for more details.  To obtain a 
-** copy of the GNU Library General Public License, write to the Free 
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+** Library General Public License for more details.  To obtain a
+** copy of the GNU Library General Public License, write to the Free
 ** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** Any permitted reproduction of these routines, in whole or in part,
@@ -41,8 +41,8 @@ static bitmap_t *_make_bitmap(uint8 *data_addr, bool hw, int width,
    int i;
 
    /* quick safety check */
-  /* if (NULL == data_addr)
-      return NULL;*/
+   /* if (NULL == data_addr)
+       return NULL;*/
 
    /* Make sure to add in space for line pointers */
    bitmap = NOFRENDO_MALLOC(sizeof(bitmap_t) + (sizeof(uint8 *) * height));
@@ -75,15 +75,16 @@ static bitmap_t *_make_bitmap(uint8 *data_addr, bool hw, int width,
    return bitmap;
 }
 #include "freertos/FreeRTOS.h"
+
 /* Allocate and initialize a bitmap structure */
 bitmap_t *bmp_create(int width, int height, int overdraw)
 {
    uint8 *addr = NULL;
    /*int pitch;
 
-   pitch = width + (overdraw * 2); // left and right 
+   pitch = width + (overdraw * 2); // left and right
 
-   addr = NOFRENDO_MALLOC(((pitch * height) + 3) & 0xFFFFFFF8); // add max 32-bit aligned adjustment 
+   addr = NOFRENDO_MALLOC(((pitch * height) + 3) & 0xFFFFFFF8); // add max 32-bit aligned adjustment
    if (NULL == addr) return NULL;*/
 
    return _make_bitmap(addr, false, width, height, width, overdraw);

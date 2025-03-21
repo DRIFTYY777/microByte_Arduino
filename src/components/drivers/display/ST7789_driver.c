@@ -179,25 +179,25 @@ void ST7789_write_pixels(st7789_driver_t *driver, st7789_color_t *pixels, size_t
 	driver->queue_fill++;
 }
 
-// void ST7789_write_lines(st7789_driver_t *driver, int ypos, int xpos, int width, uint16_t *linedata, int lineCount)
-// {
-// 	int size = width * 2 * 8 * lineCount;
-// 	driver->buffer_size = 240 * 40;
-// 	ST7789_set_window(driver, 0, ypos, 240, ypos + 20);
-// 	ST7789_swap_buffers(driver);
-// }
+//  void ST7789_write_lines(st7789_driver_t *driver, int ypos, int xpos, int width, uint16_t *linedata, int lineCount)
+//  {
+//  	int size = width * 2 * 8 * lineCount;
+//  	driver->buffer_size = 240 * 40;
+//  	ST7789_set_window(driver, 0, ypos, 240, ypos + 20);
+//  	ST7789_swap_buffers(driver);
+//  }
 
 void ST7789_write_lines(st7789_driver_t *driver, int ypos, int xpos, int width, uint16_t *linedata, int lineCount)
 {
 	int size = width * lineCount * sizeof(uint16_t);
-	int max_size = 4096;
+	int max_size = 5096;
 	ST7789_set_window(driver, xpos, ypos, xpos + width - 1, ypos + lineCount - 1);
 	for (int i = 0; i < size; i += max_size)
 	{
 		int chunk_size = (size - i > max_size) ? max_size : (size - i);
 		ST7789_write_pixels(driver, &linedata[i / 2], chunk_size);
 	}
-	ST7789_swap_buffers(driver); // Swap only after writing pixels
+	ST7789_swap_buffers(driver);
 }
 
 void ST7789_swap_buffers(st7789_driver_t *driver)
@@ -206,6 +206,29 @@ void ST7789_swap_buffers(st7789_driver_t *driver)
 	driver->current_buffer = driver->current_buffer == driver->buffer_primary ? driver->buffer_secondary : driver->buffer_primary;
 }
 
+// void ST7789_set_window(st7789_driver_t *driver, uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y)
+// {
+// 	uint8_t caset[4];
+// 	uint8_t raset[4];
+
+// 	caset[0] = (uint8_t)(start_x >> 8) & 0xFF;
+// 	caset[1] = (uint8_t)(start_x & 0xff);
+// 	caset[2] = (uint8_t)(end_x >> 8) & 0xFF;
+// 	caset[3] = (uint8_t)(end_x & 0xff);
+// 	raset[0] = (uint8_t)(start_y >> 8) & 0xFF;
+// 	raset[1] = (uint8_t)(start_y & 0xff);
+// 	raset[2] = (uint8_t)(end_y >> 8) & 0xFF;
+// 	raset[3] = (uint8_t)(end_y & 0xff);
+
+// 	st7789_command_t sequence[] = {
+// 		{ST7789_CMD_CASET, 0, 4, caset},
+// 		{ST7789_CMD_RASET, 0, 4, raset},
+// 		{ST7789_CMD_RAMWR, 0, 0, NULL},
+// 		{ST7789_CMDLIST_END, 0, 0, NULL},
+// 	};
+
+// 	ST7789_multi_cmd(driver, sequence);
+// }
 void ST7789_set_window(st7789_driver_t *driver, uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y)
 {
 	uint8_t caset[4];
@@ -221,9 +244,9 @@ void ST7789_set_window(st7789_driver_t *driver, uint16_t start_x, uint16_t start
 	raset[3] = (uint8_t)(end_y & 0xff);
 
 	st7789_command_t sequence[] = {
-		{ST7789_CMD_CASET, 0, 4, caset},
-		{ST7789_CMD_RASET, 0, 4, raset},
-		{ST7789_CMD_RAMWR, 0, 0, NULL},
+		{ST7789_CMD_CASET, 0, 4, caset}, // Column address set
+		{ST7789_CMD_RASET, 0, 4, raset}, // Row address set
+		{ST7789_CMD_RAMWR, 0, 0, NULL},	 // Write to RAM
 		{ST7789_CMDLIST_END, 0, 0, NULL},
 	};
 

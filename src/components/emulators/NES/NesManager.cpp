@@ -79,11 +79,7 @@ static void nofrendo_video_task(void *arg)
     while (1)
     {
         xQueueReceive(nofrendo_vidQueue, &bmp, portMAX_DELAY);
-        if (!bmp || !bmp->line[0])
-        {
-            // ESP_LOGE("NES", "Invalid bitmap data");
-            return;
-        }
+
         display_HAL_NES_frame((const uint8_t *)bmp->line[0]);
     }
 }

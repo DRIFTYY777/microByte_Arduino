@@ -25,6 +25,7 @@ static void displayTask(void *arg)
     bitmap_t *bmp = NULL;
     while (1)
     {
+        // xQueueReceive(vidQueue, &bmp, portMAX_DELAY); //skip one frame to drop to 30
         xQueueReceive(vidQueue, &bmp, portMAX_DELAY);
         display_HAL_NES_frame((const uint8_t *)bmp->line[0]);
     }
@@ -77,7 +78,7 @@ static void clear(uint8 color)
 static bitmap_t *lock_write(void)
 {
     // SDL_LockSurface(mySurface);
-    myBitmap = bmp_createhw((uint8 *)fb, NES_SCREEN_WIDTH, NES_SCREEN_HEIGHT, NES_SCREEN_WIDTH * 2);
+    myBitmap = bmp_createhw((uint8 *)fb, NES_SCREEN_WIDTH, NES_SCREEN_HEIGHT, NES_SCREEN_WIDTH * 2); //
     return myBitmap;
 }
 /* release the resource */
@@ -113,17 +114,44 @@ void osd_getvideoinfo(vidinfo_t *info)
     info->driver = &sdlDriver;
 }
 
-/* input */
+/*
 
-static void osd_initinput() {}
-static void osd_freeinput(void) {}
+    |||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+    ||  R1           |------------------------|        R2  ||
+    ||               | 240 320                |            ||
+    ||               | Display                |            ||
+    ||      up       |                        |  B     A   ||
+    || left    right |                        |            ||
+    ||     down      |________________________|  X     Y   ||
+    ||              select    menu    start                ||
+    |||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+*/
 
 void osd_getinput(void)
 {
     uint16_t b = user_input.input_read();
+
     const int ev[16] = {
-        event_joypad1_down, event_joypad1_left, event_joypad1_up, event_joypad1_right, 0, 0, (btn_ss & 1) ? event_state_save : 0, (btn_ss & 1) ? event_state_load : 0,
-        event_joypad1_b, event_joypad1_a, event_joypad1_start, 0, event_joypad1_select, 0, 0, 0};
+        event_joypad1_up,    // up
+        event_joypad1_down,  // down
+        event_joypad1_right, // right
+        event_joypad1_left,  // left
+        0,
+        event_quit,           // menu
+        event_joypad1_start,  // start
+        event_joypad1_select, // select
+        0,
+        event_joypad1_b, // B
+        event_joypad1_a, // A
+        0,               //(btn_ss & 1) ? event_state_save : 0, // select on physical keyboard
+        0,               //(btn_ss & 1) ? event_state_load : 0, // start on physical keyboard
+        0,
+        0,
+        0
+        ///
+    };
+
     static int oldb = 0xffff;
     int chg = b ^ oldb;
     int x;
@@ -162,17 +190,13 @@ int osd_init()
 
     // display_init(); //TODO: Modified
     printf("osd_init\r\n");
-    // vidQueue = xQueueCreate(10, sizeof(bitmap_t *));
-    //  xTaskCreatePinnedToCore(&displayTask, "displayTask", 2048, NULL, 5, NULL, 1);
-    // xTaskCreatePinnedToCore(&displayTask, "displayTask", 2048, NULL, 4, NULL, 0);
-    osd_initinput();
+
     return 0;
 }
 
 void osd_shutdown()
 {
     // osd_stopsound();
-    osd_freeinput();
 }
 
 char configfilename[] = "na";

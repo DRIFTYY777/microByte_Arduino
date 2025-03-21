@@ -183,3 +183,4 @@ void ST7789_rotate_display(st7789_driver_t *driver, uint8_t rotation);
 
 void ST7789_drawPixel(st7789_driver_t *driver, int16_t x, int16_t y, uint16_t color);
 void ST7789_drawCircle(st7789_driver_t *driver, int16_t x0, int16_t y0, int16_t r, uint16_t color);
+
