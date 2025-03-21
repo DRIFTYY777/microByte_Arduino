@@ -1,1 +1,5 @@
-
+![Main Menu](IMG_8180.jpeg)
+![System Info](IMG_8181.jpeg)
+![Brightnes Settings](IMG_8182.jpeg)
+![Notification Led](IMG_8183.jpeg)
+![Evil Apple](IMG_8186.jpeg)
