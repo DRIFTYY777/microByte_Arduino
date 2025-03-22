@@ -62,6 +62,7 @@ void display_HAL_boot_frame(uint16_t *buffer)
 {
     // The boot animation to the buffer
     display.current_buffer = buffer;
+
     // Send to the driver layer and change the buffer
     ST7789_swap_buffers(&display);
 }

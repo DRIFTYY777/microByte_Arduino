@@ -97,22 +97,23 @@ void setup()
              sys_manager.system_memory(MEMORY_INTERNAL),
              sys_manager.system_memory(MEMORY_DMA));
 
-    /* Init of Display Backlight */
-    backlight.backlight_init();
-
     // int32_t status = sys_manager.system_get_state();
     // if (status == SYS_SOFT_RESET)
-    //{
+    // {
     //     boot_screen_ani = false;
     //     sys_manager.system_set_state(SYS_NORMAL_STATE);
     // }
-    ///* Boot Screen Animation */
+
+    /* Init of Display Backlight */
+    backlight.backlight_init();
+
+    /* Boot Screen Animation */
     // xTaskCreatePinnedToCore(boot_screen_task, "intro_task", 3048, (void *)boot_screen_ani, 1, &intro_handler, 0);
     // if (boot_screen_ani)
     //     vTaskDelay(2000 / portTICK_RATE_MS);
     // vTaskDelete(intro_handler);
     // boot_screen_free();
-    // display_HAL_change_endian();
+    //  display_HAL_change_endian();
 
     /* Display and Lvgl driver init */
     ui_init();
@@ -138,9 +139,10 @@ void loop()
             {
                 while (app.status == STATUS_RUNNING)
                     evilApple.startAdvertising();
-            }
+                }
             evilApple.stopAdvertising();
         }
+
         else if (app.mode == MODE_EXT_APP)
         {
             if (app.status == STATUS_RUNNING)

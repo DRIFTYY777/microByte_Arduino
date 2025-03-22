@@ -65,7 +65,7 @@ static void nofrendo_task(void *arg)
 {
     // Create game route on the SD card
     char *argv[1];
-    argv[0] = (char *)malloc(256);
+    argv[0] = (char *)malloc(512); // 256
     sprintf(argv[0], "/sdcard/Emulator/NES/%s", (char *)arg);
 
     // Execute nofrendo emulator

@@ -138,9 +138,9 @@ void osd_getinput(void)
         event_joypad1_right, // right
         event_joypad1_left,  // left
         0,
-        event_quit,           // menu
-        event_joypad1_start,  // start
-        event_joypad1_select, // select
+        (btn_ss & 1) ? event_state_save : 0, // menu
+        event_joypad1_start,                 // start
+        event_joypad1_select,                // select
         0,
         event_joypad1_b, // B
         event_joypad1_a, // A

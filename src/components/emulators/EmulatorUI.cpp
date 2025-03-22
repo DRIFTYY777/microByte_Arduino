@@ -92,7 +92,7 @@ void game_list_event_handler(lv_event_t *e)
     }
 
     /* List of games based on selected emulaotr */
-    char *game_list[100];
+    char *game_list[1000];
     uint8_t games_num = sd_card.sd_game_list(game_list, emulator_selected);
     ESP_LOGI(TAG, "Found %i games", games_num);
 

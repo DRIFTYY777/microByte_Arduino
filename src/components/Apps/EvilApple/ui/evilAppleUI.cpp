@@ -14,6 +14,7 @@ void start_event(lv_event_t *e)
 {
     app.status = STATUS_RUNNING;
     Serial.println("Start Event");
+    delay(150);
     evilApple.begin();
 
     if (xQueueSend(modeQueue, &app, (TickType_t)10) == pdTRUE)
@@ -42,6 +43,8 @@ void stop_event(lv_event_t *e)
 
 void createEVIL_APPLEScreen()
 {
+    app.mode = MODE_APPLEJUICE;
+
     // Create a new screen
     lv_obj_t *new_screen = lv_obj_create(NULL);
     lv_obj_set_size(new_screen, 300, 180);
@@ -50,7 +53,6 @@ void createEVIL_APPLEScreen()
     // title bar
     notificationBar(new_screen, false, "EVIL APPLE");
     lv_obj_clear_flag(new_screen, LV_OBJ_FLAG_SCROLLABLE);
-
 
     /* Start BTN */
     lv_obj_t *start_btn = lv_btn_create(new_screen);

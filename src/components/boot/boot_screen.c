@@ -90,6 +90,8 @@ void boot_screen_task(void *arg)
 {
 	// Get the display buffer to save the partial render imagen
 	uint16_t *buffer = display_HAL_get_buffer();
+	// increment the buffer pointer to the start of the screen
+	buffer += ST7789_DISPLAY_WIDTH * (ST7789_DISPLAY_HEIGHT - 1);
 
 	while (1)
 	{
@@ -154,7 +156,7 @@ void boot_screen_task(void *arg)
 							current_layer++;
 						}
 						// Send the rendered image to the HAL
-						if (arg == 1)
+						if ((intptr_t)arg == 1)
 							display_HAL_boot_frame(buffer);
 					}
 				}
@@ -175,7 +177,6 @@ void boot_screen_task(void *arg)
 				draw_state.frame++;
 				draw_state.total_frame++;
 			}
-
 			// After draw calls
 			current_layer = animation_step->draw_elements;
 			while (current_layer->callback)
@@ -184,7 +185,6 @@ void boot_screen_task(void *arg)
 				current_layer->callback(buffer, DRAW_EVENT_END, &draw_state);
 				current_layer++;
 			}
-
 			animation_step++;
 		}
 		// font_face_destroy(&font_face);
@@ -193,7 +193,7 @@ void boot_screen_task(void *arg)
 
 /**********************
  *   STATIC FUNCTIONS
- **********************/
+ ***********************/
 
 static void plasma_animation(uint16_t *buffer, uint16_t y, draw_event_param_t *param)
 {
@@ -443,7 +443,6 @@ static inline uint16_t __attribute__((always_inline)) rgb_to_color_dither(uint8_
 
 static uint16_t rgb_to_color(uint8_t r, uint8_t g, uint8_t b)
 {
-
 	return ((((uint16_t)(r) >> 3) << 11) | (((uint16_t)(g) >> 2) << 5) | ((uint16_t)(b) >> 3));
 }
 
