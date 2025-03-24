@@ -8,6 +8,7 @@
 #include <SD.h>
 #include <SD_MMC.h>
 #include <sys/dirent.h>
+#include <esp_vfs_fat.h>
 
 static const char *TAG = "SD_CARD";
 
@@ -73,6 +74,66 @@ bool SD_CARD::sd_init()
     system_dir();
     emulator_dir();
 
+    return true;
+}
+
+#define SPI_DMA_CHAN 1
+#define SPI_DMA_CHAN2 2
+
+// begin spi
+
+bool SD_CARD::sd_init2()
+{
+    // Configure SPI bus
+    spi_bus_config_t buscfg = {
+        .mosi_io_num = VSPI_MOSI,
+        .miso_io_num = VSPI_MISO,
+        .sclk_io_num = VSPI_CLK,
+        .quadwp_io_num = -1,    // Not used
+        .quadhd_io_num = -1,    // Not used
+        .max_transfer_sz = 4000 // Maximum transfer size
+    };
+
+    ESP_LOGI(TAG, "Initializing SPI bus on VSPI_HOST...");
+    esp_err_t ret = spi_bus_initialize(VSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    if (ret == ESP_OK)
+    {
+        ESP_LOGI(TAG, "SPI bus initialized successfully.");
+    }
+    else
+    {
+        ESP_LOGE(TAG, "SPI bus initialization failed: %s", esp_err_to_name(ret));
+        return false;
+    }
+
+    // Configure SD card interface
+    sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+    host.slot = VSPI_HOST; // Use VSPI hardware SPI
+
+    sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
+    slot_config.gpio_cs = static_cast<gpio_num_t>(SD_CS); // Chip select pin
+    slot_config.host_id = VSPI_HOST;
+
+    // Mount the filesystem
+    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+        .format_if_mount_failed = false,
+        .max_files = 5,
+        .allocation_unit_size = 16 * 1024 // 16 KB
+    };
+
+    sdmmc_card_t *card;
+    ret = esp_vfs_fat_sdspi_mount(MOUNT_POINT, &host, &slot_config, &mount_config, &card);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to mount filesystem: %s", esp_err_to_name(ret));
+        spi_bus_free(VSPI_HOST); // Free the SPI bus if mount fails
+        return false;
+    }
+
+
+
+    ESP_LOGI(TAG, "SD card initialized successfully.");
+    SD_mount = true;
     return true;
 }
 

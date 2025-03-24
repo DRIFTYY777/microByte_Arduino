@@ -8,7 +8,7 @@
 #include <components/system_config/system_manager.h>
 #include <components/Apps/EvilApple/evilApple.h>
 
-const char *TAG = "EVIL APPLE";
+const char *TAG = "EVIL APPLE UI";
 
 void start_event(lv_event_t *e)
 {

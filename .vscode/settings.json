@@ -388,5 +388,6 @@
     "ioapi.h": "c",
     "backimage.c": "cpp",
     "displayhal.h": "c"
-  }
+  },
+  "cmake.sourceDirectory": "C:/Users/dhima/Desktop/microByte_Arduino/lib/lvgl"
 }

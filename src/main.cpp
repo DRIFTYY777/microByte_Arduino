@@ -139,7 +139,7 @@ void loop()
             {
                 while (app.status == STATUS_RUNNING)
                     evilApple.startAdvertising();
-                }
+            }
             evilApple.stopAdvertising();
         }
 

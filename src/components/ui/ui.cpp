@@ -104,7 +104,7 @@ void ui_init()
     lv_disp_draw_buf_init(&draw_buf, buf2, NULL, size_in_px); // Reduced buffer size for non-PSRAM boards
 
     lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res = 320;  // height
+    disp_drv.hor_res = 320; // height
     disp_drv.ver_res = 240;
 
     disp_drv.flush_cb = display_HAL_flush;
