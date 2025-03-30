@@ -47,6 +47,14 @@ void createEmulatorScreen()
     lv_obj_add_event_cb(btn, game_list_event_handler, LV_EVENT_CLICKED, NULL);
     lv_group_add_obj(group_interact, btn);
 
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_VIDEO, "GameBoy");
+    lv_obj_add_event_cb(btn, game_list_event_handler, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_VIDEO, "GameBoy Color");
+    lv_obj_add_event_cb(btn, game_list_event_handler, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
     // back btn
     btn = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
     lv_obj_add_event_cb(btn, backToMenu, LV_EVENT_CLICKED, NULL);
@@ -89,6 +97,18 @@ void game_list_event_handler(lv_event_t *e)
         Serial.println("SNES");
         emulator_selected = SNES;
         app.console = SNES;
+    }
+    else if (strcmp(btn_text, "GameBoy") == 0)
+    {
+        Serial.println("GameBoy");
+        emulator_selected = GAMEBOY;
+        app.console = GAMEBOY;
+    }
+    else if (strcmp(btn_text, "GameBoy Color") == 0)
+    {
+        Serial.println("GameBoy Color");
+        emulator_selected = GAMEBOY_COLOR;
+        app.console = GAMEBOY_COLOR;
     }
 
     /* List of games based on selected emulaotr */

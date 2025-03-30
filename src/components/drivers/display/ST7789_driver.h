@@ -126,6 +126,7 @@ void ST7789_write_pixels(st7789_driver_t *driver, st7789_color_t *pixels, size_t
  * Returns: Nothing.
  *
  */
+void ST7789_write_lines2(st7789_driver_t *driver, int ypos, int xpos, int width, uint16_t *linedata, int lineCount);
 void ST7789_write_lines(st7789_driver_t *driver, int ypos, int xpos, int width, uint16_t *linedata, int lineCount);
 
 /*

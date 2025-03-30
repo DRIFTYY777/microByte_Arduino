@@ -387,7 +387,8 @@
     "shared.h": "c",
     "ioapi.h": "c",
     "backimage.c": "cpp",
-    "displayhal.h": "c"
+    "displayhal.h": "c",
+    "esp_attr.h": "c"
   },
   "cmake.sourceDirectory": "C:/Users/dhima/Desktop/microByte_Arduino/lib/lvgl"
 }

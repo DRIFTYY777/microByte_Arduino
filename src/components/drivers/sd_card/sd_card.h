@@ -21,6 +21,14 @@
 #define SDHC 0x02
 #define SDSC 0x03
 
+/*
+these functions are defined in loader.c (GBU)
+sd_get_file
+sd_get_file_flash
+sd_file_size
+*/
+// 8307252862
+
 struct SD_CARD_INFO
 {
     uint8_t card_type = 0;
@@ -50,6 +58,8 @@ public:
     bool is_card_mounted();
 
     uint8_t sd_app_list(char *app_list[100], bool update);
+    // sd_file_size
+    size_t sd_file_size(const char *file_name);
 
     /* Emulators Function */
     uint8_t sd_game_list(char *game_list[100], uint8_t console);

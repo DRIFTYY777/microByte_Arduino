@@ -31,6 +31,7 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/ota/update_firmware.h>
 
 #include <components/emulators/NES/NesManager.h>
+#include <components/emulators/GBC/GboyManager.h>
 
 extern "C"
 {
@@ -185,6 +186,18 @@ void loop()
                         vTaskDelay(1500 / portTICK_RATE_MS);
                         NES_load_game();
                     }
+                    game_executed = true;
+                    game_running = true;
+                }
+            }
+            else if (app.console == GAMEBOY_COLOR || app.console == GAMEBOY)
+            {
+                if (app.status == STATUS_RUNNING)
+                {
+                    vTaskSuspend(gui_handler);
+                    // display_set_GB();
+                    gnuboy_execute_game(app.aap_name, app.console, app.load_save_game);
+                    gnuboy_start();
                     game_executed = true;
                     game_running = true;
                 }

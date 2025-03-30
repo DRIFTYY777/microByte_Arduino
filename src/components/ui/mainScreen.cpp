@@ -5,6 +5,8 @@
 #include <components/Apps/EvilApple/ui/evilAppleUI.h>
 #include <components/external_app/externalAppUI.h>
 
+#include <components/Apps/pwmGenerator/ui/pwmUI.h>
+
 #include <components/ota/otaUI.h>
 #include <components/emulators/EmulatorUI.h>
 
@@ -14,7 +16,6 @@
 #include "settings.h"
 
 //
-
 
 static void EventHandler(lv_event_t *e)
 {
@@ -59,6 +60,12 @@ static void EventHandler(lv_event_t *e)
             clear_group_focus();
             createSettingScreen();
         }
+        else if (strcmp(text, "PWM Generator") == 0)
+        {
+            isInMenu = false;
+            clear_group_focus();
+            createPWMscreen();
+        }
     }
 }
 
@@ -83,6 +90,10 @@ void mainScreen()
 
     /* Buttons to the menu */
     btn = lv_list_add_btn(Menu, LV_SYMBOL_BLUETOOTH, "Evil Apple");
+    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, NULL);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_BARS, "PWM Generator");
     lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, NULL);
     lv_group_add_obj(group_interact, btn);
 

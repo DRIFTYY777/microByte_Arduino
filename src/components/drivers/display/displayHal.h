@@ -34,12 +34,14 @@ extern "C"
     void display_HAL_boot_frame(uint16_t *buffer);
     void display_HAL_change_endian(bool change);
     void display_HAL_NES_frame(const uint8_t *data);
+    void display_HAL_gb_frame(const uint16_t *data);
+
 #ifdef __cplusplus
 }
 #endif
 
 void display_HAL_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p);
 void display_set_NES();
-void display_HAL_boot_frame(uint16_t *buffer);
+void display_set_GB();
 
 #endif // DISPLAYHAL_H

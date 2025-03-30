@@ -14,7 +14,7 @@ extern "C"
 #include <components/system_config/system_manager.h>
 #include <components/drivers/display/displayHal.h>
 
-TaskHandle_t videoTask_handler;
+// TaskHandle_t videoTask_handler;
 TaskHandle_t nofrendoTask_handler;
 
 QueueHandle_t nofrendo_vidQueue;
@@ -79,7 +79,6 @@ static void nofrendo_video_task(void *arg)
     while (1)
     {
         xQueueReceive(nofrendo_vidQueue, &bmp, portMAX_DELAY);
-
         display_HAL_NES_frame((const uint8_t *)bmp->line[0]);
     }
 }

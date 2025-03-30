@@ -12,7 +12,7 @@ void createPWMscreen()
     lv_obj_align(new_screen, LV_ALIGN_CENTER, 0, 0);
 
     // title bar
-    notificationBar(new_screen, false, "PWM Generator");
+    notificationBar(new_screen, "PWM Generator", NULL);
     lv_obj_clear_flag(new_screen, LV_OBJ_FLAG_SCROLLABLE);
 
     /* Frequency Slider */
@@ -45,4 +45,6 @@ void createPWMscreen()
     // lv_chart_set_range(chart, 0, 100);
     lv_chart_set_point_count(chart, 10);
     lv_chart_set_div_line_count(chart, 3, 3);
+
+    lv_scr_load(new_screen);
 }

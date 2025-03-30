@@ -6,9 +6,9 @@ void PWMGenerator::Init(uint8_t pin, uint32_t frequency, uint8_t dutyCycle)
     this->frequency = frequency;
     this->dutyCycle = dutyCycle;
 
-    ledcSetup(0, frequency, 8);
-    ledcAttachPin(pin, 0);
-    ledcWrite(0, dutyCycle);
+    ledcSetup(channel, frequency, resolution);
+    ledcAttachPin(pin, channel);
+    ledcWrite(channel, dutyCycle * ((1 << resolution) - 1) / 100);
 }
 
 void PWMGenerator::deInit()
@@ -19,21 +19,21 @@ void PWMGenerator::deInit()
 void PWMGenerator::setFrequency(uint32_t frequency)
 {
     this->frequency = frequency;
-    ledcWriteTone(0, frequency);
+    ledcSetup(channel, frequency, resolution);
 }
 
 void PWMGenerator::setDutyCycle(uint8_t dutyCycle)
 {
     this->dutyCycle = dutyCycle;
-    ledcWrite(0, dutyCycle);
+    ledcWrite(channel, dutyCycle * ((1 << resolution) - 1) / 100);
 }
 
 void PWMGenerator::start()
 {
-    ledcWrite(0, dutyCycle);
+    ledcWrite(channel, dutyCycle * ((1 << resolution) - 1) / 100);
 }
 
 void PWMGenerator::stop()
 {
-    ledcWrite(0, 0);
+    ledcWrite(channel, 0);
 }

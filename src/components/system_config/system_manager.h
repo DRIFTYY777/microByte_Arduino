@@ -64,6 +64,7 @@ extern QueueHandle_t modeQueue;
 extern QueueHandle_t batteryQueue;
 extern QueueHandle_t vidQueue;
 extern TimerHandle_t timer;
+extern TaskHandle_t videoTask_handler;
 
 struct SYSTEM_MODE
 {

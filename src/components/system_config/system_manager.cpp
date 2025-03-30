@@ -20,6 +20,7 @@ QueueHandle_t modeQueue;
 QueueHandle_t batteryQueue;
 QueueHandle_t vidQueue;
 TimerHandle_t timer = NULL;
+TaskHandle_t videoTask_handler;
 
 SYSTEM_MODE management;        // Only declare here
 APPS app;                      // Only declare here

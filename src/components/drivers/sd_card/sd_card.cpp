@@ -130,8 +130,6 @@ bool SD_CARD::sd_init2()
         return false;
     }
 
-
-
     ESP_LOGI(TAG, "SD card initialized successfully.");
     SD_mount = true;
     return true;
@@ -186,6 +184,21 @@ uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
         }
     }
     return i;
+}
+
+size_t SD_CARD::sd_file_size(const char *path)
+{
+    // TODO: There is a bug which with some specific letters combination, fail opening the file and crash the program
+    FILE *fd = fopen(path, "rb");
+
+    fseek(fd, 0, SEEK_END);
+    size_t actual_size = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+
+    ESP_LOGI(TAG, "Size: %i bytes", actual_size);
+    fclose(fd);
+
+    return actual_size;
 }
 
 uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)

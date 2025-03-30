@@ -54,6 +54,10 @@
 // Vibraion Motor pin configuration
 #define VIBRATION_PIN 1
 
+// IR Remote pin configuration
+#define RECEIVE_PIN 35
+#define TRANSMIT_PIN 1
+
 // WiFi Configuration
 #define WIFI_SSID "Dhiman"
 #define WIFI_PASS "niggainthehood"
