@@ -53,7 +53,6 @@ private:
 
 public:
     bool sd_init();
-    bool sd_init2();
     bool sd_default();
     bool is_card_mounted();
 

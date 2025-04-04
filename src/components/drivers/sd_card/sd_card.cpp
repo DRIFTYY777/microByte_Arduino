@@ -5,10 +5,17 @@
 
 #include "formatSD.h"
 
-#include <SD.h>
-#include <SD_MMC.h>
+#include <SD.h>  // Changed from SD_MMC.h
+#include <SPI.h> // Added SPI library
 #include <sys/dirent.h>
 #include <esp_vfs_fat.h>
+
+/*
+    Mounting point of sd card using spi and SD library is "/sd".
+    And mounting point of sd card using SD_MMC library is "/sdcard".
+
+    this MF wasted my presious time.
+*/
 
 static const char *TAG = "SD_CARD";
 
@@ -16,53 +23,32 @@ SD_CARD_INFO sd_card_info;
 
 bool SD_CARD::sd_init()
 {
-    pinMode(SD_CS, OUTPUT);
-    digitalWrite(SD_CS, HIGH);
 
-    SD_MMC.setPins(VSPI_CLK, VSPI_MOSI, VSPI_MISO);
+    SPI.begin(VSPI_CLK, VSPI_MISO, VSPI_MOSI); // Initialize SPI bus (optional, default is HSPI)
+    SPI.setFrequency(4000000);                 // Set SPI frequency (optional, default is 1MHz)
 
-    if (!SD_MMC.begin(MOUNT_POINT, true))
+    if (!SD.begin(SD_CS)) // Initialize SD card using SPI with CS pin
     {
-        ESP_LOGE(TAG, "Card Mount Failed");
+        ESP_LOGE(TAG, "Card Mount Failed (SPI)");
         SD_mount = false;
         sd_card_info.card_mounted = 0;
         return false;
     }
 
     delay(100);
-    uint8_t cardType = SD_MMC.cardType();
-    if (cardType == CARD_NONE)
-    {
-        ESP_LOGE(TAG, "No SD card attached");
-        SD_mount = false;
-        sd_card_info.card_mounted = 0;
-        return false;
-    }
+    // The SD library doesn't have a direct equivalent to SD_MMC.cardType()
+    // You might need to rely on the success of SD.begin()
 
-    ESP_LOGI(TAG, "SD Card Type: ");
-    switch (cardType)
-    {
-    case CARD_MMC:
-        ESP_LOGI(TAG, "MMC");
-        break;
-    case CARD_SD:
-        ESP_LOGI(TAG, "SDSC");
-        break;
-    case CARD_SDHC:
-        ESP_LOGI(TAG, "SDHC");
-        break;
-    default:
-        ESP_LOGI(TAG, "Unknown");
-        break;
-    }
+    // Assuming the card is mounted if SD.begin() succeeds
+    ESP_LOGI(TAG, "SD Card Type: SPI"); // Indicate SPI usage
 
-    uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-    uint64_t usedSpace = cardSize - (SD_MMC.usedBytes() / (1024 * 1024));
+    uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+    uint64_t usedSpace = cardSize - (SD.usedBytes() / (1024 * 1024));
 
     ESP_LOGE(TAG, "SD Card Size: %lluMB", cardSize);
 
     // Update struct info
-    sd_card_info.card_type = cardType;
+    sd_card_info.card_type = SDIO; // Or some other indication that it's using SPI
     sd_card_info.card_size = static_cast<uint16_t>(cardSize);
     sd_card_info.card_mounted = 1;
     sd_card_info.card_status = 1; // Assume status OK
@@ -74,64 +60,6 @@ bool SD_CARD::sd_init()
     system_dir();
     emulator_dir();
 
-    return true;
-}
-
-#define SPI_DMA_CHAN 1
-#define SPI_DMA_CHAN2 2
-
-// begin spi
-
-bool SD_CARD::sd_init2()
-{
-    // Configure SPI bus
-    spi_bus_config_t buscfg = {
-        .mosi_io_num = VSPI_MOSI,
-        .miso_io_num = VSPI_MISO,
-        .sclk_io_num = VSPI_CLK,
-        .quadwp_io_num = -1,    // Not used
-        .quadhd_io_num = -1,    // Not used
-        .max_transfer_sz = 4000 // Maximum transfer size
-    };
-
-    ESP_LOGI(TAG, "Initializing SPI bus on VSPI_HOST...");
-    esp_err_t ret = spi_bus_initialize(VSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
-    if (ret == ESP_OK)
-    {
-        ESP_LOGI(TAG, "SPI bus initialized successfully.");
-    }
-    else
-    {
-        ESP_LOGE(TAG, "SPI bus initialization failed: %s", esp_err_to_name(ret));
-        return false;
-    }
-
-    // Configure SD card interface
-    sdmmc_host_t host = SDSPI_HOST_DEFAULT();
-    host.slot = VSPI_HOST; // Use VSPI hardware SPI
-
-    sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-    slot_config.gpio_cs = static_cast<gpio_num_t>(SD_CS); // Chip select pin
-    slot_config.host_id = VSPI_HOST;
-
-    // Mount the filesystem
-    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-        .format_if_mount_failed = false,
-        .max_files = 5,
-        .allocation_unit_size = 16 * 1024 // 16 KB
-    };
-
-    sdmmc_card_t *card;
-    ret = esp_vfs_fat_sdspi_mount(MOUNT_POINT, &host, &slot_config, &mount_config, &card);
-    if (ret != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to mount filesystem: %s", esp_err_to_name(ret));
-        spi_bus_free(VSPI_HOST); // Free the SPI bus if mount fails
-        return false;
-    }
-
-    ESP_LOGI(TAG, "SD card initialized successfully.");
-    SD_mount = true;
     return true;
 }
 
@@ -158,245 +86,304 @@ bool SD_CARD::is_card_mounted()
 
 uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
 {
-    struct dirent *entry;
-    DIR *dir = NULL;
+    File root;
     if (update)
-        dir = opendir("/sdcard/Firmware");
+        root = SD.open("/Firmware");
     else
-        dir = opendir("/sdcard/External_Apps");
+        root = SD.open("/External_Apps");
 
-    if (!dir)
+    if (!root)
     {
         ESP_LOGE(TAG, "Failed to open directory");
         return 0;
     }
-    // Only find .bin file on the apps folder
-    uint8_t i = 0;
-    while ((entry = readdir(dir)) != NULL)
+    if (!root.isDirectory())
     {
-        size_t nameLength = strlen(entry->d_name);
-        app_list[i] = (char *)malloc(nameLength + 1);
-        if (strcmp(entry->d_name + (nameLength - 4), ".bin") == 0)
-        {
-            sprintf(app_list[i], "%s", entry->d_name);
-            ESP_LOGI(TAG, "Found %s ", app_list[i]);
-            i++;
-        }
+        ESP_LOGE(TAG, "/Firmware or /External_Apps is not a directory");
+        return 0;
     }
+
+    uint8_t i = 0;
+    File entry;
+    while (entry = root.openNextFile())
+    {
+        if (!entry.isDirectory())
+        {
+            String fileName = entry.name();
+            if (fileName.endsWith(".bin"))
+            {
+                size_t nameLength = fileName.length();
+                app_list[i] = (char *)malloc(nameLength + 1);
+                if (app_list[i])
+                {
+                    strcpy(app_list[i], fileName.c_str());
+                    ESP_LOGI(TAG, "Found %s ", app_list[i]);
+                    i++;
+                }
+                else
+                {
+                    ESP_LOGE(TAG, "Failed to allocate memory for filename");
+                    // Handle memory allocation failure
+                }
+            }
+        }
+        entry.close();
+    }
+    root.close();
     return i;
 }
 
 size_t SD_CARD::sd_file_size(const char *path)
 {
-    // TODO: There is a bug which with some specific letters combination, fail opening the file and crash the program
-    FILE *fd = fopen(path, "rb");
-
-    fseek(fd, 0, SEEK_END);
-    size_t actual_size = ftell(fd);
-    fseek(fd, 0, SEEK_SET);
-
+    File file = SD.open(path);
+    if (!file)
+    {
+        ESP_LOGE(TAG, "Failed to open file for size check");
+        return 0;
+    }
+    size_t actual_size = file.size();
     ESP_LOGI(TAG, "Size: %i bytes", actual_size);
-    fclose(fd);
-
+    file.close();
     return actual_size;
 }
 
 uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)
 {
-    struct dirent *entry;
+    const char *dirPath;
+    const char *extension;
 
-    // Open the folder of the specific console
-    DIR *dir = NULL;
-    if (console == NES)
-        dir = opendir("/sdcard/Emulator/NES");
-    else if (console == GAMEBOY)
-        dir = opendir("/sdcard/Emulator/GameBoy");
-    else if (console == GAMEBOY_COLOR)
-        dir = opendir("/sdcard/Emulator/GameBoy_Color");
-    else if (console == SNES)
-        dir = opendir("/sdcard/Emulator/SNES");
-    else if (console == SMS)
-        dir = opendir("/sdcard/Emulator/Master_System");
-    else if (console == GG)
-        dir = opendir("/sdcard/Emulator/Game_Gear");
-
-    if (!dir)
+    switch (console)
     {
-        ESP_LOGE(TAG, "Failed to stat dir : 0x%02x", console);
+    case NES:
+        dirPath = "/Emulator/NES";
+        extension = ".nes";
+        break;
+    case GAMEBOY:
+        dirPath = "/Emulator/GameBoy";
+        extension = ".gb";
+        break;
+    case GAMEBOY_COLOR:
+        dirPath = "/Emulator/GameBoy_Color";
+        extension = ".gbc";
+        break;
+    case SNES:
+        dirPath = "/Emulator/SNES";
+        extension = ".smc"; // Or other SNES extensions
+        break;
+    case SMS:
+        dirPath = "/Emulator/Master_System";
+        extension = ".sms";
+        break;
+    case GG:
+        dirPath = "/Emulator/Game_Gear";
+        extension = ".gg";
+        break;
+    default:
+        ESP_LOGE(TAG, "Invalid console type: 0x%02x", console);
         return 0;
     }
-    // Loop to find the game of each console base on the file extension
-    uint8_t i = 0;
-    while ((entry = readdir(dir)) != NULL)
+
+    File root = SD.open(dirPath);
+    if (!root)
     {
-
-        size_t nameLength = strlen(entry->d_name);
-
-        // TODO: Rework game list maker, set by alphabetical order
-        if ((strcmp(entry->d_name + (nameLength - 4), ".nes") == 0) && console == NES)
-        {
-            game_list[i] = (char *)malloc(256);
-            sprintf(game_list[i], "%s", entry->d_name);
-            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
-            // if(i>0) organize_list(game_list, i);
-            i++;
-        }
-        else if ((strcmp(entry->d_name + (nameLength - 3), ".gb") == 0) && console == GAMEBOY)
-        {
-            game_list[i] = (char *)malloc(256);
-            sprintf(game_list[i], "%s", entry->d_name);
-            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
-            // if(i>0) organize_list(game_list, i);
-            i++;
-        }
-        else if ((strcmp(entry->d_name + (nameLength - 4), ".gbc") == 0) && console == GAMEBOY_COLOR)
-        {
-            game_list[i] = (char *)malloc(256);
-            sprintf(game_list[i], "%s", entry->d_name);
-            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
-            // if(i>0) organize_list(game_list, i);
-            i++;
-        }
-        else if ((strcmp(entry->d_name + (nameLength - 4), ".sms") == 0) && console == SMS)
-        {
-            game_list[i] = (char *)malloc(256);
-            sprintf(game_list[i], "%s", entry->d_name);
-            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
-            // if(i>0) organize_list(game_list, i);
-            i++;
-        }
-        else if ((strcmp(entry->d_name + (nameLength - 3), ".gg") == 0) && console == GG)
-        {
-            game_list[i] = (char *)malloc(256);
-            sprintf(game_list[i], "%s", entry->d_name);
-            ESP_LOGI(TAG, "Found %s ", (char *)game_list[i]);
-            // if(i>0) organize_list(game_list, i);
-            i++;
-        }
+        ESP_LOGE(TAG, "Failed to open directory: %s", dirPath);
+        return 0;
+    }
+    if (!root.isDirectory())
+    {
+        ESP_LOGE(TAG, "%s is not a directory", dirPath);
+        return 0;
     }
 
-    // Return the number of files
+    uint8_t i = 0;
+    File entry;
+    while (entry = root.openNextFile())
+    {
+        if (!entry.isDirectory())
+        {
+            String fileName = entry.name();
+            if (fileName.endsWith(extension))
+            {
+                size_t nameLength = fileName.length();
+                game_list[i] = (char *)malloc(nameLength + 1);
+                if (game_list[i])
+                {
+                    strcpy(game_list[i], fileName.c_str());
+                    ESP_LOGI(TAG, "Found %s ", game_list[i]);
+                    i++;
+                }
+                else
+                {
+                    ESP_LOGE(TAG, "Failed to allocate memory for filename");
+                    // Handle memory allocation failure
+                }
+            }
+        }
+        entry.close();
+    }
+    Serial.println(dirPath);
+    Serial.println("Game list:");
+
+    root.close();
+
+    // print the full path of selected game
+    for (uint8_t j = 0; j < i; j++)
+    {
+        Serial.println(game_list[j]);
+    }
+    ESP_LOGI(TAG, "Total games found: %d", i);
+
     return i;
 }
 
 bool SD_CARD::sd_sav_exist(char *file_name, uint8_t emulator)
 {
+    char file_route[256];
+    const char *saveDir;
 
-    char *file_route = (char *)malloc(256);
-    if (emulator == GAMEBOY)
-        sprintf(file_route, "/sdcard/Emulator/GameBoy/Save_Data/%s.sav", file_name);
-    else if (emulator == GAMEBOY_COLOR)
-        sprintf(file_route, "/sdcard/Emulator/GameBoy_Color/Save_Data/%s.sav", file_name);
-    else if (emulator == NES)
-        sprintf(file_route, "/sdcard/Emulator/NES/Save_Data/%s.sav", file_name);
-    else if (emulator == SMS)
-        sprintf(file_route, "/sdcard/Emulator/Master_System/Save_Data/%s.sav", file_name);
-    else if (emulator == GG)
-        sprintf(file_route, "/sdcard/Emulator/Game_Gear/Save_Data/%s.sav", file_name);
-
-    struct stat st;
-    if (stat(file_route, &st) == -1)
+    switch (emulator)
     {
-        free(file_route);
+    case GAMEBOY:
+        saveDir = "/Emulator/GameBoy/Save_Data/";
+        break;
+    case GAMEBOY_COLOR:
+        saveDir = "/Emulator/GameBoy_Color/Save_Data/";
+        break;
+    case NES:
+        saveDir = "/Emulator/NES/Save_Data/";
+        break;
+    case SMS:
+        saveDir = "/Emulator/Master_System/Save_Data/";
+        break;
+    case GG:
+        saveDir = "/Emulator/Game_Gear/Save_Data/";
+        break;
+    default:
+        ESP_LOGE(TAG, "Invalid emulator type for save exist check");
         return false;
     }
-    free(file_route);
-    return true;
+
+    sprintf(file_route, "%s%s.sav", saveDir, file_name);
+
+    File file = SD.open(file_route);
+    bool exists = file;
+    if (exists)
+    {
+        file.close();
+    }
+    return exists;
 }
 
 void SD_CARD::sd_sav_remove(char *file_name, uint8_t emulator)
 {
-    char *file_route = (char *)malloc(256);
-    if (emulator == GAMEBOY)
-        sprintf(file_route, "/sdcard/Emulator/GameBoy/Save_Data/%s.sav", file_name);
-    else if (emulator == GAMEBOY_COLOR)
-        sprintf(file_route, "/sdcard/Emulator/GameBoy_Color/Save_Data/%s.sav", file_name);
-    else if (emulator == NES)
-        sprintf(file_route, "/sdcard/Emulator/NES/Save_Data/%s.sav", file_name);
-    else if (emulator == SMS)
-        sprintf(file_route, "/sdcard/Emulator/Master_System/Save_Data/%s.sav", file_name);
-    else if (emulator == GG)
-        sprintf(file_route, "/sdcard/Emulator/Game_Gear/Save_Data/%s.sav", file_name);
+    char file_route[256];
+    const char *saveDir;
 
-    remove(file_route);
+    switch (emulator)
+    {
+    case GAMEBOY:
+        saveDir = "/Emulator/GameBoy/Save_Data/";
+        break;
+    case GAMEBOY_COLOR:
+        saveDir = "/Emulator/GameBoy_Color/Save_Data/";
+        break;
+    case NES:
+        saveDir = "/Emulator/NES/Save_Data/";
+        break;
+    case SMS:
+        saveDir = "/Emulator/Master_System/Save_Data/";
+        break;
+    case GG:
+        saveDir = "/Emulator/Game_Gear/Save_Data/";
+        break;
+    default:
+        ESP_LOGE(TAG, "Invalid emulator type for save removal");
+        return;
+    }
+
+    sprintf(file_route, "%s%s.sav", saveDir, file_name);
+
+    if (SD.remove(file_route))
+    {
+        ESP_LOGI(TAG, "Save file removed: %s", file_route);
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to remove save file: %s", file_route);
+    }
 }
 
 void SD_CARD::emulator_dir()
 {
     // Check if the emulator folders exist and create them if they don't
-    struct stat st;
-    // create a directory named Emulator in the root directory
-    if (stat("/sdcard/Emulator", &st) == -1)
+    if (!SD.exists("/Emulator"))
     {
         ESP_LOGI(TAG, "No Emulator folder found, creating it");
-        mkdir("/sdcard/Emulator", 0700);
+        SD.mkdir("/Emulator");
     }
     // NES
-    if (stat("/sdcard/Emulator/NES", &st) == -1)
+    if (!SD.exists("/Emulator/NES"))
     {
         ESP_LOGI(TAG, "No NES folder found, creating it");
-        mkdir("/sdcard/Emulator/NES", 0700);
-        mkdir("/sdcard/Emulator/NES/Save_Data", 0700);
+        SD.mkdir("/Emulator/NES");
+        SD.mkdir("/Emulator/NES/Save_Data");
     }
     // GameBoy Color
-    if (stat("/sdcard/Emulator/GameBoy_Color", &st) == -1)
+    if (!SD.exists("/Emulator/GameBoy_Color"))
     {
         ESP_LOGI(TAG, "No GameBoy Color folder found, creating it");
-        mkdir("/sdcard/Emulator/GameBoy_Color", 0700);
-        mkdir("/sdcard/Emulator/GameBoy_Color/Save_Data", 0700);
+        SD.mkdir("/Emulator/GameBoy_Color");
+        SD.mkdir("/Emulator/GameBoy_Color/Save_Data");
     }
     // GameBoy
-    if (stat("/sdcard/Emulator/GameBoy", &st) == -1)
+    if (!SD.exists("/Emulator/GameBoy"))
     {
         ESP_LOGI(TAG, "No GameBoy folder found, creating it");
-        mkdir("/sdcard/Emulator/GameBoy", 0700);
-        mkdir("/sdcard/Emulator/GameBoy/Save_Data", 0700);
+        SD.mkdir("/Emulator/GameBoy");
+        SD.mkdir("/Emulator/GameBoy/Save_Data");
     }
     // SNES
-    if (stat("/sdcard/Emulator/SNES", &st) == -1)
+    if (!SD.exists("/Emulator/SNES"))
     {
         ESP_LOGI(TAG, "No SNES folder found, creating it");
-        mkdir("/sdcard/Emulator/SNES", 0700);
-        mkdir("/sdcard/Emulator/SNES/Save_Data", 0700);
+        SD.mkdir("/Emulator/SNES");
+        SD.mkdir("/Emulator/SNES/Save_Data");
     }
     // Game Gear
-    if (stat("/sdcard/Emulator/Game_Gear", &st) == -1)
+    if (!SD.exists("/Emulator/Game_Gear"))
     {
         ESP_LOGI(TAG, "No Game_Gear folder found, creating it");
-        mkdir("/sdcard/Emulator/Game_Gear", 0700);
-        mkdir("/sdcard/Emulator/Game_Gear/Save_Data", 0700);
+        SD.mkdir("/Emulator/Game_Gear");
+        SD.mkdir("/Emulator/Game_Gear/Save_Data");
     }
     // Master System
-    if (stat("/sdcard/Emulator/Master_System", &st) == -1)
+    if (!SD.exists("/Emulator/Master_System"))
     {
         ESP_LOGI(TAG, "No Master_System folder found, creating it");
-        mkdir("/sdcard/Emulator/Master System", 0700);
-        mkdir("/sdcard/Emulator/Master System/Save_Data", 0700);
+        SD.mkdir("/Emulator/Master_System");
+        SD.mkdir("/Emulator/Master_System/Save_Data");
     }
 }
 
 void SD_CARD::system_dir()
 {
     // Check if the system folders exist and create them if they don't
-    struct stat st;
-
-    // Apps
-    if (stat("/sdcard/Internal Apps", &st) == -1)
+    if (!SD.exists("/Internal Apps"))
     {
         ESP_LOGI(TAG, "No Apps folder found, creating it");
-        mkdir("/sdcard/Apps", 0700);
+        SD.mkdir("/Internal Apps");
     }
     // External Apps
-    if (stat("/sdcard/External Apps", &st) == -1)
+    if (!SD.exists("/External Apps"))
     {
         ESP_LOGI(TAG, "No External_Apps folder found, creating it");
-        mkdir("/sdcard/External_Apps", 0700);
+        SD.mkdir("/External Apps");
     }
     // Firmware
-    if (stat("/sdcard/Firmware", &st) == -1)
+    if (!SD.exists("/Firmware"))
     {
         ESP_LOGI(TAG, "No Firmware folder found, creating it");
-        mkdir("/sdcard/Firmware", 0700);
+        SD.mkdir("/Firmware");
     }
 }
 

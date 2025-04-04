@@ -212,10 +212,12 @@ bool gbc_rom_load(const char *game_name, uint8_t console)
 	// Game directory in realtion with the console that we wan to use
 	char rom_name[300];
 	if (console == GAMEBOY)
-		sprintf(rom_name, "/sdcard/Emulator/GameBoy/%s", game_name);
+		//sprintf(rom_name, "/sdcard/Emulator/GameBoy/%s", game_name);
+		sprintf(rom_name, "/s/Emulator/GameBoy/%s", game_name);
 	else
 	{
-		sprintf(rom_name, "/sdcard/Emulator/GameBoy_Color/%s", game_name);
+		//sprintf(rom_name, "/sdcard/Emulator/GameBoy_Color/%s", game_name);
+		sprintf(rom_name, "/sd/Emulator/GameBoy_Color/%s", game_name);
 	}
 
 	// size_t game_size = sd_file_size(rom_name);
@@ -432,10 +434,12 @@ bool gbc_state_save(const char *game_name, uint8_t console)
 {
 	char rom_name[300];
 	if (console == GAMEBOY)
-		sprintf(rom_name, "/sdcard/Emulator/GameBoy/Save_Data/%s.sav", game_name);
+		//sprintf(rom_name, "/sdcard/Emulator/GameBoy/Save_Data/%s.sav", game_name);
+		sprintf(rom_name, "/sd/Emulator/GameBoy/Save_Data/%s.sav", game_name);
 	else
 	{
-		sprintf(rom_name, "/sdcard/Emulator/GameBoy_Color/Save_Data/%s.sav", game_name);
+		//sprintf(rom_name, "/sdcard/Emulator/GameBoy_Color/Save_Data/%s.sav", game_name);
+		sprintf(rom_name, "/sd/Emulator/GameBoy_Color/Save_Data/%s.sav", game_name);
 	}
 
 	FILE *f = fopen(rom_name, "w");
@@ -458,10 +462,12 @@ bool gbc_state_load(const char *game_name, uint8_t console)
 {
 	char rom_name[300];
 	if (console == GAMEBOY)
-		sprintf(rom_name, "/sdcard/Emulator/GameBoy/Save_Data/%s.sav", game_name);
+		//sprintf(rom_name, "/sdcard/Emulator/GameBoy/Save_Data/%s.sav", game_name);
+		sprintf(rom_name, "/sd/Emulator/GameBoy/Save_Data/%s.sav", game_name);
 	else
 	{
-		sprintf(rom_name, "/sdcard/Emulator/GameBoy_Color/Save_Data/%s.sav", game_name);
+		//sprintf(rom_name, "/sdcard/Emulator/GameBoy_Color/Save_Data/%s.sav", game_name);
+		sprintf(rom_name, "/sd/Emulator/GameBoy_Color/Save_Data/%s.sav", game_name);
 	}
 
 	FILE *f = fopen(rom_name, "r");

@@ -38,8 +38,15 @@ extern "C"
 #include <components/boot/boot_screen.h>
 }
 
-// #include <components/emulators/NES/NesManager.h>
-// #include <components/emulators/GBC/GboyManager.h>
+/*
+
+Amazing Spider-Man.gb
+[ 22059][E][vfs_api.cpp:105]
+ open(): /sd/Emulator/GameBoy/Save_Data/Amazing Spider-Man.gb.sav does not exist, no permits for creation
+
+
+ gbu loader.c
+*/
 
 #include <SD.h>
 
@@ -81,11 +88,11 @@ void setup()
     sys_manager.system_init_config();
     sys_manager.system_info();
 
-    /* Display Drivers Init.. */
-    display_hall_init();
-
     /* SD Crad */
     sd_card.sd_init();
+
+    /* Display Drivers Init.. */
+    display_hall_init();
 
     /* 1 Sec Delay */
     vTaskDelay(1000 / portTICK_RATE_MS);
@@ -118,7 +125,7 @@ void setup()
 
     /* Display and Lvgl driver init */
     ui_init();
-    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 12, NULL, 1, &gui_handler, 0);
+    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 8, NULL, 1, &gui_handler, 0);
 
     /* Init of GUI */
     GUI_frontend();
@@ -143,7 +150,6 @@ void loop()
             }
             evilApple.stopAdvertising();
         }
-
         else if (app.mode == MODE_EXT_APP)
         {
             if (app.status == STATUS_RUNNING)

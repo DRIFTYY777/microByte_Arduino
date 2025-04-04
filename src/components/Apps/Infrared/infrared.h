@@ -58,4 +58,4 @@ public:
 
 extern Infrared infrared; // Declare an instance of the Infrared class
 
-#endif // INFRARED_H)
+#endif // INFRARED_H

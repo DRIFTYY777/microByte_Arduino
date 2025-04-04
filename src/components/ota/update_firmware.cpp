@@ -75,7 +75,8 @@ int UPDATE_FIRMWARE::update_init(const char *fw_name)
 
     // Open the new fw file
     char name_aux[256];
-    sprintf(name_aux, "/sdcard/Firmware/%s", fw_name);
+    // sprintf(name_aux, "/sdcard/Firmware/%s", fw_name);
+    sprintf(name_aux, "/sd/Firmware/%s", fw_name);
     FILE *fd = fopen(name_aux, "rb");
     if (fd == NULL)
     {

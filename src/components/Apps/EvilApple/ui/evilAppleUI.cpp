@@ -13,7 +13,6 @@ const char *TAG = "EVIL APPLE UI";
 void start_event(lv_event_t *e)
 {
     app.status = STATUS_RUNNING;
-    Serial.println("Start Event");
     delay(150);
     evilApple.begin();
 

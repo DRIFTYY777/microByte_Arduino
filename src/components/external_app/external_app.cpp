@@ -39,7 +39,8 @@ void EXTERNAL_APP::external_app_init(const char *app_name)
 
     FILE *fd = NULL;
     char name_aux[256];
-    sprintf(name_aux, "/sdcard/External_Apps/%s", app_name);
+    // sprintf(name_aux, "/sdcard/External_Apps/%s", app_name);
+    sprintf(name_aux, "/sd/External_Apps/%s", app_name);
 
     fd = fopen(name_aux, "rb");
     if (fd == NULL)
