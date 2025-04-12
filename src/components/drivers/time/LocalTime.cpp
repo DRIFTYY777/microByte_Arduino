@@ -1,98 +1,117 @@
 #include "LocalTime.h"
-#include <esp32-hal-log.h>
-#include <esp_sntp.h>
 
-void LocalTime::updateSystemTime()
-{
-    struct timeval tv;
-    tv.tv_sec = mktime(&timeinfo);
-    tv.tv_usec = 0;
-    settimeofday(&tv, NULL);
-}
+#include "esp_sleep.h"
+#include "esp_timer.h"
+#include "esp_log.h"
 
-/// @brief Initialize SNTP client
-/// This function initializes the SNTP client with the default server
-/// @note This function be called when Intrnet connection is available
+RTC_DATA_ATTR struct tm saved_time; // Stored in RTC memory
+
 void LocalTime::init()
 {
-    ESP_LOGI(TAG, "Initializing SNTP...");
-    esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
-    esp_sntp_setservername(0, "pool.ntp.org");
-    esp_sntp_init();
+    struct tm current_time;
+    time_t now;
+
+    // First boot: Set the initial time
+    if (saved_time.tm_year == 0)
+    {
+        ESP_LOGI("RTC", "First boot, setting initial time...");
+        time(&now);
+        localtime_r(&now, &saved_time);
+    }
+    else
+    {
+        // Increase the time based on deep sleep duration
+        ESP_LOGI("RTC", "Restoring saved time...");
+        time(&now);
+        now += esp_timer_get_time() / 1000000; // Adjust for elapsed time
+        localtime_r(&now, &saved_time);
+    }
+    print_time(&saved_time);
+}
+
+void LocalTime::print_time(tm *t)
+{
+    printf("Time: %04d-%02d-%02d %02d:%02d:%02d\n",
+           t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+           t->tm_hour, t->tm_min, t->tm_sec);
 }
 
 bool LocalTime::setDateTime(const char *datetime)
 {
-    if (sscanf(datetime, "%d-%d-%d %d:%d:%d",
-               &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday,
-               &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec) != 6)
+    if (strptime(datetime, "%Y-%m-%d %H:%M:%S", &saved_time) == NULL)
     {
+        ESP_LOGE("RTC", "Failed to set date and time from string: %s", datetime);
         return false;
     }
-    timeinfo.tm_year -= 1900; // Convert to struct tm format
-    timeinfo.tm_mon -= 1;
-    updateSystemTime();
+    saved_time.tm_isdst = -1; // Let mktime determine if DST is in effect
+    time_t t = mktime(&saved_time);
+    if (t == -1)
+    {
+        ESP_LOGE("RTC", "Failed to convert struct tm to time_t");
+        return false;
+    }
+    saved_time = *localtime(&t); // Update saved_time with the correct timezone
     return true;
 }
 
 bool LocalTime::setDate(const char *date)
 {
-    if (sscanf(date, "%d-%d-%d",
-               &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday) != 3)
+    if (strptime(date, "%Y-%m-%d", &saved_time) == NULL)
     {
+        ESP_LOGE("RTC", "Failed to set date from string: %s", date);
         return false;
     }
-    timeinfo.tm_year -= 1900;
-    timeinfo.tm_mon -= 1;
-    updateSystemTime();
+    saved_time.tm_isdst = -1; // Let mktime determine if DST is in effect
+    time_t t = mktime(&saved_time);
+    if (t == -1)
+    {
+        ESP_LOGE("RTC", "Failed to convert struct tm to time_t");
+        return false;
+    }
+    saved_time = *localtime(&t); // Update saved_time with the correct timezone
     return true;
 }
 
 bool LocalTime::setTime(const char *time)
 {
-    if (sscanf(time, "%d:%d:%d",
-               &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec) != 3)
+    if (strptime(time, "%H:%M:%S", &saved_time) == NULL)
     {
+        ESP_LOGE("RTC", "Failed to set time from string: %s", time);
         return false;
     }
-    updateSystemTime();
+    saved_time.tm_isdst = -1; // Let mktime determine if DST is in effect
+    time_t t = mktime(&saved_time);
+    if (t == -1)
+    {
+        ESP_LOGE("RTC", "Failed to convert struct tm to time_t");
+        return false;
+    }
+    saved_time = *localtime(&t); // Update saved_time with the correct timezone
     return true;
 }
 
 char *LocalTime::getDateTime()
 {
-    time_t now = time(NULL);
-    localtime_r(&now, &timeinfo);
-    snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d",
-             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
-             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &saved_time);
     return buffer;
 }
 
 char *LocalTime::getDate()
 {
-    time_t now = time(NULL);
-    localtime_r(&now, &timeinfo);
-    snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d",
-             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d", &saved_time);
     return buffer;
 }
 
 char *LocalTime::getTime()
 {
-    time_t now = time(NULL);
-    localtime_r(&now, &timeinfo);
-    snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d",
-             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    strftime(buffer, sizeof(buffer), "%H:%M:%S", &saved_time);
     return buffer;
 }
 
 char *LocalTime::getFormattedDate()
 {
-    time_t now = time(NULL);
-    localtime_r(&now, &timeinfo);
-    snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d",
-             timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
+    strftime(buffer, sizeof(buffer), "%d/%m/%Y", &saved_time);
     return buffer;
 }
+
 LocalTime local_time;

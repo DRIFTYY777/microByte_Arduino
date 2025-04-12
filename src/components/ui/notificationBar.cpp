@@ -2,6 +2,8 @@
 
 /* Drivers */
 #include <components/drivers/sd_card/sd_card.h>
+#include <components/drivers/time/LocalTime.h>
+
 #include "helpers.h"
 
 // Notification bar container objects
@@ -79,7 +81,9 @@ void notificationBar(lv_obj_t *parent, bool isHidden, const char *text)
 
         // Time Label
         time_label = lv_label_create(notification_cont);
-        lv_label_set_text(time_label, "12:00AM");
+
+        lv_label_set_text(time_label, local_time.getTime()); // Set the time string to the label
+
         lv_obj_align_to(time_label, Charging_label, LV_ALIGN_OUT_RIGHT_MID, 50, 0); // 30px offset from Charging label
 
         // Optional: Adjust the height of the labels if necessary

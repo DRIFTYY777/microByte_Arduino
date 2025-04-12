@@ -87,6 +87,10 @@ void setup()
     /* System Init for hardware state */
     sys_manager.system_init_config();
     sys_manager.system_info();
+    app.mode = MODE_NONE;
+
+    /* Internal RTC  Init.. */
+    local_time.init();
 
     /* SD Crad */
     sd_card.sd_init();
@@ -105,25 +109,10 @@ void setup()
              sys_manager.system_memory(MEMORY_INTERNAL),
              sys_manager.system_memory(MEMORY_DMA));
 
-    // int32_t status = sys_manager.system_get_state();
-    // if (status == SYS_SOFT_RESET)
-    // {
-    //     boot_screen_ani = false;
-    //     sys_manager.system_set_state(SYS_NORMAL_STATE);
-    // }
-
     /* Init of Display Backlight */
     backlight.backlight_init();
 
-    /* Boot Screen Animation */
-    // xTaskCreatePinnedToCore(boot_screen_task, "intro_task", 3048, (void *)boot_screen_ani, 1, &intro_handler, 0);
-    // if (boot_screen_ani)
-    //     vTaskDelay(2000 / portTICK_RATE_MS);
-    // vTaskDelete(intro_handler);
-    // boot_screen_free();
-    //  display_HAL_change_endian();
-
-    /* Display and Lvgl driver init */
+    /* Lvgl driver init */
     ui_init();
     xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 8, NULL, 1, &gui_handler, 0);
 
@@ -132,6 +121,12 @@ void setup()
 
     /* Responsibile for User Input */
     user_input.input_init();
+
+    local_time.setDateTime("2023-10-01 12:00:00");
+
+    Serial.println(local_time.getDateTime());
+    Serial.println(local_time.getDate());
+    Serial.println(local_time.getTime());
 
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
@@ -209,5 +204,9 @@ void loop()
                 }
             }
         }
+        Serial.println(local_time.getDateTime());
+        vTaskDelay(1000 / portTICK_RATE_MS); // 1 Sec Delay
     }
+    Serial.println(local_time.getDateTime());
+    vTaskDelay(1000 / portTICK_RATE_MS); // 1 Sec Delay
 }

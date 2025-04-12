@@ -13,6 +13,8 @@ private:
 public:
     void init();
 
+    void print_time(struct tm *t);
+
     bool setDateTime(const char *datetime);
     bool setDate(const char *date);
     bool setTime(const char *time);
