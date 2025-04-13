@@ -1,14 +1,15 @@
 #ifndef __LOCALTIME_H
 #define __LOCALTIME_H
 
-#include <ctime>
+#include <Arduino.h>
 
 class LocalTime
 {
 private:
     struct tm timeinfo;
     char buffer[32];
-    void updateSystemTime();
+
+    static void timeTask(void *pvParameters);
 
 public:
     void init();
@@ -24,6 +25,7 @@ public:
     char *getTime();
     char *getFormattedDate();
 };
+
 extern LocalTime local_time;
 
-#endif
+#endif // __LOCALTIME_H

@@ -3,8 +3,20 @@
 #include "esp_sleep.h"
 #include "esp_timer.h"
 #include "esp_log.h"
+#include <mpu_wrappers.h>
 
 RTC_DATA_ATTR struct tm saved_time; // Stored in RTC memory
+
+void LocalTime::timeTask(void *pvParameters)
+{
+    while (1)
+    {
+        time_t now;
+        time(&now);                      // Get the current system time
+        localtime_r(&now, &saved_time);  // Update saved_time with the current time
+        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1 second
+    }
+}
 
 void LocalTime::init()
 {
@@ -27,6 +39,9 @@ void LocalTime::init()
         localtime_r(&now, &saved_time);
     }
     print_time(&saved_time);
+
+    // Create a task to update the time every second
+    xTaskCreatePinnedToCore(timeTask, "TimeTask", 2048, NULL, 1, NULL, APP_CPU_NUM);
 }
 
 void LocalTime::print_time(tm *t)

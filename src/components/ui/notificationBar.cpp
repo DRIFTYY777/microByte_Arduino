@@ -16,6 +16,16 @@ static lv_obj_t *SD_label;
 static lv_obj_t *Charging_label;
 static lv_obj_t *time_label;
 
+static lv_timer_t *time_updater = NULL; // Timer for updating the time label
+
+void updateTimeLabel(lv_timer_t *timer)
+{
+    if (time_label)
+    {
+        lv_label_set_text(time_label, local_time.getFormattedDate());
+    }
+}
+
 /// @brief Notification bar for the top of the screen or as title bar for the app
 /// @param parent the parent object to attach the notification bar to
 /// @param isHidden if true, show the battery, wifi, bluetooth, sd card, charging, and time status
@@ -82,7 +92,12 @@ void notificationBar(lv_obj_t *parent, bool isHidden, const char *text)
         // Time Label
         time_label = lv_label_create(notification_cont);
 
-        lv_label_set_text(time_label, local_time.getTime()); // Set the time string to the label
+        // lv_label_set_text(time_label, local_time.getTime()); // Set the time string to the label
+
+        if (!time_updater)
+        {
+            time_updater = lv_timer_create(updateTimeLabel, 1000, NULL); // Create a timer to update the time label every second
+        }
 
         lv_obj_align_to(time_label, Charging_label, LV_ALIGN_OUT_RIGHT_MID, 50, 0); // 30px offset from Charging label
 

@@ -204,9 +204,5 @@ void loop()
                 }
             }
         }
-        Serial.println(local_time.getDateTime());
-        vTaskDelay(1000 / portTICK_RATE_MS); // 1 Sec Delay
     }
-    Serial.println(local_time.getDateTime());
-    vTaskDelay(1000 / portTICK_RATE_MS); // 1 Sec Delay
 }
