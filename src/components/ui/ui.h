@@ -2,9 +2,6 @@
 #define UI_H
 
 #include <lvgl.h>
-// #include <TFT_eSPI.h>
-
-// extern TFT_eSPI tft;
 
 /* Initilization of Display Drivers and LVGL drivers */
 void ui_init();

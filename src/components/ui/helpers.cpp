@@ -35,3 +35,4 @@ void clear_group_focus()
         lv_group_remove_obj(obj);
     }
 }
+

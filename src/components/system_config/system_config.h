@@ -58,6 +58,10 @@
 #define RECEIVE_PIN 35
 #define TRANSMIT_PIN 1
 
+// Radio pin configuration (NRF24L01)
+#define NRF_CSN 45
+#define NRF_CE 48
+
 // WiFi Configuration
 #define WIFI_SSID "Dhiman"
 #define WIFI_PASS "niggainthehood"

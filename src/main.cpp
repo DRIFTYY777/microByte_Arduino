@@ -38,6 +38,15 @@ extern "C"
 #include <components/boot/boot_screen.h>
 }
 
+#include "RF24.h"
+#include "printf.h"
+
+RF24 radio(NRF_CE, NRF_CSN); // CE, CSN
+uint8_t address[][6] = {"1Node", "2Node"};
+bool radioNumber = 0; // 0 uses address[0] to transmit, 1 uses address[1] to transmit
+bool role = true;     // true = TX role, false = RX role
+float payload = 0.0;
+
 /*
 
 Amazing Spider-Man.gb

@@ -27,6 +27,10 @@
     LV_USE_LOG 0
 
 
+    FPS: 100
+    CPU: 43%
+
+
     #define DISP_BUF_SIZE (240 * 10) // width * 2
     And single buffer in psram
     -SPI_RAM: 8386019 Bytes
@@ -89,8 +93,13 @@ void ui_init()
     int32_t size_in_px = DISP_BUF_SIZE;
     static lv_disp_draw_buf_t draw_buf;
 
+    // buffer in psram
     static lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
     static lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+
+    // buffer in dma
+    // static lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_DMA);
+    // static lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_DMA);
 
     if (!buf1 || !buf2)
     {
@@ -110,6 +119,7 @@ void ui_init()
     disp_drv.flush_cb = display_HAL_flush;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
+
     // Create timer for LVGL system ticks
     const esp_timer_create_args_t periodic_timer_args = {
         .callback = &lv_tick_task,
@@ -117,6 +127,29 @@ void ui_init()
     esp_timer_handle_t periodic_timer;
     ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, LV_TICK_PERIOD_MS * 1000));
+}
+
+static lv_obj_t *fps_label;
+static lv_obj_t *cpu_label;
+static uint32_t frame_count = 0;
+static void update_fps_and_cpu(lv_timer_t *timer)
+{
+    // Calculate FPS
+    char fps_text[32];
+    snprintf(fps_text, sizeof(fps_text), "FPS: %d", frame_count);
+    // ESP_LOGI("UI", "%s", fps_text); // Print FPS to serial
+    Serial.println(fps_text); // Print FPS to serial
+    frame_count = 0;          // Reset frame count
+
+    // Calculate CPU usage (example using FreeRTOS heap info)
+    size_t free_heap = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+    size_t total_heap = heap_caps_get_total_size(MALLOC_CAP_INTERNAL);
+    int cpu_usage = 100 - ((free_heap * 100) / total_heap);
+
+    char cpu_text[32];
+    snprintf(cpu_text, sizeof(cpu_text), "CPU: %d%%", cpu_usage);
+    // ESP_LOGI("UI", "%s", cpu_text); // Print CPU usage to serial
+    Serial.println(cpu_text); // Print CPU usage to serial
 }
 
 void GUI_task(void *arg)
@@ -129,6 +162,8 @@ void GUI_task(void *arg)
             {
                 lv_task_handler();
                 xSemaphoreGive(xGuiSemaphore);
+
+                frame_count++; // Increment frame count
             }
         }
         vTaskDelay(pdMS_TO_TICKS(10)); // Adjust tick rate as needed
@@ -153,5 +188,7 @@ void GUI_frontend()
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
     // Create a group for non-interactive objects
+
+    // lv_timer_create(update_fps_and_cpu, 1000, NULL);
     backToMenu(NULL);
 }
