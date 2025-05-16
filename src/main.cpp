@@ -36,16 +36,8 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 extern "C"
 {
 #include <components/boot/boot_screen.h>
+#include <components/drivers/nrf24/nrf24.h>
 }
-
-#include "RF24.h"
-#include "printf.h"
-
-RF24 radio(NRF_CE, NRF_CSN); // CE, CSN
-uint8_t address[][6] = {"1Node", "2Node"};
-bool radioNumber = 0; // 0 uses address[0] to transmit, 1 uses address[1] to transmit
-bool role = true;     // true = TX role, false = RX role
-float payload = 0.0;
 
 /*
 
@@ -104,6 +96,8 @@ void setup()
     /* SD Crad */
     sd_card.sd_init();
 
+    // nrf24_init(&nrf24_config);
+
     /* Display Drivers Init.. */
     display_hall_init();
 
@@ -123,7 +117,7 @@ void setup()
 
     /* Lvgl driver init */
     ui_init();
-    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 8, NULL, 1, &gui_handler, 0);
+    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 10, NULL, 1, &gui_handler, 0);
 
     /* Init of GUI */
     GUI_frontend();

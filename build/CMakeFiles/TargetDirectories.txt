@@ -1,0 +1,6 @@
+C:/Users/dhima/Desktop/microByte_Arduino/build/CMakeFiles/lvgl.dir
+C:/Users/dhima/Desktop/microByte_Arduino/build/CMakeFiles/lvgl_examples.dir
+C:/Users/dhima/Desktop/microByte_Arduino/build/CMakeFiles/lvgl_demos.dir
+C:/Users/dhima/Desktop/microByte_Arduino/build/CMakeFiles/INSTALL.dir
+C:/Users/dhima/Desktop/microByte_Arduino/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/dhima/Desktop/microByte_Arduino/build/CMakeFiles/ZERO_CHECK.dir

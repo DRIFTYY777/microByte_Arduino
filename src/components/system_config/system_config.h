@@ -61,6 +61,7 @@
 // Radio pin configuration (NRF24L01)
 #define NRF_CSN 45
 #define NRF_CE 48
+#define NRF_CLK_SPEED (8 * 1000 * 1000) // 8Mhz
 
 // WiFi Configuration
 #define WIFI_SSID "Dhiman"

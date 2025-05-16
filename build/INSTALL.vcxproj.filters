@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\dhima\Desktop\microByte_Arduino\build\CMakeFiles\3cefe780d7dbddec1bf49d840a26058e\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{FBFF6588-52D7-3CAC-8A68-78FA9DD3ED0D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

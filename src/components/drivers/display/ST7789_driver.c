@@ -18,6 +18,8 @@
 #include "esp_log.h"
 #include <esp32-hal-log.h>
 
+#include <components/drivers/spiManager/spiManager.h>
+
 /*********************
  *      DEFINES
  *********************/
@@ -70,17 +72,20 @@ bool ST7789_init(st7789_driver_t *driver)
 	gpio_set_direction(driver->pin_reset, GPIO_MODE_OUTPUT);
 	gpio_set_direction(driver->pin_dc, GPIO_MODE_OUTPUT);
 
-	ESP_LOGI(TAG, "Set RST pin: %i \n Set DC pin: %i", HSPI_RST, HSPI_DC);
+	ESP_LOGI(TAG, "Set RST pin: %i \n Set DC pin: %i", driver->pin_reset, driver->pin_dc);
 
 	// Set-Up SPI BUS
-	spi_bus_config_t buscfg = {
-		.mosi_io_num = driver->pin_mosi,
-		.miso_io_num = driver->pin_miso,
-		.sclk_io_num = driver->pin_sclk,
-		.quadwp_io_num = -1,
-		.quadhd_io_num = -1,
-		.max_transfer_sz = driver->buffer_size * 2 * sizeof(st7789_color_t),
-		.flags = 0};
+	// spi_bus_config_t buscfg = {
+	// 	.mosi_io_num = driver->pin_mosi,
+	// 	.miso_io_num = driver->pin_miso,
+	// 	.sclk_io_num = driver->pin_sclk,
+	// 	.quadwp_io_num = -1,
+	// 	.quadhd_io_num = -1,
+	// 	.max_transfer_sz = driver->buffer_size * 2 * sizeof(st7789_color_t),
+	// 	.flags = 0};
+
+	// Initialize the Global SPI bus
+	spi_bus_manager_init(driver->spi_host, driver->pin_mosi, driver->pin_miso, driver->pin_sclk, driver->buffer_size * 2 * sizeof(st7789_color_t));
 
 	// Configure SPI BUS
 	spi_device_interface_config_t devcfg = {
@@ -91,16 +96,30 @@ bool ST7789_init(st7789_driver_t *driver)
 		.pre_cb = ST7789_pre_cb,
 		.flags = SPI_DEVICE_NO_DUMMY};
 
-	if (spi_bus_initialize(driver->spi_host, &buscfg, SPI_DMA_CH_AUTO) != ESP_OK) // try without DMA first.
+	// if (spi_bus_initialize(driver->spi_host, &buscfg, SPI_DMA_CH_AUTO) != ESP_OK) // try without DMA first.
+	// {
+	// 	ESP_LOGE(TAG, "SPI Bus initialization failed.");
+	// 	return false;
+	// }
+	// if (spi_bus_add_device(driver->spi_host, &devcfg, &driver->spi) != ESP_OK)
+	//{
+	//	ESP_LOGE(TAG, "SPI Bus add device failed.");
+	//	return false;
+	//}
+
+	esp_err_t ret = spi_bus_manager_add_device(driver->spi_host, &devcfg, &driver->spi);
+
+	if (ret != ESP_OK)
 	{
-		ESP_LOGE(TAG, "SPI Bus initialization failed.");
+		ESP_LOGE(TAG, "SPI device add failed: %s", esp_err_to_name(ret));
+		driver->spi = NULL; // Prevent use of invalid handle
 		return false;
 	}
 
-	if (spi_bus_add_device(driver->spi_host, &devcfg, &driver->spi) != ESP_OK)
+	if (!driver->spi)
 	{
-		ESP_LOGE(TAG, "SPI Bus add device failed.");
-		return false;
+		ESP_LOGE(TAG, "SPI handle is NULL!");
+		return;
 	}
 
 	ESP_LOGI(TAG, "SPI Bus configured correctly.");
@@ -149,14 +168,18 @@ void ST7789_fill_area(st7789_driver_t *driver, st7789_color_t color, uint16_t st
 	{
 		if (driver->queue_fill >= ST7789_SPI_QUEUE_SIZE)
 		{
+			// spi_device_get_trans_result(driver->spi, &rtrans, portMAX_DELAY);
 			spi_device_get_trans_result(driver->spi, &rtrans, portMAX_DELAY);
+
 			driver->queue_fill--;
 		}
 		if (bytes_to_write < transfer_size)
 		{
 			transfer_size = bytes_to_write;
 		}
+		// spi_device_queue_trans(driver->spi, &trans, portMAX_DELAY);
 		spi_device_queue_trans(driver->spi, &trans, portMAX_DELAY);
+
 		driver->queue_fill++;
 		bytes_to_write -= transfer_size;
 	}
@@ -166,6 +189,12 @@ void ST7789_fill_area(st7789_driver_t *driver, st7789_color_t color, uint16_t st
 
 void ST7789_write_pixels(st7789_driver_t *driver, st7789_color_t *pixels, size_t length)
 {
+	if (driver->spi == NULL)
+	{
+		ESP_LOGE(TAG, "Attempted to use invalid SPI device handle!");
+		return;
+	}
+
 	ST7789_queue_empty(driver);
 
 	spi_transaction_t *trans = driver->current_buffer == driver->buffer_primary ? &driver->trans_a : &driver->trans_b;

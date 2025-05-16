@@ -29,7 +29,9 @@ typedef struct st7789_driver
 	uint8_t queue_fill;
 	uint16_t display_width;
 	uint16_t display_height;
+
 	spi_device_handle_t spi;
+
 	size_t buffer_size;
 	st7789_transaction_data_t data;
 	st7789_transaction_data_t command;

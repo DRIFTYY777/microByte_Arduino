@@ -388,7 +388,13 @@
     "ioapi.h": "c",
     "backimage.c": "cpp",
     "displayhal.h": "c",
-    "esp_attr.h": "c"
+    "esp_attr.h": "c",
+    "arduino.h": "c",
+    "hardwareserial.h": "c",
+    "spi_bus_manager.h": "c",
+    "esp32-hal-log.h": "c",
+    "semphr.h": "c",
+    "spimanager.h": "c"
   },
   "cmake.sourceDirectory": "C:/Users/dhima/Desktop/microByte_Arduino/lib/lvgl"
 }

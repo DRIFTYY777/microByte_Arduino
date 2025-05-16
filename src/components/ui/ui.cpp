@@ -110,7 +110,7 @@ void ui_init()
     ESP_LOGI("LVGL", "Total PSRAM: %d", heap_caps_get_total_size(MALLOC_CAP_SPIRAM));
     ESP_LOGI("LVGL", "Free PSRAM: %d", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
 
-    lv_disp_draw_buf_init(&draw_buf, buf2, NULL, size_in_px); // Reduced buffer size for non-PSRAM boards
+    lv_disp_draw_buf_init(&draw_buf, buf2, buf1, size_in_px); // Reduced buffer size for non-PSRAM boards
 
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = 320; // height
@@ -129,29 +129,6 @@ void ui_init()
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, LV_TICK_PERIOD_MS * 1000));
 }
 
-static lv_obj_t *fps_label;
-static lv_obj_t *cpu_label;
-static uint32_t frame_count = 0;
-static void update_fps_and_cpu(lv_timer_t *timer)
-{
-    // Calculate FPS
-    char fps_text[32];
-    snprintf(fps_text, sizeof(fps_text), "FPS: %d", frame_count);
-    // ESP_LOGI("UI", "%s", fps_text); // Print FPS to serial
-    Serial.println(fps_text); // Print FPS to serial
-    frame_count = 0;          // Reset frame count
-
-    // Calculate CPU usage (example using FreeRTOS heap info)
-    size_t free_heap = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
-    size_t total_heap = heap_caps_get_total_size(MALLOC_CAP_INTERNAL);
-    int cpu_usage = 100 - ((free_heap * 100) / total_heap);
-
-    char cpu_text[32];
-    snprintf(cpu_text, sizeof(cpu_text), "CPU: %d%%", cpu_usage);
-    // ESP_LOGI("UI", "%s", cpu_text); // Print CPU usage to serial
-    Serial.println(cpu_text); // Print CPU usage to serial
-}
-
 void GUI_task(void *arg)
 {
     while (1)
@@ -162,8 +139,6 @@ void GUI_task(void *arg)
             {
                 lv_task_handler();
                 xSemaphoreGive(xGuiSemaphore);
-
-                frame_count++; // Increment frame count
             }
         }
         vTaskDelay(pdMS_TO_TICKS(10)); // Adjust tick rate as needed
