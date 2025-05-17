@@ -394,7 +394,10 @@
     "spi_bus_manager.h": "c",
     "esp32-hal-log.h": "c",
     "semphr.h": "c",
-    "spimanager.h": "c"
+    "spimanager.h": "c",
+    "gpio.h": "c",
+    "nrf24.h": "c"
   },
-  "cmake.sourceDirectory": "C:/Users/dhima/Desktop/microByte_Arduino/lib/lvgl"
+  "cmake.sourceDirectory": "C:/Users/dhima/Desktop/microByte_Arduino/lib/lvgl",
+  "C_Cpp.default.compilerPath": ""
 }

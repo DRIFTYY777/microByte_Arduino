@@ -156,14 +156,15 @@ void GUI_frontend()
 {
     // Create a group for interactive objects
     lv_indev_drv_init(&kb_drv);
+    // Telling input type to LVGL
     kb_drv.type = LV_INDEV_TYPE_KEYPAD;
+    // Telling the read function to LVGL
     kb_drv.read_cb = user_input.user_input_task;
+    // Register the input device
     kb_indev = lv_indev_drv_register(&kb_drv);
     // Create a group for interactive objects
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
-    // Create a group for non-interactive objects
-
-    // lv_timer_create(update_fps_and_cpu, 1000, NULL);
+    // Set the group to the main screen
     backToMenu(NULL);
 }

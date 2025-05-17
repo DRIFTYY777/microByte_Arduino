@@ -81,6 +81,16 @@ static void timer_isr(void)
     }
 }
 
+nrf24_config_t nrf24_config = {
+    .pin_ce = NRF_CE,
+    .pin_csn = NRF_CSN,
+    .pin_mosi = HSPI_MOSI,
+    .pin_miso = HSPI_MISO,
+    .pin_sck = HSPI_CLK,
+    .spi_host = SPI3_HOST,
+    .spi_speed = NRF_CLK_SPEED,
+};
+
 void setup()
 {
     Serial.begin(115200);
@@ -96,10 +106,16 @@ void setup()
     /* SD Crad */
     sd_card.sd_init();
 
-    // nrf24_init(&nrf24_config);
+    /* Responsibile for User Input */
+    user_input.input_init();
 
     /* Display Drivers Init.. */
     display_hall_init();
+
+    vTaskDelay(1000 / portTICK_RATE_MS);
+
+    /* Radio */
+    nrf24_init(&nrf24_config);
 
     /* 1 Sec Delay */
     vTaskDelay(1000 / portTICK_RATE_MS);
@@ -121,9 +137,6 @@ void setup()
 
     /* Init of GUI */
     GUI_frontend();
-
-    /* Responsibile for User Input */
-    user_input.input_init();
 
     local_time.setDateTime("2023-10-01 12:00:00");
 
