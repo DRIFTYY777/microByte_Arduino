@@ -120,6 +120,8 @@ void setup()
     /* 1 Sec Delay */
     vTaskDelay(1000 / portTICK_RATE_MS);
 
+    Serial.println(nrf24_isConnected(&nrf24_config) ? "NRF24L01 connected" : "NRF24L01 not connected");
+
     /* Init LED for Notification */
     led_notification.LED_init();
 

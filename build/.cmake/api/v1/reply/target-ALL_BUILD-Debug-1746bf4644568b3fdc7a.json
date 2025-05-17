@@ -17,13 +17,13 @@
 	"dependencies" : 
 	[
 		{
-			"id" : "lvgl_demos::@6890427a1f51a3e7e1df"
-		},
-		{
 			"id" : "lvgl_examples::@6890427a1f51a3e7e1df"
 		},
 		{
 			"id" : "lvgl::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "lvgl_demos::@6890427a1f51a3e7e1df"
 		},
 		{
 			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
