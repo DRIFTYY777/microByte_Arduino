@@ -19,7 +19,7 @@
 
 static void EventHandler(lv_event_t *e)
 {
-    lv_event_code_t code = lv_event_get_code(e);
+    const lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *list1 = lv_obj_get_parent(obj); // Get the list object
 
@@ -72,14 +72,13 @@ static void EventHandler(lv_event_t *e)
 // void mainScreen(lv_obj_t *parent)
 void mainScreen()
 {
-
     // clear the whole screen
     isInMenu = true;
     isInSubMenu = false;
 
     lv_obj_t *parent = lv_scr_act(); // Active screen
 
-    notificationBar(parent, true, NULL);
+    notificationBar(parent, true, nullptr);
 
     /*Create a list on parent*/
     lv_obj_t *Menu = lv_list_create(parent);
@@ -90,31 +89,31 @@ void mainScreen()
 
     /* Buttons to the menu */
     btn = lv_list_add_btn(Menu, LV_SYMBOL_BLUETOOTH, "Evil Apple");
-    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_BARS, "PWM Generator");
-    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_PLAY, "Emulator");
-    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_DIRECTORY, "External App");
-    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_DOWNLOAD, "Update Firmware");
-    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_USB, "USB");
-    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_SETTINGS, "Settings");
-    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     lv_obj_t *list1 = lv_obj_get_child(lv_scr_act(), 1);

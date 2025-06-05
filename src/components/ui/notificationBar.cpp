@@ -16,25 +16,25 @@ static lv_obj_t *SD_label;
 static lv_obj_t *Charging_label;
 static lv_obj_t *time_label;
 
-static lv_timer_t *time_updater = NULL; // Timer for updating the time label
+static lv_timer_t *time_updater = nullptr; // Timer for updating the time label
 
 void updateTimeLabel(lv_timer_t *timer)
 {
     if (time_label)
     {
-        lv_label_set_text(time_label, local_time.getFormattedDate());
+        lv_label_set_text(time_label, local_time.getTime());
     }
 }
 
-/// @brief Notification bar for the top of the screen or as title bar for the app
+/// @brief Notification bar for the top of the screen or as a title bar for the app
 /// @param parent the parent object to attach the notification bar to
-/// @param isHidden if true, show the battery, wifi, bluetooth, sd card, charging, and time status
+/// @param isHidden if true, show the battery, Wi-Fi, bluetooth, sd card, charging, and time status
 /// if false, show the text passed in the text parameter
-/// @param text for showing the text in the notification bar like the app name etc
-void notificationBar(lv_obj_t *parent, bool isHidden, const char *text)
+/// @param text for showing the text in the notification bar like the app name etc.
+void notificationBar(lv_obj_t *parent, const bool isHidden, const char *text)
 {
     // notification bar
-    lv_obj_t *notification_cont = lv_obj_create(parent); // Create on active screen
+    lv_obj_t *notification_cont = lv_obj_create(parent); // Create on an active screen
     lv_obj_set_width(notification_cont, 300);
     lv_obj_set_height(notification_cont, 35);
     lv_obj_set_x(notification_cont, 3);
@@ -47,11 +47,11 @@ void notificationBar(lv_obj_t *parent, bool isHidden, const char *text)
         // Create the battery bar
         battery_bar = lv_bar_create(notification_cont);
         lv_bar_set_value(battery_bar, 25, LV_ANIM_OFF);      // Set initial value for battery bar
-        lv_bar_set_start_value(battery_bar, 0, LV_ANIM_OFF); // Set starting value
+        lv_bar_set_start_value(battery_bar, 0, LV_ANIM_OFF); // Set a starting value
 
         lv_obj_set_width(battery_bar, 50);                  // Set width of battery bar
         lv_obj_set_height(battery_bar, 15);                 // Set height of battery bar
-        lv_obj_align(battery_bar, LV_ALIGN_LEFT_MID, 0, 0); // Align battery bar to the left of the container
+        lv_obj_align(battery_bar, LV_ALIGN_LEFT_MID, 0, 0); // Align the battery bar to the left of the container
 
         // Define and apply style
         lv_style_t style;
@@ -96,10 +96,12 @@ void notificationBar(lv_obj_t *parent, bool isHidden, const char *text)
 
         if (!time_updater)
         {
-            time_updater = lv_timer_create(updateTimeLabel, 1000, NULL); // Create a timer to update the time label every second
+            time_updater = lv_timer_create(updateTimeLabel, 1000, nullptr); // Create a timer to update the time label every second
+            //
+            updateTimeLabel(nullptr);
         }
 
-        lv_obj_align_to(time_label, Charging_label, LV_ALIGN_OUT_RIGHT_MID, 50, 0); // 30px offset from Charging label
+        lv_obj_align_to(time_label, Charging_label, LV_ALIGN_OUT_RIGHT_MID, 50, 0); // 30 px offset from Charging label
 
         // Optional: Adjust the height of the labels if necessary
         lv_obj_set_height(SD_label, 20);
@@ -132,7 +134,7 @@ void notificationBar(lv_obj_t *parent, const char *text, void (*event_handler)(l
     lv_label_set_text(label, text);
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 
-    // Create back button
+    // Create a back button
     lv_obj_t *back_btn = lv_btn_create(notification_cont);
     lv_obj_set_size(back_btn, 30, 30);
     lv_obj_align(back_btn, LV_ALIGN_LEFT_MID, 10, 0); // Fixed alignment
@@ -141,10 +143,10 @@ void notificationBar(lv_obj_t *parent, const char *text, void (*event_handler)(l
     lv_obj_center(back_label);
 
     // Only add event handlers if valid
-    if (event_handler != NULL)
+    if (event_handler != nullptr)
     {
-        lv_obj_add_event_cb(notification_cont, event_handler, LV_EVENT_CLICKED, NULL);
-        lv_obj_add_event_cb(back_btn, event_handler, LV_EVENT_CLICKED, NULL);
+        lv_obj_add_event_cb(notification_cont, event_handler, LV_EVENT_CLICKED, nullptr);
+        lv_obj_add_event_cb(back_btn, event_handler, LV_EVENT_CLICKED, nullptr);
     }
 
     // make it unscrollable

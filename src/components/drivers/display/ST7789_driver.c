@@ -54,8 +54,8 @@ bool ST7789_init(st7789_driver_t *driver)
 
 	ESP_LOGI(TAG, "Display buffer allocated with a size of: %i", driver->buffer_size * 2 * sizeof(st7789_color_t));
 
-	// Why set buffer, primary and secondary instead,just primary and secondary??
-	// Set-up the display buffers
+	// Why set buffer, primary and secondary instead, just primary and secondary??
+	// Set up the display buffers
 	driver->buffer_primary = driver->buffer;
 	driver->buffer_secondary = driver->buffer + driver->buffer_size;
 	driver->current_buffer = driver->buffer_primary;
@@ -119,7 +119,7 @@ bool ST7789_init(st7789_driver_t *driver)
 	if (!driver->spi)
 	{
 		ESP_LOGE(TAG, "SPI handle is NULL!");
-		return;
+		return false;
 	}
 
 	ESP_LOGI(TAG, "SPI Bus configured correctly.");

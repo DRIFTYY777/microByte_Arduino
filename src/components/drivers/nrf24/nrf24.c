@@ -11,8 +11,8 @@ static const char *TAG = "NRF24_driver";
 
 bool spi_bus_initialized[SOC_SPI_PERIPH_NUM];
 
-char rf24_datarates[][8] = {"1Mbps", "2Mbps", "250Kbps"};
-const char rf24_crclength[][10] = {"Disabled", "8 bits", "16 bits"};
+char rf24_data_rates[][8] = {"1Mbps", "2Mbps", "250Kbps"};
+const char rf24_crc_length[][10] = {"Disabled", "8 bits", "16 bits"};
 char rf24_pa_dbm[][8] = {"PA_MIN", "PA_LOW", "PA_HIGH", "PA_MAX"};
 
 bool nrf24_init(nrf24_config_t *config)
@@ -52,7 +52,7 @@ bool nrf24_init(nrf24_config_t *config)
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "SPI device add failed: %s", esp_err_to_name(ret));
-        config->spi = NULL; // Prevent use of invalid handle
+        config->spi = NULL; // Prevent use of an invalid handle
         return false;
     }
     if (!config->spi)

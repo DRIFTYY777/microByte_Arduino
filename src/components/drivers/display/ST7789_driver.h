@@ -64,7 +64,7 @@ typedef struct st7789_command
  * Arguments:
  * 	-driver: Screen driver structure.
  *
- * Returns: True if the initialization suceed otherwise false.
+ * Returns: True if the initialization succeeds otherwise false.
  *
  */
 bool ST7789_init(st7789_driver_t *driver);

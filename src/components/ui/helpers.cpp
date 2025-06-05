@@ -30,7 +30,7 @@ void backToMenu(lv_event_t *e)
 void clear_group_focus()
 {
     lv_obj_t *obj;
-    while ((obj = lv_group_get_focused(group_interact)) != NULL)
+    while ((obj = lv_group_get_focused(group_interact)) != nullptr)
     {
         lv_group_remove_obj(obj);
     }

@@ -90,7 +90,7 @@ void ui_init()
 
     lv_init();
 
-    int32_t size_in_px = DISP_BUF_SIZE;
+    const int32_t size_in_px = DISP_BUF_SIZE;
     static lv_disp_draw_buf_t draw_buf;
 
     // buffer in psram
@@ -121,7 +121,7 @@ void ui_init()
     lv_disp_drv_register(&disp_drv);
 
     // Create timer for LVGL system ticks
-    const esp_timer_create_args_t periodic_timer_args = {
+    constexpr esp_timer_create_args_t periodic_timer_args = {
         .callback = &lv_tick_task,
         .name = "periodic_gui"};
     esp_timer_handle_t periodic_timer;
@@ -129,11 +129,11 @@ void ui_init()
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, LV_TICK_PERIOD_MS * 1000));
 }
 
-void GUI_task(void *arg)
+[[noreturn]] void GUI_task(void *arg)
 {
-    while (1)
+    while (true)
     {
-        if (xGuiSemaphore != NULL)
+        if (xGuiSemaphore != nullptr)
         {
             if (xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
             {
@@ -143,7 +143,7 @@ void GUI_task(void *arg)
         }
         vTaskDelay(pdMS_TO_TICKS(10)); // Adjust tick rate as needed
     }
-    vTaskDelete(NULL);
+    vTaskDelete(nullptr);
 }
 
 static void lv_tick_task(void *arg)
@@ -159,12 +159,12 @@ void GUI_frontend()
     // Telling input type to LVGL
     kb_drv.type = LV_INDEV_TYPE_KEYPAD;
     // Telling the read function to LVGL
-    kb_drv.read_cb = user_input.user_input_task;
+    kb_drv.read_cb = UserInput::user_input_task;
     // Register the input device
     kb_indev = lv_indev_drv_register(&kb_drv);
     // Create a group for interactive objects
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
     // Set the group to the main screen
-    backToMenu(NULL);
+    backToMenu(nullptr);
 }

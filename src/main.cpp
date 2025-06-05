@@ -1,4 +1,3 @@
-
 /*
 
 https://maximeborges.github.io/esp-stacktrace-decoder/
@@ -24,12 +23,9 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/system_config/system_manager.h>
 
 #include "components/ui/ui.h"
-
 #include <components/Apps/EvilApple/evilApple.h>
-
 #include <components/external_app/external_app.h>
 #include <components/ota/update_firmware.h>
-
 #include <components/emulators/NES/NesManager.h>
 #include <components/emulators/GBC/GboyManager.h>
 
@@ -71,15 +67,6 @@ bool boot_screen_ani = true;
 bool game_running = false;
 bool game_executed = false;
 
-static void timer_isr(void)
-{
-    printf("save\r\n");
-    app.mode = MODE_SAVE_GAME;
-    if (xQueueSend(modeQueue, &app, (TickType_t)10) != pdPASS)
-    {
-        ESP_LOGE(TAG, "modeQueue send error");
-    }
-}
 
 nrf24_config_t nrf24_config = {
     .pin_ce = NRF_CE,
@@ -94,22 +81,28 @@ nrf24_config_t nrf24_config = {
 void setup()
 {
     Serial.begin(115200);
+    Serial.print("\n");
 
     /* System Init for hardware state */
     sys_manager.system_init_config();
     sys_manager.system_info();
     app.mode = MODE_NONE;
 
-    /* Internal RTC  Init.. */
+    /* Internal RTC  Init. */
     local_time.init();
+    local_time.setDate("2024-06-05");
+    local_time.setTime("12:00:00");
+    //local_time.setDateTime("2024-06-05 12:00:00");
 
-    /* SD Crad */
+    ESP_LOGE(TAG, "RTC: %s", local_time.getTime(), local_time.getDate());
+
+    /* SD Card */
     sd_card.sd_init();
 
-    /* Responsibile for User Input */
+    /* Responsible for User Input */
     user_input.input_init();
 
-    /* Display Drivers Init.. */
+    /* Display Drivers Init. */
     display_hall_init();
 
     vTaskDelay(1000 / portTICK_RATE_MS);
@@ -120,6 +113,7 @@ void setup()
     /* 1 Sec Delay */
     vTaskDelay(1000 / portTICK_RATE_MS);
 
+    /* Testing NRF */
     Serial.println(nrf24_isConnected(&nrf24_config) ? "NRF24L01 connected" : "NRF24L01 not connected");
 
     /* Init LED for Notification */
@@ -131,20 +125,14 @@ void setup()
              sys_manager.system_memory(MEMORY_DMA));
 
     /* Init of Display Backlight */
-    backlight.backlight_init();
+    BACKLIGHT::backlight_init();
 
     /* Lvgl driver init */
     ui_init();
-    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 10, NULL, 1, &gui_handler, 0);
+    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 10, nullptr, 1, &gui_handler, 0);
 
     /* Init of GUI */
     GUI_frontend();
-
-    local_time.setDateTime("2023-10-01 12:00:00");
-
-    Serial.println(local_time.getDateTime());
-    Serial.println(local_time.getDate());
-    Serial.println(local_time.getTime());
 
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
@@ -173,8 +161,6 @@ void loop()
                 external_app.external_app_init(app.aap_name);
                 vTaskDelay(250 / portTICK_RATE_MS);
                 esp_restart();
-                vTaskDelay(250 / portTICK_RATE_MS);
-                esp_restart();
             }
         }
         else if (app.mode == MODE_UPDATE)
@@ -185,8 +171,6 @@ void loop()
                 vTaskSuspend(gui_handler);
                 vTaskDelay(1000 / portTICK_RATE_MS);
                 update_firmware.update_init(app.aap_name);
-                vTaskDelay(250 / portTICK_RATE_MS);
-                esp_restart();
                 vTaskDelay(250 / portTICK_RATE_MS);
                 esp_restart();
             }

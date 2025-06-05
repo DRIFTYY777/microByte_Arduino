@@ -1,5 +1,5 @@
-#ifndef __LOCALTIME_H
-#define __LOCALTIME_H
+#ifndef LOCALTIME_H
+#define LOCALTIME_H
 
 #include <Arduino.h>
 
@@ -18,6 +18,7 @@ public:
 
     bool setDateTime(const char *datetime);
     bool setDate(const char *date);
+
     bool setTime(const char *time);
 
     char *getDateTime();
@@ -28,4 +29,4 @@ public:
 
 extern LocalTime local_time;
 
-#endif // __LOCALTIME_H
+#endif // LOCALTIME_H
