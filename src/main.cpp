@@ -110,6 +110,8 @@ void setup()
     /* Radio */
     nrf24_init(&nrf24_config);
 
+    Serial.println(nrf24_getStatus(&nrf24_config));
+
     /* 1 Sec Delay */
     vTaskDelay(1000 / portTICK_RATE_MS);
 

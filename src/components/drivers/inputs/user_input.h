@@ -47,7 +47,7 @@ public:
     /// @details This function is used to get the input from the user
     /// @details It returns a 16bit unsigned integer with the status of each button
     /// @details Bit position of each button
-    uint16_t input_read(void);
+    static uint16_t input_read(void);
 };
 
 extern UserInput user_input;

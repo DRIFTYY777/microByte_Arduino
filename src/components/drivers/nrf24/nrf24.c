@@ -63,6 +63,7 @@ bool nrf24_init(nrf24_config_t *config)
 
     ESP_LOGI(TAG, "SPI Bus configured correctly.");
 
+
     return true;
 }
 
@@ -145,4 +146,19 @@ bool nrf24_isConnected(nrf24_config_t *config)
         return false;
     }
     return true;
+}
+
+uint8_t nrf24_getStatus(nrf24_config_t *config) {
+    uint8_t status = nrf24_DataTransfer(config, RF24_NOP);
+    config->status = status; // Update the status in the config
+    ESP_LOGD(TAG, "NRF24 Status: 0x%02X", status);
+    return status;
+}
+
+uint8_t nrf24_getChipInfo(nrf24_config_t *config) {
+    uint8_t chip_info[5];
+    nrf24_readRegister(config, 0x00, chip_info, 5); // Read the first 5 bytes of the chip info
+    ESP_LOGI(TAG, "NRF24 Chip Info: %02X %02X %02X %02X %02X", chip_info[0], chip_info[1], chip_info[2], chip_info[3], chip_info[4]);
+    return chip_info[0]; // Return the first byte as the chip info
+
 }

@@ -15,8 +15,11 @@
 #define VSPI_CLK 40  // CLK
 
 // I2C pin configuration
-#define I2C_SDA 18 // SDA
-#define I2C_SCL 8  // SCL
+// #define I2C_SDA 18 // SDA
+// #define I2C_SCL 8  // SCL
+#define I2C_SDA 8 // SDA
+#define I2C_SCL 9  // SCL
+
 
 // SD Card pin configuration
 #define SD_CS 39
@@ -28,9 +31,9 @@
 #define I2S_DATA_O 25 // I2C SDA
 #define I2S_NUM I2S_NUM_0
 
-// Input pin configuration (TCA9555)
-#define TCA_CLK_SPEED (400 * 1000) // 400Khz
-#define TCA_dev_address 0x20
+// Input pin configuration (PCA9555)
+#define PCA_CLK_SPEED (400 * 1000) // 400Khz
+#define PCA_dev_address 0x20
 
 // Fuel Gauge pin configuration (MAX17048)
 #define MAX17048_CLK_SPEED (400 * 1000) // 400Khz

@@ -1,22 +1,21 @@
 #include "user_input.h"
 #include <esp32-hal-log.h>
+#include <esp32-hal.h>
 #include <components/system_config/system_manager.h>
-#include <components/system_config/system_config.h>
 #include <components/ui/helpers.h>
 
-#include "TCA9555.h"
+#include "PCA9555.h"
 
 #define DEBOUNCE_DELAY 60 // Adjust as needed (in milliseconds)
 
 static const char *TAG = "user_input";
 
-TCA9555 TCA(TCA_dev_address);
+
 
 void UserInput::input_init(void)
 {
-    Wire.begin(I2C_SDA, I2C_SCL, TCA_CLK_SPEED);
-    TCA.begin();
-    Wire.setClock(TCA_CLK_SPEED);
+    pca9555.init();
+
     // GND___________---__________IOEXPANDER
 }
 
@@ -26,7 +25,9 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
     static bool buttonPressed[8] = {false};
     unsigned long currentTime = millis();
 
-    uint16_t inputs_value = TCA.read16(); // Read the inputs from the hardware
+
+    // uint16_t inputs_value = TCA.read16(); // Read the inputs from the hardware
+    uint16_t inputs_value = pca9555.read(); // Read the inputs from the hardware
 
     data->state = LV_INDEV_STATE_REL; // Default state: Released
 
@@ -144,7 +145,7 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
 
 uint16_t UserInput::input_read(void)
 {
-    return TCA.read16();
+    return pca9555.read(); // Read the inputs from the hardware
 }
 
 UserInput user_input;

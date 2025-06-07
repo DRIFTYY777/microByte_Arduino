@@ -7,7 +7,6 @@
 
 #include <Wire.h>
 
-class MAX17048G {
 
 // Registers address Table 1
 #define MAX17048G_VCELL 0x02
@@ -25,34 +24,21 @@ class MAX17048G {
 #define MAX17048G_CMD 0xFE
 
 
+class MAX17048G {
 
 private:
-    TwoWire *i2cPort; // Pointer to the I2C port
-    uint8_t i2cAddress; // I2C address of the MAX17048G
+    bool writeRegister(uint8_t reg, uint8_t value);
+    uint8_t readRegister(uint8_t reg);
 
-    void writeRegister(uint8_t reg, uint16_t value);
-    uint16_t readRegister(uint8_t reg);
-
-    // Helper function to convert raw voltage to float
-    float convertVoltage(uint16_t rawValue);
+    uint8_t _address;
+    TwoWire* _wire;
+    uint8_t _error;
+    uint8_t _type;
 
 public:
-    explicit MAX17048G(TwoWire *i2cPort = &Wire, const uint8_t i2cAddress = 0x36) : i2cPort(i2cPort), i2cAddress(i2cAddress) {}
+    MAX17048G(uint8_t address, TwoWire *wire = &Wire);
 
-    void begin(); // Initialize the MAX17048G
-    void reset();
-    void setConfig(uint16_t config);
-    void adc();
-    void hibernate();
-    float getVoltage();
-    float getSOC(); // State of Charge
-    float getCapacity(); // Capacity in mAh
-    float getDesignCapacity(); // Design Capacity in mAh
-    float getFullCapacity(); // Full Capacity in mAh
-    float getAverageCurrent(); // Average Current in mA
-    float getCurrent(); // Current in mA
-    float getPower(); // Power in mW
-    float getTemperature(); // Temperature in Celsius
+    bool init();
 
 
 

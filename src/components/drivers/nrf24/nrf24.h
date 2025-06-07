@@ -63,4 +63,10 @@ void nrf24_writeRegister(nrf24_config_t *config, uint8_t reg, uint8_t *data, uin
 // check device is connected
 bool nrf24_isConnected(nrf24_config_t *config);
 
+//get the status of the NRF24L01
+uint8_t nrf24_getStatus(nrf24_config_t *config);
+
+// get the chip information
+uint8_t nrf24_getChipInfo(nrf24_config_t *config);
+
 #endif // NRF24_H
