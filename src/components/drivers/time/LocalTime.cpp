@@ -31,7 +31,7 @@ RTC_DATA_ATTR struct tm saved_time; // Stored in RTC memory
 
 [[noreturn]] void LocalTime::timeTask(void *pvParameters)
 {
-    LocalTime* localTime = (LocalTime*)pvParameters;
+    // LocalTime* localTime = (LocalTime*)pvParameters;
     while (true)
     {
         time_t now;

@@ -2,15 +2,13 @@
 
 #include <esp_heap_caps.h>
 #include <string.h>
-#include <soc/soc.h>
 #include <esp_ota_ops.h>
-#include <esp_spi_flash.h>
 
 #include <Preferences.h>
 
-#include "esp_system.h" // For esp_chip_info()
 #include <Esp.h>
 #include <esp_chip_info.h>
+
 
 static const char *TAG = "SystemManager";
 
@@ -19,7 +17,7 @@ Preferences preferences; // NVS storage handler
 QueueHandle_t modeQueue;
 QueueHandle_t batteryQueue;
 QueueHandle_t vidQueue;
-TimerHandle_t timer = NULL;
+TimerHandle_t timer = nullptr;
 TaskHandle_t videoTask_handler;
 
 SYSTEM_MODE management;        // Only declare here
@@ -101,9 +99,6 @@ int SystemManager::system_memory(uint8_t memory)
 void SystemManager::system_init_config()
 {
     preferences.begin("nvs", false);
-
-    // Initialize the wifi based on the saved state
-    system_wifi.status = (uint8_t)preferences.getChar("wifi", OFF);
 }
 
 void SystemManager::system_set_state(int8_t state)
@@ -120,42 +115,41 @@ void SystemManager::system_save_config(uint8_t config, int8_t value)
 {
     if (config == SYS_BRIGHT && value <= 100)
     {
-        preferences.putChar("scr_bright", (char)value);
+        preferences.putChar("scr_bright", static_cast<char>(value));
     }
     else if (config == SYS_VOLUME && value <= 100)
     {
-        preferences.putChar("sound_volume", (char)value);
+        preferences.putChar("sound_volume", static_cast<char>(value));
     }
     else if (config == SYS_GUI_COLOR)
     {
-        preferences.putChar("GUI_color", (char)value);
+        preferences.putChar("GUI_color", static_cast<char>(value));
     }
     else if (config == SYS_STATE_SAV_BTN)
     {
-        preferences.putChar("Save_State", (char)value);
+        preferences.putChar("Save_State", static_cast<char>(value));
     }
     else if (config == SYS_VIBRATION)
     {
-        preferences.putChar("vibration", (char)value);
+        preferences.putChar("vibration", static_cast<char>(value));
     }
     else if (config == SYS_WIFI)
     {
-        preferences.putChar("wifi", (char)value);
+        preferences.putChar("wifi", static_cast<char>(value));
     }
     else if (config == SYS_BLUETOOTH)
     {
-        preferences.putChar("bluetooth", (char)value);
+        preferences.putChar("bluetooth", static_cast<char>(value));
     }
     else if (config == SYS_LED)
     {
-        preferences.putChar("led", (char)value);
+        preferences.putChar("led", static_cast<char>(value));
     }
 }
 
 int8_t SystemManager::system_get_config(uint8_t config)
 {
     int8_t value = -1; // Default value
-
     if (config == SYS_BRIGHT)
     {
         value = (int8_t)preferences.getChar("scr_bright", 100); // Default 100
@@ -192,8 +186,28 @@ int8_t SystemManager::system_get_config(uint8_t config)
     {
         value = (int8_t)preferences.getChar("led", -1);
     }
-
     return value;
 }
+
+void SystemManager::saveCredentials(const char *path, const char *value) {
+    // save data to NVS
+    if (path != nullptr && value != nullptr) {
+        preferences.putString(path, value);
+    } else {
+        ESP_LOGE(TAG, "Invalid path or value for saving credentials");
+    }
+}
+
+const char * SystemManager::getCredentials(const char *path) {
+    // get data from NVS
+    if (path != nullptr) {
+        const String value = preferences.getString(path, "default_value");
+        return strdup(value.c_str()); // Return a copy of the string
+    } else {
+        ESP_LOGE(TAG, "Invalid path for getting credentials");
+        return nullptr; // Return nullptr if a path is invalid
+    }
+}
+
 
 SystemManager sys_manager;

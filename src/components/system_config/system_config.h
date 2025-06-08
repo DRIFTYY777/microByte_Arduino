@@ -67,5 +67,5 @@
 #define NRF_CLK_SPEED (8 * 1000 * 1000) // 8Mhz
 
 // WiFi Configuration
-#define WIFI_SSID "Dhiman"
-#define WIFI_PASS "niggainthehood"
+// #define WIFI_SSID "Dhiman"
+// #define WIFI_PASS "rolloverhotspot"

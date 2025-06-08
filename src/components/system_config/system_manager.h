@@ -3,6 +3,7 @@
 
 #include <cstdint>
 
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include "freertos/timers.h"
@@ -130,6 +131,12 @@ public:
     int8_t system_get_state();
     void system_save_config(uint8_t config, int8_t value);
     int8_t system_get_config(uint8_t config);
+
+
+    // dedicated to save and get Wi-Fi credentials
+    static void saveCredentials(const char *path, const char *value);
+    static const char *getCredentials(const char *path);
+
 };
 
 extern SystemManager sys_manager;

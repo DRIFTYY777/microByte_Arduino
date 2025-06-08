@@ -11,10 +11,10 @@
 #include <esp_vfs_fat.h>
 
 /*
-    Mounting point of sd card using spi and SD library is "/sd".
-    And mounting point of sd card using SD_MMC library is "/sdcard".
+    The mounting point of sd card using spi and SD library is "/sd".
+    And the mounting point of sd card using SD_MMC library is "/sdcard".
 
-    this MF wasted my presious time.
+    this MF wasted my previous time.
 */
 
 static const char *TAG = "SD_CARD";
@@ -25,9 +25,9 @@ bool SD_CARD::sd_init()
 {
 
     SPI.begin(VSPI_CLK, VSPI_MISO, VSPI_MOSI); // Initialize SPI bus (optional, default is HSPI)
-    SPI.setFrequency(4000000);                 // Set SPI frequency (optional, default is 1MHz)
+    SPI.setFrequency(1000000);                 // Set SPI frequency (optional, default is 1MHz)
 
-    if (!SD.begin(SD_CS)) // Initialize SD card using SPI with CS pin
+    if (!SD.begin(SD_CS, SPI)) // Initialize SD card using SPI with CS pin
     {
         ESP_LOGE(TAG, "Card Mount Failed (SPI)");
         SD_mount = false;
@@ -38,6 +38,10 @@ bool SD_CARD::sd_init()
     delay(100);
     // The SD library doesn't have a direct equivalent to SD_MMC.cardType()
     // You might need to rely on the success of SD.begin()
+    SPI.setFrequency(4000000);                 // Set SPI frequency (optional, default is 1MHz)
+
+
+
 
     // Assuming the card is mounted if SD.begin() succeeds
     ESP_LOGI(TAG, "SD Card Type: SPI"); // Indicate SPI usage
@@ -71,7 +75,7 @@ bool SD_CARD::sd_default()
         ESP_LOGE(TAG, "SD Card not mounted");
         return false;
     }
-    // Frmat the SD card
+    // Format the SD card
     format_sdcard();
     // Check if the Emulator and System folders exist and create them if they don't
     emulator_dir();
@@ -105,7 +109,7 @@ uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
 
     uint8_t i = 0;
     File entry;
-    while (entry = root.openNextFile())
+    while (entry == root.openNextFile())
     {
         if (!entry.isDirectory())
         {
@@ -113,7 +117,7 @@ uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
             if (fileName.endsWith(".bin"))
             {
                 size_t nameLength = fileName.length();
-                app_list[i] = (char *)malloc(nameLength + 1);
+                app_list[i] = static_cast<char *>(malloc(nameLength + 1));
                 if (app_list[i])
                 {
                     strcpy(app_list[i], fileName.c_str());
@@ -197,7 +201,7 @@ uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)
 
     uint8_t i = 0;
     File entry;
-    while (entry = root.openNextFile())
+    while (entry == root.openNextFile())
     {
         if (!entry.isDirectory())
         {
@@ -205,7 +209,7 @@ uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)
             if (fileName.endsWith(extension))
             {
                 size_t nameLength = fileName.length();
-                game_list[i] = (char *)malloc(nameLength + 1);
+                game_list[i] = static_cast<char *>(malloc(nameLength + 1));
                 if (game_list[i])
                 {
                     strcpy(game_list[i], fileName.c_str());
