@@ -1,33 +1,39 @@
+// LocalTime.cpp
 #include "LocalTime.h"
 
 #include "esp_sleep.h"
 #include "esp_timer.h"
-#include "esp_log.h"
 #include <mpu_wrappers.h>
+#include <components/system_config/system_config.h>
+#include <components/drivers/wifi/connections.h>
+#include "esp_sntp.h"
 
 RTC_DATA_ATTR struct tm saved_time; // Stored in RTC memory
 
-// [[noreturn]] void LocalTime::timeTask(void *pvParameters)
-// {
-//     LocalTime* localTime = (LocalTime*)pvParameters;  // Get the instance pointer
-//     while (true)
-//     {
-//         time_t now;
-//         time(&now);                      // Get the current system time
-//         localtime_r(&now, &saved_time);  // Update saved_time with the current time
-//
-//         // Log time every minute for debugging
-//         static int last_minute = -1;
-//         if (saved_time.tm_min != last_minute) {
-//             localTime->print_time(&saved_time);  // Call print_time on the instance
-//             last_minute = saved_time.tm_min;
-//         }
-//
-//         vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1 second
-//     }
-// }
-
-
+bool LocalTime::init_NTCP() {
+    if (WIFI_CONNECTIONS::getState() == CONNECTED) {
+        configTime(19800, 0, "pool.ntp.org", "time.nist.gov");
+        
+        Serial.println("Waiting for NTP time sync...");
+        
+        time_t now = time(nullptr);
+        int retry = 0;
+        while (now < 8 * 3600 * 2 && retry < 10) {
+            delay(500);
+            now = time(nullptr);
+            retry++;
+        }
+        
+        if (now > 8 * 3600 * 2) {
+            struct tm timeinfo;
+            getLocalTime(&timeinfo);
+            Serial.println("NTP time sync completed!");
+            return true;
+        }
+    }
+    Serial.println("No wifi Connection");
+    return false;
+}
 
 [[noreturn]] void LocalTime::timeTask(void *pvParameters)
 {
@@ -59,7 +65,6 @@ void LocalTime::init()
     time(&now);
     localtime_r(&now, &timeinfo);
 
-
     // Set the timezone to your local timezone
     setenv("TZ", "GMT0", 1);
     tzset();
@@ -75,9 +80,9 @@ void LocalTime::init()
         saved_time.tm_min = 0;    // 00 minutes
         saved_time.tm_sec = 0;    // 00 seconds
         saved_time.tm_isdst = -1; // Let the system determine DST
-        
-        time_t t = mktime(&saved_time);
-        struct timeval tv = { .tv_sec = t };
+
+        const time_t t = mktime(&saved_time);
+        const struct timeval tv = { .tv_sec = t };
         settimeofday(&tv, nullptr);  // Set the system time using a set time of day instead of stime
     }
     
@@ -133,32 +138,6 @@ bool LocalTime::setDate(const char *date)
     return true;
 }
 
-// bool LocalTime::setTime(const char* time_str) {
-//     struct tm tm;
-//     if (sscanf(time_str, "%d:%d:%d", &tm.tm_hour, &tm.tm_min, &tm.tm_sec) != 3) {
-//         return false;
-//     }
-//
-//     // Get current date
-//     time_t now;
-//     time(&now);
-//     struct tm* current = localtime(&now);
-//
-//     // Keep current date, only update time
-//     tm.tm_year = current->tm_year;
-//     tm.tm_mon = current->tm_mon;
-//     tm.tm_mday = current->tm_mday;
-//
-//     // Convert to time_t and set
-//     time_t t = mktime(&tm);
-//     struct timeval tv = { .tv_sec = t, .tv_usec = 0 };
-//     settimeofday(&tv, NULL);
-//
-//     return true;
-// }
-
-
-
 bool LocalTime::setTime(const char* time_str) {
     // Parse input time string
     int hour, min, sec;
@@ -167,21 +146,21 @@ bool LocalTime::setTime(const char* time_str) {
         return false;
     }
 
-    // Keep current date but update time in saved_time
+    // Keep the current date but update time in saved_time
     saved_time.tm_hour = hour;
     saved_time.tm_min = min;
     saved_time.tm_sec = sec;
     saved_time.tm_isdst = -1;
 
     // Convert to time_t
-    time_t t = mktime(&saved_time);
+    const time_t t = mktime(&saved_time);
     if (t == -1) {
         ESP_LOGE("RTC", "Failed to convert time");
         return false;
     }
 
     // Set system time
-    struct timeval tv = { .tv_sec = t, .tv_usec = 0 };
+    const struct timeval tv = { .tv_sec = t, .tv_usec = 0 };
     if (settimeofday(&tv, nullptr) != 0) {
         ESP_LOGE("RTC", "Failed to set system time");
         return false;
@@ -195,6 +174,11 @@ bool LocalTime::setTime(const char* time_str) {
              saved_time.tm_hour, saved_time.tm_min, saved_time.tm_sec);
 
     return true;
+}
+
+bool LocalTime::setDay(const char *day) {
+
+
 }
 
 char *LocalTime::getDateTime()
@@ -219,6 +203,47 @@ char *LocalTime::getFormattedDate()
 {
     strftime(buffer, sizeof(buffer), "%d/%m/%Y", &saved_time);
     return buffer;
+}
+
+char * LocalTime::getRegion() {
+    // Assuming the region is set to GMT0, you can modify this as needed
+    strcpy(buffer, "GMT0");
+    return buffer;
+}
+
+char* LocalTime::get_time_online() {
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+        strcpy(buffer, "Failed to obtain time");
+        return buffer;
+    }
+    strftime(buffer, sizeof(buffer), "%H:%M:%S", &timeinfo);
+    return buffer;
+}
+
+bool LocalTime::syncTime() {
+
+
+
+
+}
+
+int LocalTime::getYear() {
+    // Implementation
+    struct tm timeinfo;
+    if(getLocalTime(&timeinfo)) {
+        return timeinfo.tm_year + 1900;
+    }
+    return 0;
+}
+
+int LocalTime::getDay() {
+    // Implementation
+    struct tm timeinfo;
+    if(getLocalTime(&timeinfo)) {
+        return timeinfo.tm_mday;
+    }
+    return 0;
 }
 
 LocalTime local_time;

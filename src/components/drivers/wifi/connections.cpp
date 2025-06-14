@@ -22,15 +22,13 @@ QueueHandle_t WIFI_queue = nullptr;
 WiFiState WIFI_CONNECTIONS::currentState = NO_CREDENTIALS;
 
 
-
 bool WIFI_CONNECTIONS::begin_wifi() {
 // check the saved Wi-Fi credentials if exist return true else return false
-    if (sys_manager.getCredentials("wifi_name") == nullptr ||
-        sys_manager.getCredentials("wifi_password") == nullptr){
-        currentState = NO_CREDENTIALS;
-
-        sys_manager.saveCredentials("wifi_name", "WIFISSID");
-        sys_manager.saveCredentials("wifi_password", "WIFIPASSWORD");
+    if ( SystemManager::getCredentials("wifi_name") == nullptr ||
+         SystemManager::getCredentials("wifi_password") == nullptr){
+         currentState = NO_CREDENTIALS;
+         SystemManager::saveCredentials("wifi_name", "WIFISSID");
+         SystemManager::saveCredentials("wifi_password", "WIFIPASSWORD");
         return false;
     }
     return true;
@@ -40,50 +38,48 @@ bool WIFI_CONNECTIONS::begin_wifi() {
     while (true) {
         uint8_t start_wifi;
         if (xQueueReceive(WIFI_queue, &start_wifi, portMAX_DELAY) == pdTRUE && start_wifi == 1) {
-            const auto ssid = sys_manager.getCredentials("wifi_name");
-            const auto password = sys_manager.getCredentials("wifi_password");
+            const auto ssid = SystemManager::getCredentials("wifi_name");
+            const auto password =  SystemManager::getCredentials("wifi_password");
 
-            Serial.printf("Connecting to SSID: %s\n", ssid);
-
-
-
-            WiFi.begin(ssid, password);
-
+            ESP_LOGI(TAG, "Connecting to SSID: %s", ssid);
             int attempts = 0;
-            currentState = CONNECTING;
-
+            if (WiFiClass::status() != WL_CONNECTED) {
+                WiFi.begin(ssid, password);
+                currentState = CONNECTING;
+            }
             if (!ssid || !password) {
                 currentState = NO_CREDENTIALS;
                 continue;
             }
-
-            while (WiFi.status() != WL_CONNECTED && attempts < 10) {
+            while (WiFiClass::status() != WL_CONNECTED && attempts < 10) {
                 vTaskDelay(pdMS_TO_TICKS(1000));
-                Serial.print(".");
+                ESP_LOGI(TAG, "Connecting to SSID: %s", ssid);
                 attempts++;
             }
+            if (WiFiClass::status() == WL_CONNECTED) {
+                ESP_LOGE(TAG, "Connected to Wi-Fi!");
+                ESP_LOGI(TAG, "IP address: ");
+                ESP_LOGI(TAG, WiFi.localIP());
 
-            if (WiFi.status() == WL_CONNECTED) {
-                Serial.println("\nConnected to Wi-Fi!");
-                Serial.println(WiFi.localIP());
                 currentState = CONNECTED;
             } else {
-                wl_status_t status = WiFi.status();
+                const wl_status_t status = WiFiClass::status();
                 if (status == WL_CONNECT_FAILED) {
                     currentState = WRONG_PASSWORD;
-                    Serial.println("Wrong password.");
+                    ESP_LOGI(TAG, "Connection failed.");
                 } else if (status == WL_NO_SSID_AVAIL) {
                     currentState = AVAILABLE;
-                    Serial.println("SSID not available.");
+                    ESP_LOGI(TAG, "Connection failed.");
                 } else {
                     currentState = CONNECTION_FAILED;
-                    Serial.println("Failed to connect.");
+                    ESP_LOGI(TAG, "Failed to connect.");
                 }
                 WiFi.disconnect();
             }
         }
     }
 }
+
 
 void WIFI_CONNECTIONS::wifi_init()
 {

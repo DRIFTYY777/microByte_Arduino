@@ -66,6 +66,10 @@
 #define NRF_CE 48
 #define NRF_CLK_SPEED (8 * 1000 * 1000) // 8Mhz
 
+#define NTP_SERVER "pool.ntp.org"
+
+
+
 // WiFi Configuration
 // #define WIFI_SSID "Dhiman"
 // #define WIFI_PASS "rolloverhotspot"

@@ -20,6 +20,7 @@
 #include <components/drivers/time/LocalTime.h>
 
 // emulators
+#include <esp_task_wdt.h>
 #include <components/emulators/EmulatorUI.h>
 
 /*
@@ -84,11 +85,14 @@ void set_custom_theme()
     lv_disp_set_theme(lv_disp_get_default(), theme);
 }
 
+lv_style_t style;
+
 void ui_init()
 {
     xGuiSemaphore = xSemaphoreCreateMutex();
 
     lv_init();
+    //lv_style_init(&style);  // new thing added to initialize the style
 
     const int32_t size_in_px = DISP_BUF_SIZE;
     static lv_disp_draw_buf_t draw_buf;
@@ -141,7 +145,8 @@ void ui_init()
                 xSemaphoreGive(xGuiSemaphore);
             }
         }
-        vTaskDelay(pdMS_TO_TICKS(10)); // Adjust tick rate as needed
+        esp_task_wdt_reset();
+        vTaskDelay(pdMS_TO_TICKS(5)); // Adjust tick rate as needed
     }
     vTaskDelete(nullptr);
 }

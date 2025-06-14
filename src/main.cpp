@@ -13,6 +13,7 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/drivers/wifi/connections.h>
 
 // #include <components/drivers/battery/battery.h>
+#include <esp_task_wdt.h>
 #include <components/drivers/inputs/user_input.h>
 #include <components/drivers/LED/LED_notification.h>
 #include <components/drivers/sd_card/sd_card.h>
@@ -83,10 +84,17 @@ nrf24_config_t nrf24_config = {
     .spi_speed = NRF_CLK_SPEED,
 };
 
+
 void setup()
 {
     Serial.begin(115200);
     Serial.print("\n");
+
+    /* Init of Wi-Fi */
+    WIFI_CONNECTIONS::wifi_init();
+
+    /* Increase of Watchdog */
+    esp_task_wdt_init(10, true); // 10-second timeout
 
     /* System Init for hardware state */
     sys_manager.system_init_config();
@@ -95,11 +103,10 @@ void setup()
 
     /* Internal RTC  Init. */
     local_time.init();
-    local_time.setDate("2024-06-05");
-    local_time.setTime("12:00:00");
 
+    /* 1 Sec Delay */
+    vTaskDelay(500 / portTICK_RATE_MS);
 
-    delay(10);
     /* SD Card */
     sd_card.sd_init();
 
@@ -109,13 +116,11 @@ void setup()
     /* Display Drivers Init. */
     display_hall_init();
 
-    vTaskDelay(1000 / portTICK_RATE_MS);
-
     /* Radio */
     //nrf24_init(&nrf24_config);
 
     /* 1 Sec Delay */
-    vTaskDelay(1000 / portTICK_RATE_MS);
+    vTaskDelay(500 / portTICK_RATE_MS);
 
     /* Testing NRF */
    // Serial.println(nrf24_isConnected(&nrf24_config) ? "NRF24L01 connected" : "NRF24L01 not connected");
@@ -134,27 +139,16 @@ void setup()
 
     /* Lvgl driver init */
     ui_init();
-    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 6, nullptr, 1, &gui_handler, 0);
+    xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 8, nullptr, 2, &gui_handler, 0);
 
     /* Init of GUI */
     GUI_frontend();
 
+    /* Init of NTP for time sync */
+    local_time.init_NTCP();
+
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
-
-    wifi.changePassword("Dhiman", "rolloverinternet");
-    wifi.wifi_init();
-
-    // sys_manager.saveCredentials("wifi_name", "Dhiman");
-    // sys_manager.saveCredentials("wifi_password", "rolloverinternet");
-    //
-     // const char *ssid = sys_manager.getCredentials("wifi_name");
-     // const char *password = sys_manager.getCredentials("wifi_password");
-     //
-     // Serial.printf("Connecting to %s\n", ssid);
-     // Serial.printf("Connecting to %s\n", password);
-
-
 }
 
 void loop()

@@ -398,7 +398,8 @@
     "gpio.h": "c",
     "nrf24.h": "c",
     "nrf24_regs.h": "c",
-    "spi_master.h": "c"
+    "spi_master.h": "c",
+    "esp_bit_defs.h": "c"
   },
   "cmake.sourceDirectory": "C:/Users/dhima/Desktop/microByte_Arduino/lib/lvgl",
   "C_Cpp.default.compilerPath": ""

@@ -14,6 +14,7 @@
 #include <components/drivers/sd_card/formatSD.h>
 #include <components/drivers/vb/vibration.h>
 #include <components/drivers/LED/LED_notification.h>
+#include <components/drivers/time/LocalTime.h>
 
 /*
                   W 300
@@ -27,10 +28,9 @@
                     Y
 */
 
-static lv_obj_t *brightness_label = NULL;
-static lv_obj_t *brightness_slider = NULL;
+static lv_obj_t *brightness_label = nullptr;
+static lv_obj_t *brightness_slider = nullptr;
 
-const static char *TAG = "SETTINGS_UI";
 
 void backButtonEventHandler(lv_event_t *e)
 {
@@ -49,7 +49,7 @@ void backButton(lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_obj_t
     lv_obj_t *back_label = lv_label_create(back_btn);
     lv_label_set_text(back_label, "Back");
     lv_obj_center(back_label);
-    lv_obj_add_event_cb(back_btn, backButtonEventHandler, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(back_btn, backButtonEventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, back_btn);
     lv_group_focus_obj(back_btn);
 }
@@ -152,7 +152,7 @@ void brightness_slider_event_cb(lv_event_t *e)
     if (brightness_label)
         lv_label_set_text(brightness_label, brightnessStr);
     // Set backlight brightness
-    backlight.backlight_set((uint8_t)brightness);
+    BACKLIGHT::backlight_set(static_cast<uint8_t>(brightness));
 }
 void brightnessSettings()
 {
@@ -176,7 +176,7 @@ void brightnessSettings()
     lv_obj_align(brightness_slider, LV_ALIGN_CENTER, 0, 0);
     lv_slider_set_range(brightness_slider, 0, 100);
     lv_slider_set_value(brightness_slider, brightness, LV_ANIM_OFF);
-    lv_obj_add_event_cb(brightness_slider, brightness_slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(brightness_slider, brightness_slider_event_cb, LV_EVENT_VALUE_CHANGED, nullptr);
 
     // Create label
     brightness_label = lv_label_create(window);
@@ -232,7 +232,7 @@ void vibrationSettings()
     lv_obj_align(sw, LV_ALIGN_CENTER, 0, 0); // Align switch to the center
     lv_group_add_obj(group_interact, sw);
     lv_obj_add_state(sw, LV_STATE_CHECKED);
-    lv_obj_add_event_cb(sw, VBEH, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(sw, VBEH, LV_EVENT_VALUE_CHANGED, nullptr);
 
     // Create a button
     backButton(0, -10, 80, 30, window);
@@ -281,7 +281,7 @@ void wifiSettings()
     lv_obj_align(sw, LV_ALIGN_CENTER, 100, 0);
     lv_group_add_obj(group_interact, sw);
     lv_obj_add_state(sw, LV_STATE_CHECKED);
-    lv_obj_add_event_cb(sw, WBEH, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(sw, WBEH, LV_EVENT_VALUE_CHANGED, nullptr);
 
     // create a lsit view
     lv_obj_t *list = lv_list_create(lv_scr_act());
@@ -326,17 +326,17 @@ void sdCardSettings()
     // create a list for sd card
     // sd_default
     lv_obj_t *sd_default = lv_list_add_btn(Menu, LV_SYMBOL_OK, "Reset");
-    lv_obj_add_event_cb(sd_default, SDEH, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(sd_default, SDEH, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, sd_default);
 
     // sd_format
     lv_obj_t *sd_format = lv_list_add_btn(Menu, LV_SYMBOL_REFRESH, "Format");
-    lv_obj_add_event_cb(sd_format, SDEH, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(sd_format, SDEH, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, sd_format);
 
     // back
     lv_obj_t *back = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
-    lv_obj_add_event_cb(back, backButtonEventHandler, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(back, backButtonEventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, back);
 
     // make first button focused
@@ -371,10 +371,13 @@ static void NLEH(lv_event_t *e)
         case 5:
             led_notification.LED_mode(LED_FADE_OFF);
             break;
+        default:
+                break;
         }
     }
 }
-void LED(void)
+
+void LED()
 {
     // Create a window
     lv_obj_t *window = lv_obj_create(lv_scr_act());
@@ -385,7 +388,7 @@ void LED(void)
     // Title bar
     notificationBar(lv_scr_act(), false, "LED");
 
-    /*Create a normal drop down list*/
+    /*Create a normal drop-down list*/
     lv_obj_t *dd = lv_dropdown_create(window);
     lv_dropdown_set_options(dd, "Blink HS\n"
                                 "Blink LS\n"
@@ -395,7 +398,7 @@ void LED(void)
                                 "Fade Off");
 
     lv_obj_align(dd, LV_ALIGN_TOP_MID, 0, 20);
-    lv_obj_add_event_cb(dd, NLEH, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(dd, NLEH, LV_EVENT_ALL, nullptr);
 
     // Add a back button
     backButton(0, -10, 80, 30, window);
@@ -403,6 +406,58 @@ void LED(void)
     // make it focus
     lv_group_add_obj(group_interact, dd);
 }
+
+
+void dateAndTimeSettings() {
+    // Create a window
+    lv_obj_t *window = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(window, 300, 180);
+    lv_obj_align(window, LV_ALIGN_CENTER, 0, 20);
+    lv_obj_clear_flag(window, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Title bar
+    notificationBar(lv_scr_act(), false, "DATE AND TIME");
+
+
+    // print date, time, year, day, region etc
+    LocalTime local_time;
+    char buffer[100];
+    sprintf(buffer, "Date: %s\nTime: %s\nYear: %d\nDay: %d\nRegion: %s",
+            local_time.getDate(), local_time.getTime(),
+            local_time.getYear(), local_time.getDay(),
+            local_time.getRegion());
+    // Create a label to display the date and time
+    lv_obj_t *date_time_label = lv_label_create(window);
+    lv_label_set_text(date_time_label, buffer);
+    lv_obj_align(date_time_label, LV_ALIGN_LEFT_MID, 0, 20);
+
+    // Create a label to display the year and day
+    lv_obj_t *year_day_label = lv_label_create(window);
+    sprintf(buffer, "Year: %d\nDay: %d", local_time.getYear(), local_time.getDay());
+    lv_label_set_text(year_day_label, buffer);
+    lv_obj_align(year_day_label, LV_ALIGN_LEFT_MID, 0, 60);
+    // Create a label to display the region
+    lv_obj_t *region_label = lv_label_create(window);
+    sprintf(buffer, "Region: %s", local_time.getRegion());
+    lv_label_set_text(region_label, buffer);
+    lv_obj_align(region_label, LV_ALIGN_LEFT_MID, 0, 100);
+    // Create a label to display the online time
+    lv_obj_t *online_time_label = lv_label_create(window);
+    sprintf(buffer, "Online Time: %s", local_time.get_time_online());
+    lv_label_set_text(online_time_label, buffer);
+    lv_obj_align(online_time_label, LV_ALIGN_LEFT_MID, 0, 140);
+
+
+
+
+
+    // Add a back button
+    backButton(0, -10, 80, 30, window);
+
+    // make it focus
+    lv_group_add_obj(group_interact, date_time_label);
+}
+
 
 void settings_menu(lv_event_t *e)
 {
@@ -438,13 +493,18 @@ void settings_menu(lv_event_t *e)
         clear_group_focus();
         delay(50);
         sdCardSettings();
+    }else if (strcmp(btn_text, "Date and Time") == 0)
+    {
+        clear_group_focus();
+        delay(50);
+        dateAndTimeSettings();
     }
 }
 
 void createSettingScreen()
 {
     // Create a new screen
-    lv_obj_t *new_screen = lv_obj_create(NULL);
+    lv_obj_t *new_screen = lv_obj_create(nullptr);
     lv_obj_set_size(new_screen, 320, 240);
     lv_obj_align(new_screen, LV_ALIGN_CENTER, 0, 0);
 
@@ -460,44 +520,49 @@ void createSettingScreen()
     lv_obj_t *btn;
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_LEFT, "Back");
-    lv_obj_add_event_cb(btn, backToMenu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, backToMenu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_BARS, "About this device");
-    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     /*System config options */
     btn = lv_list_add_btn(Menu, LV_SYMBOL_VIDEO, "Brightness");
-    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_SETTINGS, "LED");
-    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_VOLUME_MAX, "Volume");
-    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_SETTINGS, "Vibration");
-    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_BATTERY_FULL, "Battery");
-    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_WIFI, "Wi-Fi");
-    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_BLUETOOTH, "Bluetooth");
-    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     btn = lv_list_add_btn(Menu, LV_SYMBOL_SD_CARD, "SD Card");
-    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
+    lv_group_add_obj(group_interact, btn);
+
+    // date and time settings
+    btn =  lv_list_add_btn(Menu, LV_SYMBOL_EDIT, "Date and Time");
+    lv_obj_add_event_cb(btn, settings_menu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
     // Safely switch to the new screen

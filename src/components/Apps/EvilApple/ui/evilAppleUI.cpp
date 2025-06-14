@@ -40,12 +40,33 @@ void stop_event(lv_event_t *e)
     }
 }
 
+static void event_cb(lv_event_t * e)
+{
+    // if button is clicked, start the evil apple
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_CLICKED)
+    {
+        ESP_LOGI(TAG, "Start button clicked");
+        // change button text to stop
+        lv_obj_t *btn = lv_event_get_target(e);
+        lv_obj_t *label = lv_obj_get_child(btn, 0); // Get the label inside the button
+        lv_label_set_text(label, "Stop");
+        start_event(e);
+    }
+    else
+    {
+        ESP_LOGW(TAG, "Unexpected event code: %d", code);
+    }
+
+}
+
+
 void createEVIL_APPLEScreen()
 {
     app.mode = MODE_APPLEJUICE;
 
     // Create a new screen
-    lv_obj_t *new_screen = lv_obj_create(NULL);
+    lv_obj_t *new_screen = lv_obj_create(nullptr);
     lv_obj_set_size(new_screen, 300, 180);
     lv_obj_align(new_screen, LV_ALIGN_CENTER, 0, 0);
 
@@ -82,6 +103,22 @@ void createEVIL_APPLEScreen()
     lv_obj_center(back_label);
     lv_obj_add_event_cb(back_btn, backToMenu, LV_EVENT_CLICKED, NULL);
     lv_group_add_obj(group_interact, back_btn);
+
+
+    // lv_obj_t * btn = lv_btn_create(new_screen);
+    // lv_obj_set_size(btn, 100, 50);
+    // lv_obj_center(btn);
+    // lv_obj_add_event_cb(btn, event_cb, LV_EVENT_CLICKED, nullptr);
+    //
+    // lv_obj_t * label = lv_label_create(btn);
+    // lv_label_set_text(label, "Start");
+    // lv_obj_center(label);
+
+
+
+
+
+
 
     // Safely switch to the new screen
     lv_scr_load(new_screen);

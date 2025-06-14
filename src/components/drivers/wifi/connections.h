@@ -20,14 +20,10 @@ private:
     static bool begin_wifi();
     static void wifi_task(void *pvParameters);
 
-
 public:
-
-
     static void wifi_init();
     static void wifi_deinit();
     static WiFiState getState();
-
     static bool changePassword(char *ssid, char *password);
 
 
