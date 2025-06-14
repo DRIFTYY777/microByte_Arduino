@@ -42,6 +42,76 @@ static void ST7789_multi_cmd(st7789_driver_t *driver, const st7789_command_t *se
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
+// bool ST7789_init(st7789_driver_t *driver)
+// {
+// 	// Allocate the buffer memory
+// 	driver->buffer = (st7789_color_t *)heap_caps_malloc(driver->buffer_size * 2 * sizeof(st7789_color_t), MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
+// 	if (driver->buffer == NULL)
+// 	{
+// 		ESP_LOGE(TAG, "Display buffer allocation fail");
+// 		return false;
+// 	}
+//
+// 	ESP_LOGI(TAG, "Display buffer allocated with a size of: %i", driver->buffer_size * 2 * sizeof(st7789_color_t));
+//
+// 	// Why set buffer, primary and secondary instead, just primary and secondary??
+// 	// Set up the display buffers
+// 	driver->buffer_primary = driver->buffer;
+// 	driver->buffer_secondary = driver->buffer + driver->buffer_size;
+// 	driver->current_buffer = driver->buffer_primary;
+// 	driver->queue_fill = 0;
+//
+// 	driver->data.driver = driver;
+// 	driver->data.data = true;
+// 	driver->command.driver = driver;
+// 	driver->command.data = false;
+//
+// 	// Set the RESET and DC PIN
+// 	gpio_pad_select_gpio(driver->pin_reset);
+// 	gpio_pad_select_gpio(driver->pin_dc);
+// 	gpio_set_direction(driver->pin_reset, GPIO_MODE_OUTPUT);
+// 	gpio_set_direction(driver->pin_dc, GPIO_MODE_OUTPUT);
+//
+// 	ESP_LOGI(TAG, "Set RST pin: %i \n Set DC pin: %i", driver->pin_reset, driver->pin_dc);
+//
+//
+// 	spi_bus_manager_init(driver->spi_host, driver->pin_mosi, driver->pin_miso, driver->pin_sclk, driver->buffer_size * 2 * sizeof(st7789_color_t));
+//
+// 	// Configure SPI BUS
+// 	spi_device_interface_config_t devcfg = {
+// 		.clock_speed_hz = driver->spi_speed,
+// 		.mode = 3,
+// 		.spics_io_num = driver->pin_cs,
+// 		.queue_size = ST7789_SPI_QUEUE_SIZE,
+// 		.pre_cb = ST7789_pre_cb,
+// 		.flags = SPI_DEVICE_NO_DUMMY};
+//
+// 	esp_err_t ret = spi_bus_add_device(driver->spi_host, &devcfg, &driver->spi);
+//
+// 	if (ret != ESP_OK)
+// 	{
+// 		ESP_LOGE(TAG, "SPI device add failed: %s", esp_err_to_name(ret));
+// 		driver->spi = NULL; // Prevent use of invalid handle
+// 		return false;
+// 	}
+//
+// 	if (!driver->spi)
+// 	{
+// 		ESP_LOGE(TAG, "SPI handle is NULL!");
+// 		return false;
+// 	}
+//
+// 	ESP_LOGI(TAG, "SPI Bus configured correctly.");
+//
+// 	// Set the screen configuration
+// 	ST7789_reset(driver);
+// 	ST7789_config(driver);
+//
+// 	ESP_LOGI(TAG, "Display configured and ready to work.");
+//
+// 	return true;
+// }
+
 bool ST7789_init(st7789_driver_t *driver)
 {
 	// Allocate the buffer memory
@@ -54,7 +124,6 @@ bool ST7789_init(st7789_driver_t *driver)
 
 	ESP_LOGI(TAG, "Display buffer allocated with a size of: %i", driver->buffer_size * 2 * sizeof(st7789_color_t));
 
-	// Why set buffer, primary and secondary instead, just primary and secondary??
 	// Set up the display buffers
 	driver->buffer_primary = driver->buffer;
 	driver->buffer_secondary = driver->buffer + driver->buffer_size;
@@ -74,20 +143,23 @@ bool ST7789_init(st7789_driver_t *driver)
 
 	ESP_LOGI(TAG, "Set RST pin: %i \n Set DC pin: %i", driver->pin_reset, driver->pin_dc);
 
-	// Set-Up SPI BUS
-	// spi_bus_config_t buscfg = {
-	// 	.mosi_io_num = driver->pin_mosi,
-	// 	.miso_io_num = driver->pin_miso,
-	// 	.sclk_io_num = driver->pin_sclk,
-	// 	.quadwp_io_num = -1,
-	// 	.quadhd_io_num = -1,
-	// 	.max_transfer_sz = driver->buffer_size * 2 * sizeof(st7789_color_t),
-	// 	.flags = 0};
+	// Check if SPI bus is already initialized, if not initialize it
+	 if (!spi_bus_manager_is_initialized(driver->spi_host))
+	 {
+	 	if (!spi_bus_manager_init(driver->spi_host, driver->pin_mosi, driver->pin_miso, driver->pin_sclk, driver->buffer_size * 2 * sizeof(st7789_color_t)))
+	 	{
+	 		ESP_LOGE(TAG, "Failed to initialize SPI bus");
+	 		return false;
+	 	}
+	 }
+	 else
+	 {
+	 	ESP_LOGI(TAG, "SPI bus already initialized, adding device only.");
+	 }
 
-	// Initialize the Global SPI bus
-	spi_bus_manager_init(driver->spi_host, driver->pin_mosi, driver->pin_miso, driver->pin_sclk, driver->buffer_size * 2 * sizeof(st7789_color_t));
+	set_max_transfer_size(driver->spi_host, driver->buffer_size * 2 * sizeof(st7789_color_t));
 
-	// Configure SPI BUS
+	// Configure an SPI device using the manager
 	spi_device_interface_config_t devcfg = {
 		.clock_speed_hz = driver->spi_speed,
 		.mode = 3,
@@ -96,17 +168,7 @@ bool ST7789_init(st7789_driver_t *driver)
 		.pre_cb = ST7789_pre_cb,
 		.flags = SPI_DEVICE_NO_DUMMY};
 
-	// if (spi_bus_initialize(driver->spi_host, &buscfg, SPI_DMA_CH_AUTO) != ESP_OK) // try without DMA first.
-	// {
-	// 	ESP_LOGE(TAG, "SPI Bus initialization failed.");
-	// 	return false;
-	// }
-	// if (spi_bus_add_device(driver->spi_host, &devcfg, &driver->spi) != ESP_OK)
-	//{
-	//	ESP_LOGE(TAG, "SPI Bus add device failed.");
-	//	return false;
-	//}
-
+	// esp_err_t ret = spi_bus_manager_add_device(driver->spi_host, driver->pin_cs, &devcfg, &driver->spi);
 	esp_err_t ret = spi_bus_manager_add_device(driver->spi_host, &devcfg, &driver->spi);
 
 	if (ret != ESP_OK)
@@ -122,7 +184,7 @@ bool ST7789_init(st7789_driver_t *driver)
 		return false;
 	}
 
-	ESP_LOGI(TAG, "SPI Bus configured correctly.");
+	ESP_LOGI(TAG, "SPI device configured correctly using SPI manager.");
 
 	// Set the screen configuration
 	ST7789_reset(driver);
@@ -132,6 +194,7 @@ bool ST7789_init(st7789_driver_t *driver)
 
 	return true;
 }
+
 
 void ST7789_reset(st7789_driver_t *driver)
 {

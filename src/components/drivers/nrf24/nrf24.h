@@ -5,23 +5,20 @@
 
 typedef struct
 {
-    uint8_t pin_ce;
-    uint8_t pin_csn;
-    uint8_t pin_mosi;
-    uint8_t pin_miso;
-    uint8_t pin_sck;
-    uint8_t pin_irq;
+    uint8_t pin_ce; // Chip Enable
+    uint8_t pin_csn;  // Chip Select Not
+    int8_t pin_irq; // Interrupt pin, -1 if not used
 
-    uint8_t channel;
+    uint8_t channel; // RF channel (0-125)
     uint8_t status; // Receive status
-    uint8_t payload;
-    uint8_t address_width;
-    uint8_t auto_ack;
-    uint8_t retransmit_delay;
-    uint8_t retransmit_count;
+    uint8_t payload; // Payload size (1-32 bytes)
+    uint8_t address_width; // Address width (3-5 bytes)
+    uint8_t auto_ack; // Enable auto acknowledgment (0 or 1)
+    uint8_t retransmit_delay; // Retransmit delay in microseconds (0-15)
+    uint8_t retransmit_count; // Retransmit count (0-15)
 
-    int spi_host;
-    int spi_speed;
+    int spi_host; // SPI host (HSPI_HOST or VSPI_HOST)
+    int spi_speed; // SPI speed in Hz (e.g., 1000000 for 1MHz)
     spi_device_handle_t spi;
 
 } nrf24_config_t; // NRF24L01 configuration structure
@@ -62,11 +59,5 @@ void nrf24_writeRegister(nrf24_config_t *config, uint8_t reg, uint8_t *data, uin
 
 // check device is connected
 bool nrf24_isConnected(nrf24_config_t *config);
-
-//get the status of the NRF24L01
-uint8_t nrf24_getStatus(nrf24_config_t *config);
-
-// get the chip information
-uint8_t nrf24_getChipInfo(nrf24_config_t *config);
 
 #endif // NRF24_H

@@ -6,9 +6,15 @@
 #include <mpu_wrappers.h>
 #include <components/system_config/system_config.h>
 #include <components/drivers/wifi/connections.h>
+#include <components/core/processManager.h>
 #include "esp_sntp.h"
 
+static const char *TAG = "LocalTime";
+
 RTC_DATA_ATTR struct tm saved_time; // Stored in RTC memory
+
+// Static member definition
+uint32_t LocalTime::time_process_id = 0;
 
 bool LocalTime::init_NTCP() {
     if (WIFI_CONNECTIONS::getState() == CONNECTED) {
@@ -37,9 +43,16 @@ bool LocalTime::init_NTCP() {
 
 [[noreturn]] void LocalTime::timeTask(void *pvParameters)
 {
-    // LocalTime* localTime = (LocalTime*)pvParameters;
+    ESP_LOGI(TAG, "Time task started and managed by ProcessManager");
+
     while (true)
     {
+        // Check if process is still alive and should continue running
+        if (!process_manager.is_process_alive(time_process_id)) {
+            ESP_LOGW(TAG, "Time process is no longer alive, terminating task");
+            break;
+        }
+
         time_t now;
         time(&now);
         localtime_r(&now, &saved_time);  // Update saved_time with current system time
@@ -47,16 +60,17 @@ bool LocalTime::init_NTCP() {
         // Debug log if minute changes
         static int last_minute = -1;
         if (saved_time.tm_min != last_minute) {
-            ESP_LOGI("RTC", "Current time: %02d:%02d:%02d",
+            ESP_LOGI(TAG, "Current time: %02d:%02d:%02d",
                      saved_time.tm_hour, saved_time.tm_min, saved_time.tm_sec);
             last_minute = saved_time.tm_min;
         }
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
+
+    ESP_LOGI(TAG, "Time task terminating");
+    vTaskDelete(NULL);
 }
-
-
 
 void LocalTime::init()
 {
@@ -72,7 +86,7 @@ void LocalTime::init()
     // First boot or invalid time: Set the initial time
     if (saved_time.tm_year == 0 || saved_time.tm_year < 100)  // Check for invalid year
     {
-        ESP_LOGI("RTC", "Invalid time detected, setting initial time...");
+        ESP_LOGI(TAG, "Invalid time detected, setting initial time...");
         saved_time.tm_year = 2024 - 1900;  // Set to the current year
         saved_time.tm_mon = 0;    // January
         saved_time.tm_mday = 1;   // 1st day
@@ -90,9 +104,22 @@ void LocalTime::init()
     localtime_r(&now, &saved_time);
     print_time(&saved_time);
 
-    // Create a task to update the time every second, passing 'this' pointer
-    TaskHandle_t timeTaskHandle;
-    xTaskCreatePinnedToCore(timeTask, "TimeTask", 2048, this, 1, &timeTaskHandle, APP_CPU_NUM);
+    // Create time process using ProcessManager instead of xTaskCreatePinnedToCore
+    time_process_id = process_manager.create_process(
+        "TimeTask",                // Process name
+        timeTask,                  // Task function
+        2048,                      // Stack size
+        this,                      // Parameters
+        PROCESS_PRIORITY_LOW,      // Priority
+        APP_CPU_NUM                // Core affinity
+    );
+
+    if (time_process_id == 0) {
+        ESP_LOGE(TAG, "Failed to create time process");
+        return;
+    }
+
+    ESP_LOGI(TAG, "Time process created with ID: %lu", time_process_id);
 }
 
 void LocalTime::print_time(tm *t)
@@ -106,35 +133,56 @@ bool LocalTime::setDateTime(const char *datetime)
 {
     if (strptime(datetime, "%Y-%m-%d %H:%M:%S", &saved_time) == nullptr)
     {
-        ESP_LOGE("RTC", "Failed to set date and time from string: %s", datetime);
+        ESP_LOGE(TAG, "Failed to set date and time from string: %s", datetime);
         return false;
     }
     saved_time.tm_isdst = -1; // Let mktime determine if DST is in effect
     time_t t = mktime(&saved_time);
     if (t == -1)
     {
-        ESP_LOGE("RTC", "Failed to convert struct tm to time_t");
+        ESP_LOGE(TAG, "Failed to convert struct tm to time_t");
         return false;
     }
     saved_time = *localtime(&t); // Update saved_time with the correct timezone
+    
+    // Set system time
+    const struct timeval tv = { .tv_sec = t, .tv_usec = 0 };
+    settimeofday(&tv, nullptr);
+    
+    ESP_LOGI(TAG, "DateTime set successfully");
     return true;
 }
 
 bool LocalTime::setDate(const char *date)
 {
-    if (strptime(date, "%Y-%m-%d", &saved_time) == nullptr)
+    struct tm temp_time = saved_time; // Keep current time
+    
+    if (strptime(date, "%Y-%m-%d", &temp_time) == nullptr)
     {
-        ESP_LOGE("RTC", "Failed to set date from string: %s", date);
+        ESP_LOGE(TAG, "Failed to set date from string: %s", date);
         return false;
     }
-    saved_time.tm_isdst = -1; // Let mktime determine if DST is in effect
-    time_t t = mktime(&saved_time);
+    
+    // Keep the current time, only update date
+    temp_time.tm_hour = saved_time.tm_hour;
+    temp_time.tm_min = saved_time.tm_min;
+    temp_time.tm_sec = saved_time.tm_sec;
+    temp_time.tm_isdst = -1;
+    
+    time_t t = mktime(&temp_time);
     if (t == -1)
     {
-        ESP_LOGE("RTC", "Failed to convert struct tm to time_t");
+        ESP_LOGE(TAG, "Failed to convert struct tm to time_t");
         return false;
     }
-    saved_time = *localtime(&t); // Update saved_time with the correct timezone
+    
+    saved_time = *localtime(&t);
+    
+    // Set system time
+    const struct timeval tv = { .tv_sec = t, .tv_usec = 0 };
+    settimeofday(&tv, nullptr);
+    
+    ESP_LOGI(TAG, "Date set successfully");
     return true;
 }
 
@@ -142,7 +190,13 @@ bool LocalTime::setTime(const char* time_str) {
     // Parse input time string
     int hour, min, sec;
     if (sscanf(time_str, "%d:%d:%d", &hour, &min, &sec) != 3) {
-        ESP_LOGE("RTC", "Failed to parse time string: %s", time_str);
+        ESP_LOGE(TAG, "Failed to parse time string: %s", time_str);
+        return false;
+    }
+
+    // Validate time values
+    if (hour < 0 || hour > 23 || min < 0 || min > 59 || sec < 0 || sec > 59) {
+        ESP_LOGE(TAG, "Invalid time values: %d:%d:%d", hour, min, sec);
         return false;
     }
 
@@ -155,14 +209,14 @@ bool LocalTime::setTime(const char* time_str) {
     // Convert to time_t
     const time_t t = mktime(&saved_time);
     if (t == -1) {
-        ESP_LOGE("RTC", "Failed to convert time");
+        ESP_LOGE(TAG, "Failed to convert time");
         return false;
     }
 
     // Set system time
     const struct timeval tv = { .tv_sec = t, .tv_usec = 0 };
     if (settimeofday(&tv, nullptr) != 0) {
-        ESP_LOGE("RTC", "Failed to set system time");
+        ESP_LOGE(TAG, "Failed to set system time");
         return false;
     }
 
@@ -170,37 +224,100 @@ bool LocalTime::setTime(const char* time_str) {
     localtime_r(&t, &saved_time);
 
     // Debug print
-    ESP_LOGI("RTC", "Time set to: %02d:%02d:%02d",
+    ESP_LOGI(TAG, "Time set to: %02d:%02d:%02d",
              saved_time.tm_hour, saved_time.tm_min, saved_time.tm_sec);
 
     return true;
 }
 
 bool LocalTime::setDay(const char *day) {
+    int day_val = atoi(day);
+    
+    if (day_val < 1 || day_val > 31) {
+        ESP_LOGE(TAG, "Invalid day value: %d", day_val);
+        return false;
+    }
+    
+    saved_time.tm_mday = day_val;
+    saved_time.tm_isdst = -1;
+    
+    time_t t = mktime(&saved_time);
+    if (t == -1) {
+        ESP_LOGE(TAG, "Failed to convert time");
+        return false;
+    }
+    
+    // Set system time
+    const struct timeval tv = { .tv_sec = t, .tv_usec = 0 };
+    settimeofday(&tv, nullptr);
+    
+    // Update saved_time
+    localtime_r(&t, &saved_time);
+    
+    ESP_LOGI(TAG, "Day set to: %d", day_val);
+    return true;
+}
 
-
+bool LocalTime::setYear(const char *year) {
+    int year_val = atoi(year);
+    
+    if (year_val < 1900 || year_val > 3000) {
+        ESP_LOGE(TAG, "Invalid year value: %d", year_val);
+        return false;
+    }
+    
+    saved_time.tm_year = year_val - 1900; // tm_year is years since 1900
+    saved_time.tm_isdst = -1;
+    
+    time_t t = mktime(&saved_time);
+    if (t == -1) {
+        ESP_LOGE(TAG, "Failed to convert time");
+        return false;
+    }
+    
+    // Set system time
+    const struct timeval tv = { .tv_sec = t, .tv_usec = 0 };
+    settimeofday(&tv, nullptr);
+    
+    // Update saved_time
+    localtime_r(&t, &saved_time);
+    
+    ESP_LOGI(TAG, "Year set to: %d", year_val);
+    return true;
 }
 
 char *LocalTime::getDateTime()
 {
+    time_t now;
+    time(&now);
+    localtime_r(&now, &saved_time);
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &saved_time);
     return buffer;
 }
 
 char *LocalTime::getDate()
 {
+    time_t now;
+    time(&now);
+    localtime_r(&now, &saved_time);
     strftime(buffer, sizeof(buffer), "%Y-%m-%d", &saved_time);
     return buffer;
 }
 
 char *LocalTime::getTime()
 {
+    time_t now;
+    time(&now);
+    localtime_r(&now, &saved_time);
     strftime(buffer, sizeof(buffer), "%H:%M:%S", &saved_time);
     return buffer;
 }
 
 char *LocalTime::getFormattedDate()
 {
+    time_t now;
+    time(&now);
+    localtime_r(&now, &saved_time);
     strftime(buffer, sizeof(buffer), "%d/%m/%Y", &saved_time);
     return buffer;
 }
@@ -221,29 +338,66 @@ char* LocalTime::get_time_online() {
     return buffer;
 }
 
+char* LocalTime::get_date_online() {
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+        strcpy(buffer, "Failed to obtain date");
+        return buffer;
+    }
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d", &timeinfo);
+    return buffer;
+}
+
 bool LocalTime::syncTime() {
-
-
-
-
+    if (WIFI_CONNECTIONS::getState() != CONNECTED) {
+        ESP_LOGW(TAG, "Cannot sync time - no WiFi connection");
+        return false;
+    }
+    
+    return init_NTCP();
 }
 
 int LocalTime::getYear() {
-    // Implementation
+    time_t now;
+    time(&now);
     struct tm timeinfo;
-    if(getLocalTime(&timeinfo)) {
-        return timeinfo.tm_year + 1900;
-    }
-    return 0;
+    localtime_r(&now, &timeinfo);
+    return timeinfo.tm_year + 1900;
 }
 
 int LocalTime::getDay() {
-    // Implementation
+    time_t now;
+    time(&now);
     struct tm timeinfo;
-    if(getLocalTime(&timeinfo)) {
-        return timeinfo.tm_mday;
+    localtime_r(&now, &timeinfo);
+    return timeinfo.tm_mday;
+}
+
+// Process management functions
+void LocalTime::stop_time_process() {
+    if (time_process_id != 0) {
+        ESP_LOGI(TAG, "Stopping time process ID: %lu", time_process_id);
+        process_manager.delete_process(time_process_id);
+        time_process_id = 0;
     }
-    return 0;
+}
+
+void LocalTime::suspend_time_process() {
+    if (time_process_id != 0) {
+        ESP_LOGI(TAG, "Suspending time process ID: %lu", time_process_id);
+        process_manager.suspend_process(time_process_id);
+    }
+}
+
+void LocalTime::resume_time_process() {
+    if (time_process_id != 0) {
+        ESP_LOGI(TAG, "Resuming time process ID: %lu", time_process_id);
+        process_manager.resume_process(time_process_id);
+    }
+}
+
+uint32_t LocalTime::get_time_process_id() {
+    return time_process_id;
 }
 
 LocalTime local_time;

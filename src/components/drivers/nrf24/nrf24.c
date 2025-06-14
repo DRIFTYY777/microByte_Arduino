@@ -1,9 +1,9 @@
 #include "nrf24.h"
 #include "nrf24_regs.h"
 #include "driver/gpio.h"
-#include <components/drivers/spiManager/spiManager.h>
-#include "esp_log.h"
-#include <string.h>
+#include "components/drivers/spiManager/spiManager.h"
+
+#include <Arduino.h>
 
 #define _BV(x) (1 << (x))
 
@@ -11,8 +11,10 @@ static const char *TAG = "NRF24_driver";
 
 bool spi_bus_initialized[SOC_SPI_PERIPH_NUM];
 
-char rf24_data_rates[][8] = {"1Mbps", "2Mbps", "250Kbps"};
-const char rf24_crc_length[][10] = {"Disabled", "8 bits", "16 bits"};
+// const char rf24_datarates[][8] = {"1Mbps", "2Mbps", "250Kbps"};
+char rf24_datarates[][8] = {"1Mbps", "2Mbps", "250Kbps"};
+const char rf24_crclength[][10] = {"Disabled", "8 bits", "16 bits"};
+// const char rf24_pa_dbm[][8] = {"PA_MIN", "PA_LOW", "PA_HIGH", "PA_MAX"};
 char rf24_pa_dbm[][8] = {"PA_MIN", "PA_LOW", "PA_HIGH", "PA_MAX"};
 
 bool nrf24_init(nrf24_config_t *config)
@@ -27,42 +29,45 @@ bool nrf24_init(nrf24_config_t *config)
     gpio_set_direction(config->pin_ce, GPIO_MODE_OUTPUT);
     gpio_set_direction(config->pin_csn, GPIO_MODE_OUTPUT);
 
-    ESP_LOGI(TAG, "Set RST pin: %i \n Set DC pin: %i", config->pin_ce, config->pin_csn);
+    ESP_LOGI(TAG, "Set CE pin: %i \n Set CSN pin: %i", config->pin_ce, config->pin_csn);
 
-    // Set-Up SPI BUS
-    if (!spi_bus_initialized[config->spi_host])
+    // Check if SPI bus is already initialized using the manager
+    if (!spi_bus_manager_is_initialized(config->spi_host))
     {
-        spi_bus_manager_init(config->spi_host, config->pin_mosi, config->pin_miso, config->pin_sck, 0);
-        spi_bus_initialized[config->spi_host] = true;
+        ESP_LOGI(TAG, "SPI bus not initialized. Please initialize it first using spi_bus_manager_init()");
+        return false;
     }
     else
     {
         ESP_LOGI(TAG, "SPI bus already initialized.");
     }
 
+    // Use the SPI manager to add the device
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = config->spi_speed,
         .mode = 0,
-        .spics_io_num = config->pin_csn,
+        .spics_io_num = config->pin_csn, // Will be set by the manager using cs_pin parameter
         .queue_size = 7,
-        .flags = SPI_DEVICE_NO_DUMMY};
+        .flags = SPI_DEVICE_NO_DUMMY
+    };
 
-    esp_err_t ret = spi_bus_manager_add_device(config->spi_host, &devcfg, &config->spi);
+    // esp_err_t ret = spi_bus_manager_add_device(config->spi_host, config->pin_csn, &devcfg, &config->spi);
+    esp_err_t ret = spi_bus_manager_add_device(config->spi_host,  &devcfg, &config->spi);
 
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "SPI device add failed: %s", esp_err_to_name(ret));
-        config->spi = NULL; // Prevent use of an invalid handle
+        config->spi = NULL; // Prevent use of invalid handle
         return false;
     }
+
     if (!config->spi)
     {
         ESP_LOGE(TAG, "SPI handle is NULL!");
         return false;
     }
 
-    ESP_LOGI(TAG, "SPI Bus configured correctly.");
-
+    ESP_LOGI(TAG, "SPI device configured correctly using SPI manager.");
 
     return true;
 }
@@ -138,6 +143,7 @@ void nrf24_writeRegister(nrf24_config_t *config, uint8_t reg, uint8_t *data, uin
     gpio_set_level(config->pin_csn, 1);
 }
 
+
 bool nrf24_isConnected(nrf24_config_t *config)
 {
     uint8_t status = nrf24_DataTransfer(config, 0xFF);
@@ -146,19 +152,4 @@ bool nrf24_isConnected(nrf24_config_t *config)
         return false;
     }
     return true;
-}
-
-uint8_t nrf24_getStatus(nrf24_config_t *config) {
-    uint8_t status = nrf24_DataTransfer(config, RF24_NOP);
-    config->status = status; // Update the status in the config
-    ESP_LOGD(TAG, "NRF24 Status: 0x%02X", status);
-    return status;
-}
-
-uint8_t nrf24_getChipInfo(nrf24_config_t *config) {
-    uint8_t chip_info[5];
-    nrf24_readRegister(config, 0x00, chip_info, 5); // Read the first 5 bytes of the chip info
-    ESP_LOGI(TAG, "NRF24 Chip Info: %02X %02X %02X %02X %02X", chip_info[0], chip_info[1], chip_info[2], chip_info[3], chip_info[4]);
-    return chip_info[0]; // Return the first byte as the chip info
-
 }

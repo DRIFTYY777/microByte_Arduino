@@ -9,18 +9,17 @@ private:
     struct tm timeinfo;
     char buffer[32];
     const long gmtOffset_sec = 19800;
-
     const int daylightOffset_sec = 0;
 
+    // Process ID for time task
+    static uint32_t time_process_id;
 
     static void timeTask(void *pvParameters);
-
 
 public:
     void init();
 
     bool init_NTCP();
-
 
     static void print_time(struct tm *t);
 
@@ -30,15 +29,13 @@ public:
     static bool setDay(const char *day);
     static bool setYear(const char *year);
 
-
     char *getDateTime();
     char *getDate();
     char *getTime();
     char *getFormattedDate();
 
-    int getYear();  // Declaration
-    int getDay();   // Declaration
-
+    int getYear();
+    int getDay();
 
     char *getRegion();
 
@@ -46,6 +43,12 @@ public:
     char *get_date_online();
 
     bool syncTime();
+
+    // Process management functions
+    void stop_time_process();
+    void suspend_time_process();
+    void resume_time_process();
+    uint32_t get_time_process_id();
 };
 
 extern LocalTime local_time;

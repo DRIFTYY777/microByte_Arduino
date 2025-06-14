@@ -20,9 +20,11 @@ typedef struct st7789_driver
 	int pin_reset;
 	int pin_dc;
 	int pin_cs;
+
 	int pin_mosi;
 	int pin_miso;
 	int pin_sclk;
+
 	int spi_host;
 	int spi_speed;
 	int dma_chan;

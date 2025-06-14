@@ -2,6 +2,7 @@
 #include <driver/ledc.h>
 #include <components/system_config/system_config.h>
 #include <components/system_config/system_manager.h>
+#include <components/core/processManager.h>
 
 static const char *TAG = "LED notifications";
 
@@ -10,6 +11,9 @@ QueueHandle_t LEDQueue;
 
 // LEDC channel configuration
 ledc_channel_config_t ledc;
+
+// Process ID for LED task
+uint32_t led_process_id = 0;
 
 void LED_NOTIFICATION::LED_init()
 {
@@ -40,8 +44,22 @@ void LED_NOTIFICATION::LED_init()
     // Create FreeRTOS queue
     LEDQueue = xQueueCreate(5, sizeof(uint8_t));
 
-    // Start the LED task
-    xTaskCreate(LED_task, "LED Task", 1024, NULL, 1, NULL);
+    // Create LED process using process manager instead of xTaskCreate
+    led_process_id = process_manager.create_process(
+        "LED_Task",              // Process name
+        LED_task,                // Task function
+        1024,                    // Stack size
+        NULL,                    // Parameters
+        PROCESS_PRIORITY_LOW,    // Priority
+        tskNO_AFFINITY          // Core affinity
+    );
+
+    if (led_process_id == 0) {
+        ESP_LOGE(TAG, "Failed to create LED process");
+        return;
+    }
+
+    ESP_LOGI(TAG, "LED process created with ID: %lu", led_process_id);
 
     // Check if the brightness is set to 0, if so set it to 50
     if (sys_manager.system_get_config(SYS_LED) == 0)
@@ -75,13 +93,21 @@ void LED_NOTIFICATION::LED_set(uint8_t state)
     ledc_update_duty(ledc.speed_mode, ledc.channel);
 }
 
-// LED task function
+// LED task function - now managed by ProcessManager
 void LED_NOTIFICATION::LED_task(void *arg)
 {
     uint8_t mode;
 
+    ESP_LOGI(TAG, "LED task started and managed by ProcessManager");
+
     while (1)
     {
+        // Check if process is still alive and should continue running
+        if (!process_manager.is_process_alive(led_process_id)) {
+            ESP_LOGW(TAG, "LED process is no longer alive, terminating task");
+            break;
+        }
+
         if (xQueueReceive(LEDQueue, &mode, portMAX_DELAY))
         {
             switch (mode)
@@ -99,11 +125,18 @@ void LED_NOTIFICATION::LED_task(void *arg)
             case LED_BLINK_HS:
                 for (;;)
                 {
-                    if (xQueueReceive(LEDQueue, &mode, 0))
+                    // Check if process should continue and no new mode in queue
+                    if (!process_manager.is_process_alive(led_process_id) || 
+                        xQueueReceive(LEDQueue, &mode, 0))
                         break;
+                    
                     ledc_set_fade_with_time(ledc.speed_mode, ledc.channel, 5000, 100);
                     ledc_fade_start(ledc.speed_mode, ledc.channel, LEDC_FADE_NO_WAIT);
                     vTaskDelay(250 / portTICK_PERIOD_MS);
+                    
+                    if (!process_manager.is_process_alive(led_process_id))
+                        break;
+                        
                     ledc_set_fade_with_time(ledc.speed_mode, ledc.channel, 0, 100);
                     ledc_fade_start(ledc.speed_mode, ledc.channel, LEDC_FADE_NO_WAIT);
                     vTaskDelay(250 / portTICK_PERIOD_MS);
@@ -113,11 +146,18 @@ void LED_NOTIFICATION::LED_task(void *arg)
             case LED_BLINK_LS:
                 for (;;)
                 {
-                    if (xQueueReceive(LEDQueue, &mode, 0))
+                    // Check if process should continue and no new mode in queue
+                    if (!process_manager.is_process_alive(led_process_id) || 
+                        xQueueReceive(LEDQueue, &mode, 0))
                         break;
+                    
                     ledc_set_fade_with_time(ledc.speed_mode, ledc.channel, 5000, 100);
                     ledc_fade_start(ledc.speed_mode, ledc.channel, LEDC_FADE_NO_WAIT);
                     vTaskDelay(1000 / portTICK_PERIOD_MS);
+                    
+                    if (!process_manager.is_process_alive(led_process_id))
+                        break;
+                        
                     ledc_set_fade_with_time(ledc.speed_mode, ledc.channel, 0, 100);
                     ledc_fade_start(ledc.speed_mode, ledc.channel, LEDC_FADE_NO_WAIT);
                     vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -137,12 +177,19 @@ void LED_NOTIFICATION::LED_task(void *arg)
             case LED_LOAD_ANI:
                 for (;;)
                 {
-                    if (xQueueReceive(LEDQueue, &mode, 0))
+                    // Check if process should continue and no new mode in queue
+                    if (!process_manager.is_process_alive(led_process_id) || 
+                        xQueueReceive(LEDQueue, &mode, 0))
                         break;
+                    
                     int random_time = random(50, 250);
                     ledc_set_fade_with_time(ledc.speed_mode, ledc.channel, 5000, 100);
                     ledc_fade_start(ledc.speed_mode, ledc.channel, LEDC_FADE_NO_WAIT);
                     vTaskDelay(random_time / portTICK_PERIOD_MS);
+                    
+                    if (!process_manager.is_process_alive(led_process_id))
+                        break;
+                        
                     ledc_set_fade_with_time(ledc.speed_mode, ledc.channel, 0, 100);
                     ledc_fade_start(ledc.speed_mode, ledc.channel, LEDC_FADE_NO_WAIT);
                     vTaskDelay(random_time / portTICK_PERIOD_MS);
@@ -154,6 +201,43 @@ void LED_NOTIFICATION::LED_task(void *arg)
             }
         }
     }
+    
+    ESP_LOGI(TAG, "LED task terminating");
+    vTaskDelete(NULL);
+}
+
+// Function to stop LED process
+void LED_NOTIFICATION::LED_stop()
+{
+    if (led_process_id != 0) {
+        ESP_LOGI(TAG, "Stopping LED process ID: %lu", led_process_id);
+        process_manager.delete_process(led_process_id);
+        led_process_id = 0;
+    }
+}
+
+// Function to suspend LED process
+void LED_NOTIFICATION::LED_suspend()
+{
+    if (led_process_id != 0) {
+        ESP_LOGI(TAG, "Suspending LED process ID: %lu", led_process_id);
+        process_manager.suspend_process(led_process_id);
+    }
+}
+
+// Function to resume LED process
+void LED_NOTIFICATION::LED_resume()
+{
+    if (led_process_id != 0) {
+        ESP_LOGI(TAG, "Resuming LED process ID: %lu", led_process_id);
+        process_manager.resume_process(led_process_id);
+    }
+}
+
+// Function to get LED process info
+uint32_t LED_NOTIFICATION::LED_get_process_id()
+{
+    return led_process_id;
 }
 
 LED_NOTIFICATION led_notification;
