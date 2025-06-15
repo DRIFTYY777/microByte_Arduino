@@ -207,7 +207,6 @@ void setup()
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
 }
-
 void loop()
 {
     if (xQueueReceive(modeQueue, &app, portMAX_DELAY) == pdTRUE) {
