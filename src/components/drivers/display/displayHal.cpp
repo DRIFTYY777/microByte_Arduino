@@ -34,6 +34,7 @@ void display_hall_init()
     ST7789_init(&display);
     clear_screen();
     ST7789_rotate_display(&display, 3);
+    swap_rgb(0x0000); // Ensure the RGB swap is set to little endian by default
 }
 
 void clear_screen()

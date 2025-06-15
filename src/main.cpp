@@ -99,7 +99,7 @@ void on_resource_alert(const system_resources_t* resources) {
         // Print system status
         ESP_LOGI(TAG, "=== System Status ===");
         process_manager.print_system_resources();
-        process_manager.update_all_processes();
+        // process_manager.update_all_processes();
         process_manager.print_process_table();
 
         // Cleanup dead processes

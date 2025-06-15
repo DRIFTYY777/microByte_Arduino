@@ -32,6 +32,9 @@ typedef struct st7789_driver
 	uint16_t display_width;
 	uint16_t display_height;
 
+	uint8_t madctl_val; // Cached value of the MADCTL register
+
+
 	spi_device_handle_t spi;
 
 	size_t buffer_size;
@@ -52,6 +55,14 @@ typedef struct st7789_command
 	uint8_t data_size;
 	const uint8_t *data;
 } st7789_command_t;
+
+
+// Add this enum to your header file
+typedef enum {
+	ST7789_COLOR_ORDER_RGB, // Default Red-Green-Blue
+	ST7789_COLOR_ORDER_BGR  // Blue-Green-Red
+} st7789_color_order_t;
+
 
 /*********************
  *      FUNCTIONS
@@ -179,6 +190,7 @@ void ST7789_set_window(st7789_driver_t *driver, uint16_t start_x, uint16_t start
  * Returns: Nothing.
  *
  */
+uint16_t swap_rgb(uint16_t color);
 
 void ST7789_little_endian(st7789_driver_t *driver);
 void ST7789_big_endian(st7789_driver_t *driver);

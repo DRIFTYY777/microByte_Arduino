@@ -3,6 +3,7 @@
 // UI Components
 #include "helpers.h"
 #include "mainScreen.h"
+#include "theme.h"
 
 // System
 #include <components/system_config/system_config.h>
@@ -26,11 +27,8 @@
 /*
     LVGL Version: 8.3.9
     LV_USE_LOG 0
-
-
     FPS: 100
     CPU: 43%
-
 
     #define DISP_BUF_SIZE (240 * 10) // width * 2
     And single buffer in psram
@@ -64,35 +62,12 @@ static void lv_tick_task(void *arg);
 static lv_disp_drv_t disp_drv;
 static SemaphoreHandle_t xGuiSemaphore;
 
-void set_custom_theme()
-{
-    static lv_theme_t *theme;
-
-    /* Custom primary and secondary colors */
-    lv_color_t primary = lv_color_make(255, 0, 0);   // Red
-    lv_color_t secondary = lv_color_make(0, 255, 0); // Green
-
-    /* Set the new theme */
-    theme = lv_theme_default_init(
-        lv_disp_get_default(),                   // Display
-        lv_palette_main(LV_PALETTE_DEEP_PURPLE), // Primary color
-        lv_palette_main(LV_PALETTE_BLUE),        // Secondary color
-        LV_THEME_DEFAULT_DARK,                   // Dark or Light mode
-        &lv_font_montserrat_14                   // Default font
-    );
-
-    /* Apply the theme */
-    lv_disp_set_theme(lv_disp_get_default(), theme);
-}
-
-lv_style_t style;
 
 void ui_init()
 {
     xGuiSemaphore = xSemaphoreCreateMutex();
 
     lv_init();
-    //lv_style_init(&style);  // new thing added to initialize the style
 
     const int32_t size_in_px = DISP_BUF_SIZE;
     static lv_disp_draw_buf_t draw_buf;
@@ -123,6 +98,9 @@ void ui_init()
     disp_drv.flush_cb = display_HAL_flush;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
+
+    // Into to Theme
+    change_global_theme(THEME_DEFAULT, lv_color_black(), lv_color_white(), true, nullptr);
 
     // Create timer for LVGL system ticks
     constexpr esp_timer_create_args_t periodic_timer_args = {
@@ -157,6 +135,57 @@ static void lv_tick_task(void *arg)
     lv_tick_inc(LV_TICK_PERIOD_MS);
 }
 
+void lv_example_img_1(void);
+
+
+
+
+static void ta_event_cb(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * ta = lv_event_get_target(e);
+    lv_obj_t * kb = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
+    if(code == LV_EVENT_FOCUSED) {
+        lv_keyboard_set_textarea(kb, ta);
+        lv_obj_clear_flag(kb, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    if(code == LV_EVENT_DEFOCUSED) {
+        lv_keyboard_set_textarea(kb, NULL);
+        lv_obj_add_flag(kb, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+void lv_example_keyboard_1(void)
+{
+    /*Create a keyboard to use it with an of the text areas*/
+    lv_obj_t * kb = lv_keyboard_create(lv_scr_act());
+
+    /*Create a text area. The keyboard will write here*/
+    lv_obj_t * ta;
+    ta = lv_textarea_create(lv_scr_act());
+    lv_obj_align(ta, LV_ALIGN_TOP_LEFT, 10, 10);
+    lv_obj_add_event_cb(ta, ta_event_cb, LV_EVENT_ALL, kb);
+    lv_textarea_set_placeholder_text(ta, "Hello");
+    lv_obj_set_size(ta, 140, 80);
+
+    ta = lv_textarea_create(lv_scr_act());
+    lv_obj_align(ta, LV_ALIGN_TOP_RIGHT, -10, 10);
+    lv_obj_add_event_cb(ta, ta_event_cb, LV_EVENT_ALL, kb);
+    lv_obj_set_size(ta, 140, 80);
+
+    lv_keyboard_set_textarea(kb, ta);
+
+    // make keyboard focus
+    lv_group_t * group = lv_group_create();
+    lv_group_add_obj(group, kb);
+    lv_group_add_obj(group, ta);
+    lv_indev_t * kb_indev = lv_indev_get_next(NULL);
+    if (kb_indev != NULL) {
+        lv_indev_set_group(kb_indev, group);
+    }
+}
+
 void GUI_frontend()
 {
     // Create a group for interactive objects
@@ -170,6 +199,20 @@ void GUI_frontend()
     // Create a group for interactive objects
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
+
     // Set the group to the main screen
     backToMenu(nullptr);
+}
+
+#include "new_dd_tricks.c"
+void lv_example_img_1(void)
+{
+    LV_IMG_DECLARE(new_dd_tricks);
+    // Create a full-screen image object
+    lv_obj_t *bg_img = lv_img_create(lv_scr_act());
+    lv_img_set_src(bg_img, &new_dd_tricks);
+    lv_obj_set_size(bg_img, LV_HOR_RES, LV_VER_RES); // Stretch to screen size if needed
+    lv_obj_align(bg_img, LV_ALIGN_CENTER, 0, 0);
+    // Send the image to the background
+    lv_obj_move_background(bg_img);
 }

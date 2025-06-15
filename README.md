@@ -1,7 +1,10 @@
-# microByte Arduino
+# MicroByte Arduino
 
 A modular, feature-rich firmware for the ESP32-S3-DevKitC-1, designed for embedded applications with advanced UI, multitasking, and hardware abstraction.  
 Supports LVGL GUI, FreeRTOS process management, OTA updates, external app loading, and robust system/resource monitoring.
+
+Originally based on the [microByte](https://github.com/jfm92/microByte) project, this version has been adapted for Arduino and PlatformIO environments, with a focus on modularity and ease of use.
+
 
 ---
 
@@ -9,7 +12,7 @@ Supports LVGL GUI, FreeRTOS process management, OTA updates, external app loadin
 
 - **Modular Drivers:** WiFi, SD, display (ST7789), sound, vibration, LED, user input
 - **Process Manager:** Multitasking, resource monitoring, process callbacks
-- **LVGL GUI:** Modern, touch-friendly user interface
+- **LVGL GUI:** Modern, user friendly interface
 - **OTA Updates:** Wireless firmware upgrades
 - **External App Loader:** Run user apps from SD card
 - **System Monitoring:** Heap/stack usage, task stats, watchdog
@@ -21,7 +24,7 @@ Supports LVGL GUI, FreeRTOS process management, OTA updates, external app loadin
 
 ## Hardware
 
-- **Target:** ESP32-S3-DevKitC-1 (8MB QD, No PSRAM)
+- **Target:** ESP32-S3-DevKitC-1 (16MB QD, 8MB PSRAM)
 - **Display:** ST7789 SPI TFT
 - **Input:** Buttons, vibration motor, LEDs, speaker/buzzer
 - **Storage:** microSD card (SPI)
