@@ -5,17 +5,14 @@
 #include "I2cManager.h"
 
 #include <esp_err.h>
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+#include <string.h>
 
-void I2C_Bus_Manager_Init(gpio_num_t sda_gpio, gpio_num_t scl_gpio, uint32_t clk_speed) {
-    // init I2C bus with specified SDA, SCL pins and clock speed
-
-    i2c_master_bus_config_t  i2c_config = {
-        .sda_io_num = sda_gpio,
-        .scl_io_num = scl_gpio,
-        .master.clk_speed = clk_speed,
-        .mode = I2C_MODE_MASTER,
-    };
+static const char *TAG = "I2C_MANAGER";
 
 
+static i2c_bus_state_t i2c_buses[I2C_NUM_MAX] = {0};
 
-}
+
