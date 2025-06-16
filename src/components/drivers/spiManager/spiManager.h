@@ -8,6 +8,7 @@ extern "C"
 {
 #endif
 
+
     bool spi_bus_manager_init(spi_host_device_t host, int mosi, int miso, int sclk, size_t max_transfer_sz);
     esp_err_t spi_bus_manager_add_device2(spi_host_device_t host, int cs_pin,  spi_device_interface_config_t *devcfg, spi_device_handle_t *handle);
     esp_err_t spi_bus_manager_add_device(spi_host_device_t host, spi_device_interface_config_t *devcfg, spi_device_handle_t *handle);
