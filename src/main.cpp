@@ -108,7 +108,6 @@ void on_resource_alert(const system_resources_t* resources) {
     }
 }
 
-
 void setup()
 {
     Serial.begin(115200);
@@ -161,14 +160,14 @@ void setup()
     /* Display Drivers Init. */
     display_hall_init();
 
-    /* Radio */
-    RadioHall::init();
+    /* Init of Radio */
+    RADIOHALL::init();
 
     /* 1 Sec Delay */
     vTaskDelay(500 / portTICK_RATE_MS);
 
     /* Testing NRF */
-    Serial.println(RadioHall::connected() ? "NRF24L01 connected" : "NRF24L01 not connected");
+    // Serial.println(RadioHall::connected() ? "NRF24L01 connected" : "NRF24L01 not connected");
 
     /* Init LED for Notification */
     LED_NOTIFICATION::LED_init();
@@ -207,6 +206,7 @@ void setup()
 
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
+
 }
 void loop()
 {

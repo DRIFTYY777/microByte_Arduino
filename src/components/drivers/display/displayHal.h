@@ -36,6 +36,9 @@ extern "C"
     void display_HAL_NES_frame(const uint8_t *data);
     void display_HAL_gb_frame(const uint16_t *data);
 
+    void draw_square(uint16_t x, uint16_t y, uint16_t h, uint16_t w,  uint16_t color);
+
+
 #ifdef __cplusplus
 }
 #endif

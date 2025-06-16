@@ -62,19 +62,16 @@ bool ST7789_init(st7789_driver_t *driver)
 
 	ESP_LOGI(TAG, "Set RST pin: %i \n Set DC pin: %i", driver->pin_reset, driver->pin_dc);
 
-	// Check if SPI bus is already initialized, if not initialize it
-	 if (!spi_bus_manager_is_initialized(driver->spi_host))
-	 {
-	 	if (!spi_bus_manager_init(driver->spi_host, driver->pin_mosi, driver->pin_miso, driver->pin_sclk, driver->buffer_size * 2 * sizeof(st7789_color_t)))
-	 	{
-	 		ESP_LOGE(TAG, "Failed to initialize SPI bus");
-	 		return false;
-	 	}
-	 }
-	 else
-	 {
-	 	ESP_LOGI(TAG, "SPI bus already initialized, adding device only.");
-	 }
+	// Check if SPI bus is already initialized using the manager
+	if (!spi_bus_manager_is_initialized(driver->spi_host))
+	{
+		ESP_LOGI(TAG, "SPI bus not initialized. Please initialize it first using spi_bus_manager_init()");
+		return false;
+	}
+	else
+	{
+		ESP_LOGI(TAG, "SPI bus already initialized.");
+	}
 
 	set_max_transfer_size(driver->spi_host, driver->buffer_size * 2 * sizeof(st7789_color_t));
 

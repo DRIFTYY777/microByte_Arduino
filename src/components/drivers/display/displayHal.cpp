@@ -1,5 +1,6 @@
 #include "displayHal.h"
 
+#include <esp32-hal-log.h>
 #include <components/system_config/system_config.h>
 
 extern "C"
@@ -267,4 +268,13 @@ uint16_t getPixelGBC(const uint16_t *bufs, uint16_t x, uint16_t y, uint16_t w2, 
     col = ((int)red << 11) | ((int)green << 5) | ((int)blue);
 
     return col;
+}
+
+void draw_square(uint16_t x, uint16_t y, uint16_t h, uint16_t w, uint16_t color) {
+    for (uint16_t i = 0; i < h; i++) {
+        for (uint16_t j = 0; j < w; j++) {
+            display.current_buffer[(y + i) * SCR_WIDTH + (x + j)] = color;
+        }
+    }
+    ST7789_write_lines2(&display, y, x, w, &display.current_buffer[y * SCR_WIDTH + x], h);
 }
