@@ -82,7 +82,7 @@ private:
     uint32_t heap_warning_threshold;
     uint32_t stack_warning_threshold;
 
-    static void monitor_task(void* parameter);
+    // static void monitor_task(void* parameter);
     static void monitor_timer_callback(TimerHandle_t timer);
 
     void update_process_info(process_info_t& process);

@@ -430,6 +430,9 @@ void ProcessManager::register_resource_callback(resource_alert_callback_t callba
 uint32_t ProcessManager::get_total_cpu_usage() {
     // Placeholder implementation
     // Would require runtime statistics to be enabled in FreeRTOS configuration
+
+
+
     return 0;
 }
 

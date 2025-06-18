@@ -41,6 +41,8 @@ extern "C"
 #include <components/boot/boot_screen.h>
 }
 
+#include <components/drivers/usb/usbHal.h>
+
 /*
 
 Amazing Spider-Man.gb
@@ -60,9 +62,6 @@ Amazing Spider-Man.gb
 /// MAX9814 mic
 /// arduboy
 
-
-
-
 TaskHandle_t gui_handler;
 TaskHandle_t intro_handler;
 uint32_t gui_process_id = 0;
@@ -75,38 +74,39 @@ bool boot_screen_ani = true;
 bool game_running = false;
 bool game_executed = false;
 
-
-
 // Process manager callback functions
 void on_process_created(const process_info_t* process) {
     ESP_LOGI(TAG, "Process created callback: %s (ID: %lu)", process->name.c_str(), process->id);
 }
-
+// Callback for process deletion
 void on_process_deleted(uint32_t process_id) {
     ESP_LOGI(TAG, "Process deleted callback: ID %lu", process_id);
 }
-
+// Callback for resource alerts
 void on_resource_alert(const system_resources_t* resources) {
     ESP_LOGW(TAG, "Resource alert! Free heap: %lu bytes, Task count: %d",
              resources->free_heap, resources->task_count);
 }
 
 // System monitoring task
-[[noreturn]] void system_monitor_task(void* parameter) {
-    const TickType_t monitor_delay = pdMS_TO_TICKS(30000); // 30 seconds
+// [[noreturn]] void system_monitor_task(void* parameter) {
+//     constexpr TickType_t monitor_delay = pdMS_TO_TICKS(30000); // 30 seconds
+//
+//     while (true) {
+//         // Print system status
+//         ESP_LOGI(TAG, "=== System Status ===");
+//         process_manager.print_system_resources();
+//         // process_manager.update_all_processes();
+//         process_manager.print_process_table();
+//
+//         // Cleanup dead processes
+//         process_manager.cleanup_dead_processes();
+//         vTaskDelay(monitor_delay);
+//     }
+// }
 
-    while (true) {
-        // Print system status
-        ESP_LOGI(TAG, "=== System Status ===");
-        process_manager.print_system_resources();
-        // process_manager.update_all_processes();
-        process_manager.print_process_table();
 
-        // Cleanup dead processes
-        process_manager.cleanup_dead_processes();
-        vTaskDelay(monitor_delay);
-    }
-}
+
 
 void setup()
 {
@@ -128,14 +128,11 @@ void setup()
     process_manager.set_heap_warning_threshold(20480); // 20KB
     process_manager.set_stack_warning_threshold(1024);  // 1KB
 
-    // Start process monitoring
-    process_manager.start_monitoring();
+
+
 
     // Initialize the SPI bus once in your main application
     spi_bus_manager_init(VSPI_HOST, HSPI_MOSI, HSPI_MISO, HSPI_CLK,  19200); // precalculated buffer;
-
-    /* Init of Wi-Fi */
-    WIFI_CONNECTIONS::wifi_init();
 
     /* Increase of Watchdog */
     esp_task_wdt_init(10, true); // 10-second timeout
@@ -144,6 +141,9 @@ void setup()
     sys_manager.system_init_config();
     sys_manager.system_info();
     app.mode = MODE_NONE;
+
+    /* Init of Wi-Fi */
+    WIFI_CONNECTIONS::wifi_init();
 
     /* Internal RTC  Init. */
     local_time.init();
@@ -191,18 +191,17 @@ void setup()
         ESP_LOGE(TAG, "Failed to create GUI process");
         return;
     }
-    // Create a system monitoring task
-    const uint32_t monitor_process_id = process_manager.create_process("SystemMonitor", system_monitor_task,
-                                                               1024 * 4, nullptr, PROCESS_PRIORITY_LOW, 1);
-    if (monitor_process_id == 0) {
-        ESP_LOGW(TAG, "Failed to create system monitor process");
-    }
+
 
     /* Init of GUI */
     GUI_frontend();
 
     /* Init of NTP for time sync */
     local_time.init_NTCP();
+
+
+
+
 
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));

@@ -19,8 +19,8 @@ bool isInSubMenu = false;
 
 void backToMenu(lv_event_t *e)
 {
-    isInMenu = true;
-    isInSubMenu = false;
+    // isInMenu = true;
+    // isInSubMenu = false;
     app.mode = MODE_NONE;
     clear_group_focus();
     delay(10);

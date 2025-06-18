@@ -27,7 +27,7 @@ void UserInput::user_input_task(lv_indev_drv_t *indev_drv, lv_indev_data_t *data
 
 
     // uint16_t inputs_value = TCA.read16(); // Read the inputs from the hardware
-    const uint16_t inputs_value = pca9555.read(); // Read the inputs from the hardware
+    const uint16_t inputs_value = PCA9555::read(); // Read the inputs from the hardware
 
     data->state = LV_INDEV_STATE_REL; // Default state: Released
 

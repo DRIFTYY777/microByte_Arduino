@@ -1,11 +1,10 @@
 #include "mainScreen.h"
-#include <Arduino.h>
 
 // internal apps
 #include <components/Apps/EvilApple/ui/evilAppleUI.h>
 #include <components/external_app/externalAppUI.h>
-
 #include <components/Apps/pwmGenerator/ui/pwmUI.h>
+#include <components/Apps/systemMonitor/ui/monitorUI.h>
 
 #include <components/ota/otaUI.h>
 #include <components/emulators/EmulatorUI.h>
@@ -52,7 +51,7 @@ static void EventHandler(lv_event_t *e)
         }
         else if (strcmp(text, "USB") == 0)
         {
-            Serial.println("USB");
+
         }
         else if (strcmp(text, "Settings") == 0)
         {
@@ -65,11 +64,15 @@ static void EventHandler(lv_event_t *e)
             isInMenu = false;
             clear_group_focus();
             createPWMscreen();
+        }else if (strcmp(text, "System Monitor") == 0)
+        {
+            isInMenu  = false;
+            clear_group_focus();
+            createMonitorScreen();
         }
     }
 }
 
-// void mainScreen(lv_obj_t *parent)
 void mainScreen()
 {
     // clear the whole screen
@@ -89,6 +92,10 @@ void mainScreen()
 
     /* Buttons to the menu */
     btn = lv_list_add_btn(Menu, LV_SYMBOL_BLUETOOTH, "Evil Apple");
+    lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, nullptr);
+    lv_group_add_obj(group_interact, btn);
+
+    btn = lv_list_add_btn(Menu, LV_SYMBOL_SD_CARD, "System Monitor");
     lv_obj_add_event_cb(btn, EventHandler, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, btn);
 
@@ -126,5 +133,6 @@ void mainScreen()
         }
     }
 }
+
 
 

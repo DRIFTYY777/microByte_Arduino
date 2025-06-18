@@ -149,7 +149,6 @@ static void ta_event_cb(lv_event_t * e)
         lv_keyboard_set_textarea(kb, ta);
         lv_obj_clear_flag(kb, LV_OBJ_FLAG_HIDDEN);
     }
-
     if(code == LV_EVENT_DEFOCUSED) {
         lv_keyboard_set_textarea(kb, NULL);
         lv_obj_add_flag(kb, LV_OBJ_FLAG_HIDDEN);
@@ -200,7 +199,10 @@ void GUI_frontend()
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
 
+
+
     // Set the group to the main screen
+    // lv_example_img_1();
     backToMenu(nullptr);
 }
 
@@ -214,5 +216,5 @@ void lv_example_img_1(void)
     lv_obj_set_size(bg_img, LV_HOR_RES, LV_VER_RES); // Stretch to screen size if needed
     lv_obj_align(bg_img, LV_ALIGN_CENTER, 0, 0);
     // Send the image to the background
-    lv_obj_move_background(bg_img);
+    // lv_obj_move_background(bg_img);
 }
