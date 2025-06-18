@@ -84,19 +84,32 @@
 
 void createMonitorScreen() {
     monitor.init();
+    isInMenu = false;
 
-    // Root screen
-    lv_obj_t *scr = lv_obj_create(nullptr);
-    lv_obj_set_size(scr, 320, 240);
-    lv_obj_set_scroll_dir(scr, LV_DIR_ALL);
-    lv_obj_set_scrollbar_mode(scr, LV_SCROLLBAR_MODE_AUTO);
+    // // Root screen
+    // lv_obj_t *scr = lv_obj_create(nullptr);
+    // lv_obj_set_size(scr, 320, 240);
+    // lv_obj_set_scroll_dir(scr, LV_DIR_ALL);
+    // lv_obj_set_scrollbar_mode(scr, LV_SCROLLBAR_MODE_AUTO);
+
+    // Create a new screen
+    lv_obj_t *new_screen = lv_obj_create(nullptr);
+    lv_obj_set_size(new_screen, 320, 240);
+    lv_obj_align(new_screen, LV_ALIGN_CENTER, 0, 0);
+    // lv_obj_set_scroll_dir(new_screen, LV_DIR_VER);
+    // lv_obj_set_scroll_dir(new_screen, LV_DIR_HOR);
+    // lv_obj_set_scrollbar_mode(new_screen, LV_SCROLLBAR_MODE_AUTO);
+
 
     // Table
-    lv_obj_t *table = lv_table_create(scr);
+    lv_obj_t *table = lv_table_create(new_screen);
     lv_obj_set_size(table, 700, 220);
     lv_obj_set_pos(table, 0, 0);
     lv_obj_add_flag(table, LV_OBJ_FLAG_CLICKABLE);
-    // lv_obj_set_style_text_font(table, &lv_font_montserrat_10, 0);
+
+    lv_obj_set_scroll_dir(table, LV_DIR_VER);
+    lv_obj_set_scroll_dir(table, LV_DIR_HOR);
+    lv_obj_set_scrollbar_mode(table, LV_SCROLLBAR_MODE_AUTO);
 
     lv_table_set_col_cnt(table, 7);
     lv_table_set_row_cnt(table, 1);
@@ -133,20 +146,6 @@ void createMonitorScreen() {
         lv_table_set_cell_value_fmt(table, row, 6, "%s", (p.core_id == 0xFF) ? "Any" : std::to_string(p.core_id).c_str());
     }
 
-    // Add key event listener
-    lv_obj_add_event_cb(table, [](lv_event_t *e) {
-        if (lv_event_get_code(e) == LV_EVENT_KEY) {
-            uint32_t key = lv_indev_get_key(lv_indev_get_act());
-            if (key == LV_KEY_ESC) {
-                ESP_LOGI("MONITOR", "Back button pressed from UI");
-                monitor.deinit();  // Clean up monitor resources
-                backToMenu(e); // Go back to main menu
-            }
-        }
-    }, LV_EVENT_KEY, nullptr);
-
-    lv_scr_load(scr);
-
     // Focus handling
     static lv_group_t *g = lv_group_create();
     lv_group_add_obj(g, table);
@@ -160,6 +159,23 @@ void createMonitorScreen() {
         }
         indev = lv_indev_get_next(indev);
     }
+
+    // Add key event listener
+    lv_obj_add_event_cb(table, [](lv_event_t *e) {
+        if (lv_event_get_code(e) == LV_EVENT_KEY) {
+            uint32_t key = lv_indev_get_key(lv_indev_get_act());
+            if (key == LV_KEY_ESC) {
+                ESP_LOGI("MONITOR", "Back button pressed from UI");
+                monitor.deinit();  // Clean up monitor resources
+
+                backToMenu(e); // Go back to main menu
+            }
+        }
+    }, LV_EVENT_KEY, nullptr);
+
+
+    lv_scr_load(new_screen);
+
 }
 
 

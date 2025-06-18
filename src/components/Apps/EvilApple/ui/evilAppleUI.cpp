@@ -82,6 +82,7 @@ void createEVIL_APPLEScreen()
     lv_obj_align(back_btn, LV_ALIGN_BOTTOM_MID, 0, -20);
     lv_obj_t *back_label = lv_label_create(back_btn);
     lv_label_set_text(back_label, "Back");
+
     lv_obj_center(back_label);
     lv_obj_add_event_cb(back_btn, backToMenu, LV_EVENT_CLICKED, nullptr);
     lv_group_add_obj(group_interact, back_btn);
