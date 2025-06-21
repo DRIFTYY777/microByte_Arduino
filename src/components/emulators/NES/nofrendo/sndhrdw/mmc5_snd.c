@@ -100,6 +100,7 @@ static struct
 } mmc5;
 
 #define MMC5_RECTANGLE_OUTPUT chan->output_vol
+
 static int32 mmc5_rectangle(mmc5rectangle_t *chan)
 {
    int32 output;

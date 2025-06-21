@@ -1,9 +1,10 @@
 #ifndef SD_CARD_H
 #define SD_CARD_H
 
+
 #include "stdint.h"
-#include "stdbool.h"
-#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 
 /*
   begin sd card with default
@@ -14,7 +15,9 @@
   #define SD_SPEED 4000000 // 4Mhz
 */
 
-#define MOUNT_POINT "/sdcard"
+#define MOUNT_POINT "/sdcard" // For SD_MMC library
+
+// #define MOUNT_POINT "/sd" // For SD library
 
 #define SDIO 0x00
 #define MMC 0x01
@@ -50,6 +53,9 @@ private:
     void emulator_dir();
     /* System Directory Handler*/
     void system_dir();
+
+
+
 
 public:
     bool sd_init();

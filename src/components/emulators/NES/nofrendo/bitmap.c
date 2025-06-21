@@ -46,6 +46,8 @@ static bitmap_t *_make_bitmap(uint8 *data_addr, bool hw, int width,
 
    /* Make sure to add in space for line pointers */
    bitmap = NOFRENDO_MALLOC(sizeof(bitmap_t) + (sizeof(uint8 *) * height));
+
+
    if (NULL == bitmap)
       return NULL;
 
@@ -74,7 +76,13 @@ static bitmap_t *_make_bitmap(uint8 *data_addr, bool hw, int width,
 
    return bitmap;
 }
+
+
+
+
+
 #include "freertos/FreeRTOS.h"
+
 /* Allocate and initialize a bitmap structure */
 bitmap_t *bmp_create(int width, int height, int overdraw)
 {

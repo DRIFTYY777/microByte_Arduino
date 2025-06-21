@@ -103,10 +103,17 @@ public:
     uint32_t create_process(const char* name, TaskFunction_t task_function,
                            uint32_t stack_size, void* parameters,
                            process_priority_t priority, BaseType_t core_id = tskNO_AFFINITY);
+
     bool delete_process(uint32_t process_id);
+    bool delete_process_by_name(const char* name);
     bool suspend_process(uint32_t process_id);
     bool resume_process(uint32_t process_id);
     bool set_process_priority(uint32_t process_id, process_priority_t priority);
+
+
+    //
+
+
 
     // Process monitoring
     bool start_monitoring();
@@ -134,6 +141,13 @@ public:
     uint32_t get_process_cpu_usage(uint32_t process_id);
     bool is_process_alive(uint32_t process_id);
     void cleanup_dead_processes();
+    // uint32_t process_get_stack_usage(uint32_t process_id);
+
+
+    bool process_send_message(uint32_t process_id, const void* message, size_t size);
+
+
+
 };
 
 extern ProcessManager process_manager;

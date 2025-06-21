@@ -119,9 +119,9 @@ uint32_t ProcessManager::create_process(const char* name, TaskFunction_t task_fu
 
 bool ProcessManager::delete_process(uint32_t process_id) {
     if (xSemaphoreTake(processes_mutex, portMAX_DELAY) == pdTRUE) {
-        auto it = processes.find(process_id);
+        const auto it = processes.find(process_id);
         if (it != processes.end()) {
-            TaskHandle_t handle = it->second.handle;
+            const TaskHandle_t handle = it->second.handle;
             processes.erase(it);
             xSemaphoreGive(processes_mutex);
 
@@ -141,6 +141,19 @@ bool ProcessManager::delete_process(uint32_t process_id) {
 
     ESP_LOGW(TAG, "Process not found for deletion: ID %lu", process_id);
     return false;
+}
+
+bool ProcessManager::delete_process_by_name(const char* name)
+{
+    const auto all_processes = process_manager.get_all_processes();
+    for (const auto& process : all_processes) {
+        if (process.name == name) {
+            process_manager.delete_process(process.id);
+            ESP_LOGI(TAG, "Process deleted by name: %s (ID: %lu)", name, process.id);
+            break;
+        }
+    }
+    return true;
 }
 
 bool ProcessManager::suspend_process(uint32_t process_id) {
@@ -301,7 +314,6 @@ std::vector<process_info_t> ProcessManager::get_all_processes() {
         }
         xSemaphoreGive(processes_mutex);
     }
-
     return result;
 }
 
@@ -461,3 +473,19 @@ void ProcessManager::cleanup_dead_processes() {
         xSemaphoreGive(processes_mutex);
     }
 }
+
+bool ProcessManager::process_send_message(uint32_t process_id, const void* message, size_t size)
+{    //  Message structure, Copy message data, Send message structure through queue
+
+}
+
+// uint32_t ProcessManager::process_get_stack_usage(uint32_t process_id)
+// {
+//     // return 0 if process not found
+//     process_info_t* process = get_process_info(process_id);
+//     if (!process) {
+//         return 0;
+//     }
+//     // Return the stack high water mark
+//     return process->stack_high_water_mark;
+// }

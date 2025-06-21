@@ -19,37 +19,90 @@
 
 static const char *TAG = "SD_CARD";
 
+#define SPI_DMA_CHAN    2
+
 SD_CARD_INFO sd_card_info;
+
+void listDir(File dir, int depth) {
+    while (true) {
+        File entry = dir.openNextFile();
+        if (!entry) {
+            break;
+        }
+
+        for (int i = 0; i < depth; i++) {
+            Serial.print("  ");
+        }
+
+        if (entry.isDirectory()) {
+            Serial.print("[DIR] ");
+            Serial.println(entry.name());
+            listDir(entry, depth + 1);  // Recursive call for subdirectory
+        } else {
+            Serial.print("[FILE] ");
+            Serial.print(entry.name());
+            Serial.print("  SIZE: ");
+            Serial.println(entry.size());
+        }
+
+        entry.close();
+    }
+}
+
 
 bool SD_CARD::sd_init()
 {
 
-    SPI.begin(VSPI_CLK, VSPI_MISO, VSPI_MOSI); // Initialize SPI bus (optional, default is HSPI)
-    SPI.setFrequency(1000000);                 // Set SPI frequency (optional, default is 1MHz)
+    // sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+    // sdspi_slot_config_t slot_config = SDSPI_SLOT_CONFIG_DEFAULT();
+    // slot_config.gpio_miso   =     static_cast<gpio_num_t>(VSPI_MISO);
+    // slot_config.gpio_mosi   =     static_cast<gpio_num_t>(VSPI_MOSI);
+    // slot_config.gpio_sck    =     static_cast<gpio_num_t>(VSPI_CLK);
+    // slot_config.gpio_cs     =     static_cast<gpio_num_t>(SD_CS);
+    // slot_config.dma_channel =     SPI_DMA_CHAN;
+    // host.slot               =     VSPI_HOST;
+    // host.max_freq_khz       =     SDMMC_FREQ_DEFAULT;
+    //
+    // // Mount Fat filesystem(Only one file at the time)
+    // esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+    //     .format_if_mount_failed = false,
+    //     .max_files = 1,
+    //     .allocation_unit_size = 16 * 1024
+    // };
+    // sdmmc_card_t* card;
+    // esp_err_t ret = esp_vfs_fat_sdmmc_mount(MOUNT_POINT, &host, &slot_config, &mount_config, &card);
+    //
+    // if (ret != ESP_OK) {
+    //     if (ret == ESP_FAIL) {
+    //         ESP_LOGE(TAG, "Failed to mount filesystem.");
+    //     } else {
+    //         ESP_LOGE(TAG, "Failed to initialize the card.");
+    //     }
+    //     return false;
+    // }
 
-    if (!SD.begin(SD_CS, SPI)) // Initialize SD card using SPI with CS pin
-    {
-        ESP_LOGE(TAG, "Card Mount Failed (SPI)");
-        SD_mount = false;
-        sd_card_info.card_mounted = 0;
-        return false;
-    }
+    SPI.begin(VSPI_CLK, VSPI_MISO, VSPI_MOSI); // Initialize SPI bus (optional, default is HSPI)
+    SPI.setFrequency(4000000);
+
+     if (!SD.begin(SD_CS, SPI)) // Initialize SD card using SPI with CS pin
+     {
+         ESP_LOGE(TAG, "Card Mount Failed (SPI)");
+         SD_mount = false;
+         sd_card_info.card_mounted = 0;
+         return false;
+     }
+
 
     delay(100);
     // The SD library doesn't have a direct equivalent to SD_MMC.cardType()
     // You might need to rely on the success of SD.begin()
-    SPI.setFrequency(4000000);                 // Set SPI frequency (optional, default is 1MHz)
-
-
-
-
     // Assuming the card is mounted if SD.begin() succeeds
     ESP_LOGI(TAG, "SD Card Type: SPI"); // Indicate SPI usage
 
     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
     uint64_t usedSpace = cardSize - (SD.usedBytes() / (1024 * 1024));
 
-    ESP_LOGE(TAG, "SD Card Size: %lluMB", cardSize);
+    //ESP_LOGE(TAG, "SD Card Size: %lluMB", cardSize);
 
     // Update struct info
     sd_card_info.card_type = SDIO; // Or some other indication that it's using SPI
@@ -88,54 +141,59 @@ bool SD_CARD::is_card_mounted()
     return SD_mount;
 }
 
+
 uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
 {
     File root;
     if (update)
         root = SD.open("/Firmware");
     else
-        root = SD.open("/External_Apps");
+        root = SD.open("/External Apps"); //
 
     if (!root)
     {
         ESP_LOGE(TAG, "Failed to open directory");
         return 0;
     }
+
     if (!root.isDirectory())
     {
-        ESP_LOGE(TAG, "/Firmware or /External_Apps is not a directory");
+        ESP_LOGE(TAG, "Not a directory: %s", update ? "/Firmware" : "/External Apps");
         return 0;
     }
 
     uint8_t i = 0;
     File entry;
-    while (entry == root.openNextFile())
+    while ((entry = root.openNextFile()))
     {
         if (!entry.isDirectory())
         {
-            String fileName = entry.name();
-            if (fileName.endsWith(".bin"))
+            const char* fileName = entry.name();
+            ESP_LOGI(TAG, "Checking file: %s", fileName);
+
+            if (String(fileName).endsWith(".bin"))
             {
-                size_t nameLength = fileName.length();
+                size_t nameLength = strlen(fileName);
                 app_list[i] = static_cast<char *>(malloc(nameLength + 1));
                 if (app_list[i])
                 {
-                    strcpy(app_list[i], fileName.c_str());
-                    ESP_LOGI(TAG, "Found %s ", app_list[i]);
+                    strcpy(app_list[i], fileName);
+                    ESP_LOGI(TAG, "Found bin: %s", app_list[i]);
                     i++;
                 }
                 else
                 {
-                    ESP_LOGE(TAG, "Failed to allocate memory for filename");
-                    // Handle memory allocation failure
+                    ESP_LOGE(TAG, "Memory allocation failed for %s", fileName);
                 }
             }
         }
         entry.close();
     }
+
     root.close();
     return i;
 }
+
 
 size_t SD_CARD::sd_file_size(const char *path)
 {
@@ -172,7 +230,7 @@ uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)
         break;
     case SNES:
         dirPath = "/Emulator/SNES";
-        extension = ".smc"; // Or other SNES extensions
+        extension = ".smc";
         break;
     case SMS:
         dirPath = "/Emulator/Master_System";
@@ -193,6 +251,7 @@ uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)
         ESP_LOGE(TAG, "Failed to open directory: %s", dirPath);
         return 0;
     }
+
     if (!root.isDirectory())
     {
         ESP_LOGE(TAG, "%s is not a directory", dirPath);
@@ -201,11 +260,12 @@ uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)
 
     uint8_t i = 0;
     File entry;
-    while (entry == root.openNextFile())
+    while ((entry = root.openNextFile()))
     {
         if (!entry.isDirectory())
         {
             String fileName = entry.name();
+            ESP_LOGI(TAG, "Checking file: %s", fileName.c_str());
             if (fileName.endsWith(extension))
             {
                 size_t nameLength = fileName.length();
@@ -213,32 +273,23 @@ uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)
                 if (game_list[i])
                 {
                     strcpy(game_list[i], fileName.c_str());
-                    ESP_LOGI(TAG, "Found %s ", game_list[i]);
+                    ESP_LOGI(TAG, "Found game: %s", game_list[i]);
                     i++;
                 }
                 else
                 {
-                    ESP_LOGE(TAG, "Failed to allocate memory for filename");
-                    // Handle memory allocation failure
+                    ESP_LOGE(TAG, "Memory allocation failed");
                 }
             }
         }
         entry.close();
     }
-    Serial.println(dirPath);
-    Serial.println("Game list:");
-
     root.close();
 
-    // print the full path of selected game
-    for (uint8_t j = 0; j < i; j++)
-    {
-        Serial.println(game_list[j]);
-    }
-    ESP_LOGI(TAG, "Total games found: %d", i);
-
+    ESP_LOGI(TAG, "Total games found in %s: %d", dirPath, i);
     return i;
 }
+
 
 bool SD_CARD::sd_sav_exist(char *file_name, uint8_t emulator)
 {
@@ -390,5 +441,8 @@ void SD_CARD::system_dir()
         SD.mkdir("/Firmware");
     }
 }
+
+
+
 
 SD_CARD sd_card;

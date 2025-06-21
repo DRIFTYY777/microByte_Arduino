@@ -129,10 +129,10 @@ void setup()
     process_manager.set_stack_warning_threshold(1024);  // 1KB
 
 
-
-
     // Initialize the SPI bus once in your main application
     spi_bus_manager_init(VSPI_HOST, HSPI_MOSI, HSPI_MISO, HSPI_CLK,  19200); // precalculated buffer;
+    //spi_bus_manager_init(HSPI_HOST, VSPI_MOSI, VSPI_MISO, VSPI_CLK,  19200); // precalculated buffer;
+
 
     /* Increase of Watchdog */
     esp_task_wdt_init(10, true); // 10-second timeout
@@ -198,9 +198,6 @@ void setup()
 
     /* Init of NTP for time sync */
     local_time.init_NTCP();
-
-
-
 
 
     /* Queue for creating or ... */

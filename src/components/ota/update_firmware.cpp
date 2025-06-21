@@ -36,8 +36,8 @@ int UPDATE_FIRMWARE::update_init(const char *fw_name)
 
     esp_err_t err;
     esp_ota_handle_t update_handle = 0;
-    const esp_partition_t *update_partition = NULL;
-    const esp_partition_t *running = NULL;
+    const esp_partition_t *update_partition = nullptr;
+    const esp_partition_t *running = nullptr;
     esp_app_desc_t running_fw;
     esp_app_desc_t update_fw;
     esp_app_desc_t invalid_fw;
@@ -56,8 +56,8 @@ int UPDATE_FIRMWARE::update_init(const char *fw_name)
     ESP_LOGI(TAG, "Running firmware version: %s", running_fw.version);
 
     // We're on the factory partition, get the OTA partition
-    update_partition = esp_ota_get_next_update_partition(NULL);
-    if (update_partition == NULL)
+    update_partition = esp_ota_get_next_update_partition(nullptr);
+    if (update_partition == nullptr)
     {
         ESP_LOGE(TAG, "Failed to get OTA partition");
         return -1;
@@ -75,10 +75,23 @@ int UPDATE_FIRMWARE::update_init(const char *fw_name)
 
     // Open the new fw file
     char name_aux[256];
-    // sprintf(name_aux, "/sdcard/Firmware/%s", fw_name);
-    sprintf(name_aux, "/sd/Firmware/%s", fw_name);
+
+
+    // sprintf(name_aux, "/Firmware/%s", fw_name);  // <-- Add leading slash
+    // FILE *fd = fopen(name_aux, "rb");
+
+
+    sprintf(name_aux, "/Firmware/%s", fw_name);
     FILE *fd = fopen(name_aux, "rb");
-    if (fd == NULL)
+
+    if (!fd) {
+        ESP_LOGE(TAG, "Failed to open: %s", name_aux);
+    }
+
+
+
+
+    if (fd == nullptr)
     {
         ESP_LOGE(TAG, "Opening error with: %s", name_aux);
         return -1;
@@ -107,7 +120,7 @@ int UPDATE_FIRMWARE::update_init(const char *fw_name)
             // return -1;
         }
 
-        if (last_invalid_app != NULL)
+        if (last_invalid_app != nullptr)
         {
             if (!memcmp(invalid_app_info.version, update_fw.version, sizeof(update_fw.version)))
             {
@@ -120,7 +133,7 @@ int UPDATE_FIRMWARE::update_init(const char *fw_name)
     memset(temp_buffer, 0, sizeof(temp_buffer));
 
     // The update is fine, so we will copy the new FW from the SD card to the OTA partition
-    while (1)
+    while (true)
     {
         size_t data_read = fread(temp_buffer, 1, 1024, fd);
 

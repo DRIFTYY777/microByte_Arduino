@@ -13,6 +13,7 @@ extern "C"
 
 #include <components/system_config/system_manager.h>
 #include <components/drivers/display/displayHal.h>
+#include <components/core/processManager.h>
 
 // TaskHandle_t videoTask_handler;
 TaskHandle_t nofrendoTask_handler;
@@ -33,8 +34,30 @@ void NES_start(const char *game_name)
     nofrendo_vidQueue = xQueueCreate(7, sizeof(bitmap_t *));
     // nofrendo_audioQueue = xQueueCreate(10, sizeof(int16_t *));
 
-    xTaskCreatePinnedToCore(&nofrendo_video_task, "nofrendo_video_task", 1024 * 12, NULL, 1, &videoTask_handler, 0);
+
+
+    uint32_t video_t = 0;
+    uint32_t nofrendo_t = 0;
+
+    xTaskCreatePinnedToCore(&nofrendo_video_task, "nofrendo_video_task", 1024 * 12, nullptr, 1, &videoTask_handler, 0);
     xTaskCreatePinnedToCore(&nofrendo_task, "nofrendo_main_task", 2024 * 5, (void *)game_name, 1, &nofrendoTask_handler, 1);
+
+    // video_t = process_manager.create_process("NES_Video_Task", nofrendo_video_task, 1024 * 12,
+    //                                             NULL, PROCESS_PRIORITY_HIGH, 0);
+    //
+    // nofrendo_t = process_manager.create_process("NES_Emulator_Task", nofrendo_task, 2024 * 5,
+    //                                             (void *)game_name, PROCESS_PRIORITY_HIGH, 1);
+
+    if (video_t == 0) {
+        ESP_LOGE("NES", "Failed to create GUI process");
+        return;
+    }
+    if (nofrendo_t == 0) {
+        ESP_LOGE("NES", "Failed to create NES process");
+        return;
+    }
+
+
 }
 
 void NES_resume()
@@ -67,7 +90,9 @@ static void nofrendo_task(void *arg)
     char *argv[1];
     argv[0] = (char *)malloc(212); // 256
     // sprintf(argv[0], "/sdcard/Emulator/NES/%s", (char *)arg);
-    sprintf(argv[0], "/sd/Emulator/NES/%s", (char *)arg);
+    sprintf(argv[0], "/Emulator/NES/%s", (char *)arg);
+
+
 
     // Execute nofrendo emulator
     nofrendo_main(1, argv);

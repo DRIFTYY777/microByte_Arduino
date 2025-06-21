@@ -37,10 +37,18 @@ void EXTERNAL_APP::external_app_init(const char *app_name)
         return;
     }
 
-    FILE *fd = NULL;
+   //  FILE *fd = NULL;
     char name_aux[256];
-    // sprintf(name_aux, "/sdcard/External_Apps/%s", app_name);
-    sprintf(name_aux, "/sd/External_Apps/%s", app_name);
+   // // sprintf(name_aux, "/sdcard/External_Apps/%s", app_name);
+   //  sprintf(name_aux, "/sd/External Apps/%s", app_name);
+
+
+    sprintf(name_aux, "/Firmware/%s", app_name);
+    FILE *fd = fopen(name_aux, "rb");
+    if (!fd) {
+        ESP_LOGE(TAG, "Failed to open: %s", name_aux);
+    }
+
 
     fd = fopen(name_aux, "rb");
     if (fd == NULL)

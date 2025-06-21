@@ -130,7 +130,7 @@ void osd_getvideoinfo(vidinfo_t *info)
 
 void osd_getinput(void)
 {
-    uint16_t b = user_input.input_read();
+    uint16_t b = UserInput::input_read();
 
     const int ev[16] = {
         event_joypad1_up,    // up

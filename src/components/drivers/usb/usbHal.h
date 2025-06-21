@@ -12,7 +12,6 @@
  * usbMSC - USB Mass Storage Class
  * usbSerial - USB Serial Device
  * usbUpdate - USB Firmware Update
- * usbMax - Maximum USB Modes
  * debug - Debugging USB operations
  */
 
