@@ -62,6 +62,11 @@ public:
     bool sd_default();
     bool is_card_mounted();
 
+    bool readRAW_(uint8_t* buffer, uint32_t sector);
+    bool writeRAW_(uint8_t* buffer, uint32_t sector);
+
+    static uint64_t sd_get_size();
+
     uint8_t sd_app_list(char *app_list[100], bool update);
     // sd_file_size
     size_t sd_file_size(const char *file_name);

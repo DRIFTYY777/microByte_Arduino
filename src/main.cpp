@@ -15,6 +15,7 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 
 // #include <components/drivers/battery/battery.h>
 #include <esp_task_wdt.h>
+#include <USB.h>
 #include <components/drivers/inputs/user_input.h>
 #include <components/drivers/LED/LED_notification.h>
 #include <components/drivers/sd_card/sd_card.h>
@@ -35,6 +36,7 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/emulators/GBC/GboyManager.h>
 
 #include "components/drivers/spiManager/spiManager.h"
+#include "components/drivers/usb/usbStorage/usbStorage.h"
 
 extern "C"
 {
@@ -87,26 +89,6 @@ void on_resource_alert(const system_resources_t* resources) {
     ESP_LOGW(TAG, "Resource alert! Free heap: %lu bytes, Task count: %d",
              resources->free_heap, resources->task_count);
 }
-
-// System monitoring task
-// [[noreturn]] void system_monitor_task(void* parameter) {
-//     constexpr TickType_t monitor_delay = pdMS_TO_TICKS(30000); // 30 seconds
-//
-//     while (true) {
-//         // Print system status
-//         ESP_LOGI(TAG, "=== System Status ===");
-//         process_manager.print_system_resources();
-//         // process_manager.update_all_processes();
-//         process_manager.print_process_table();
-//
-//         // Cleanup dead processes
-//         process_manager.cleanup_dead_processes();
-//         vTaskDelay(monitor_delay);
-//     }
-// }
-
-
-
 
 void setup()
 {
@@ -192,16 +174,17 @@ void setup()
         return;
     }
 
-
     /* Init of GUI */
     GUI_frontend();
 
     /* Init of NTP for time sync */
     local_time.init_NTCP();
 
-
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
+
+    // USB.begin();
+    // usbStorage.init();
 
 }
 void loop()

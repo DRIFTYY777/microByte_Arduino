@@ -354,22 +354,22 @@ static void NLEH(lv_event_t *e)
         switch (lv_dropdown_get_selected(obj))
         {
         case 0:
-            led_notification.LED_mode(LED_BLINK_HS);
+            LED_NOTIFICATION::LED_mode(LED_BLINK_HS);
             break;
         case 1:
-            led_notification.LED_mode(LED_BLINK_LS);
+            LED_NOTIFICATION::LED_mode(LED_BLINK_LS);
             break;
         case 2:
-            led_notification.LED_mode(LED_TURN_ON);
+            LED_NOTIFICATION::LED_mode(LED_TURN_ON);
             break;
         case 3:
-            led_notification.LED_mode(LED_TURN_OFF);
+            LED_NOTIFICATION::LED_mode(LED_TURN_OFF);
             break;
         case 4:
-            led_notification.LED_mode(LED_FADE_ON);
+            LED_NOTIFICATION::LED_mode(LED_FADE_ON);
             break;
         case 5:
-            led_notification.LED_mode(LED_FADE_OFF);
+            LED_NOTIFICATION::LED_mode(LED_FADE_OFF);
             break;
         default:
                 break;

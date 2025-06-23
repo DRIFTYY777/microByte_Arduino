@@ -52,34 +52,15 @@ void listDir(File dir, int depth) {
 
 bool SD_CARD::sd_init()
 {
+    // necessary of usb msc
+    if (SD_mount)
+    {
+        SD.end();
+        SD_mount = false;
+        // 20 ms delay to ensure SD Card is properly unmounted
+        vTaskDelay( 20 / portTICK_PERIOD_MS );
+    }
 
-    // sdmmc_host_t host = SDSPI_HOST_DEFAULT();
-    // sdspi_slot_config_t slot_config = SDSPI_SLOT_CONFIG_DEFAULT();
-    // slot_config.gpio_miso   =     static_cast<gpio_num_t>(VSPI_MISO);
-    // slot_config.gpio_mosi   =     static_cast<gpio_num_t>(VSPI_MOSI);
-    // slot_config.gpio_sck    =     static_cast<gpio_num_t>(VSPI_CLK);
-    // slot_config.gpio_cs     =     static_cast<gpio_num_t>(SD_CS);
-    // slot_config.dma_channel =     SPI_DMA_CHAN;
-    // host.slot               =     VSPI_HOST;
-    // host.max_freq_khz       =     SDMMC_FREQ_DEFAULT;
-    //
-    // // Mount Fat filesystem(Only one file at the time)
-    // esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-    //     .format_if_mount_failed = false,
-    //     .max_files = 1,
-    //     .allocation_unit_size = 16 * 1024
-    // };
-    // sdmmc_card_t* card;
-    // esp_err_t ret = esp_vfs_fat_sdmmc_mount(MOUNT_POINT, &host, &slot_config, &mount_config, &card);
-    //
-    // if (ret != ESP_OK) {
-    //     if (ret == ESP_FAIL) {
-    //         ESP_LOGE(TAG, "Failed to mount filesystem.");
-    //     } else {
-    //         ESP_LOGE(TAG, "Failed to initialize the card.");
-    //     }
-    //     return false;
-    // }
 
     SPI.begin(VSPI_CLK, VSPI_MISO, VSPI_MOSI); // Initialize SPI bus (optional, default is HSPI)
     SPI.setFrequency(4000000);
@@ -99,8 +80,8 @@ bool SD_CARD::sd_init()
     // Assuming the card is mounted if SD.begin() succeeds
     ESP_LOGI(TAG, "SD Card Type: SPI"); // Indicate SPI usage
 
-    uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-    uint64_t usedSpace = cardSize - (SD.usedBytes() / (1024 * 1024));
+    const uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+    const uint64_t usedSpace = cardSize - (SD.usedBytes() / (1024 * 1024));
 
     //ESP_LOGE(TAG, "SD Card Size: %lluMB", cardSize);
 
@@ -139,6 +120,21 @@ bool SD_CARD::sd_default()
 bool SD_CARD::is_card_mounted()
 {
     return SD_mount;
+}
+
+bool SD_CARD::readRAW_(uint8_t* buffer, uint32_t sector)
+{
+    return SD.readRAW(buffer, sector);
+}
+
+bool SD_CARD::writeRAW_(uint8_t* buffer, uint32_t sector)
+{
+    return SD.writeRAW(buffer, sector);
+}
+
+uint64_t SD_CARD::sd_get_size()
+{
+    return SD.cardSize();
 }
 
 

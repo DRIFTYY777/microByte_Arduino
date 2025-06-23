@@ -20,7 +20,6 @@
 #define I2C_SDA 8 // SDA
 #define I2C_SCL 9  // SCL
 
-
 // SD Card pin configuration
 #define SD_CS 39
 #define SD_SPEED 4000000 // 4Mhz

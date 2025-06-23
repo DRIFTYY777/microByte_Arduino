@@ -23,30 +23,27 @@ enum USB_STATE {
     USB_STATE_DISCONNECTED,
     USB_STATE_ERROR
 };
+
 enum USB_MODES {
     USB_MODE_NONE = 0,
     USB_MODE_CDC ,
     USB_MODE_HID,
     USB_MODE_MSC,
-    USB_MODE_SERIAL,
     USB_MODE_UPDATE,
     USB_MODE_DEBUG,
 };
 
-enum USB_HID_DEVICE {
-    USB_HID_KEYBOARD = 0,
-    USB_HID_MOUSE,
-    USB_HID_GAMEPAD,
-    USB_HID_GENERIC
-};
-
-
 
 class USBHAL {
+private:
+    bool initModes();
 
-
+public:
+    bool init();
+    void modes(uint8_t mode);
 
 };
+
 
 extern USBHAL usbHal;
 
