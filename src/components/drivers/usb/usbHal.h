@@ -5,6 +5,8 @@
 #ifndef USBHAL_H
 #define USBHAL_H
 #include <cstdint>
+#include "usbHID/usbHID.h"
+
 
 /*
  * usbCDC - USB Communication Device Class
@@ -36,12 +38,15 @@ enum USB_MODES {
 
 class USBHAL {
 private:
-    bool initModes();
-
+    uint8_t usbMode = USB_MODE_NONE;
 public:
-    bool init();
-    void modes(uint8_t mode);
 
+    usbHID usbHid;
+    
+
+    bool init();
+    void deinit();
+    void modes(uint8_t mode);
 };
 
 

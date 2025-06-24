@@ -1,8 +1,3 @@
-/*
-
-https://maximeborges.github.io/esp-stacktrace-decoder/
-*/
-
 #include <Arduino.h>
 #include <esp32-hal-log.h>
 #include <Wire.h>
@@ -22,7 +17,6 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/drivers/sound/sound.h>
 #include <components/drivers/vb/vibration.h>
 #include <components/drivers/time/LocalTime.h>
-#include <components/drivers/sd_card/formatSD.h>
 #include <components/drivers/nrf24/radioHall.h>
 
 #include <components/system_config/system_config.h>
@@ -36,14 +30,9 @@ https://maximeborges.github.io/esp-stacktrace-decoder/
 #include <components/emulators/GBC/GboyManager.h>
 
 #include "components/drivers/spiManager/spiManager.h"
-#include "components/drivers/usb/usbStorage/usbStorage.h"
+#include "components/drivers/usb/usbHal.h"
 
-extern "C"
-{
-#include <components/boot/boot_screen.h>
-}
 
-#include <components/drivers/usb/usbHal.h>
 
 /*
 
@@ -60,14 +49,8 @@ Amazing Spider-Man.gb
     old TFT_eSPI: 2.5.43 // not stable
 */
 
-/// add blue ducky
-/// MAX9814 mic
-/// arduboy
 
-TaskHandle_t gui_handler;
-TaskHandle_t intro_handler;
 uint32_t gui_process_id = 0;
-uint32_t main_process_id = 0;
 
 static const char *TAG = "Main";
 
@@ -90,6 +73,9 @@ void on_resource_alert(const system_resources_t* resources) {
              resources->free_heap, resources->task_count);
 }
 
+
+
+
 void setup()
 {
     Serial.begin(115200);
@@ -110,8 +96,11 @@ void setup()
     process_manager.set_heap_warning_threshold(20480); // 20KB
     process_manager.set_stack_warning_threshold(1024);  // 1KB
 
+    /* Initialize the usb */
+    usbHal.init();
 
-    // Initialize the SPI bus once in your main application
+
+    /* Initialize the SPI bus once in your main application */
     spi_bus_manager_init(VSPI_HOST, HSPI_MOSI, HSPI_MISO, HSPI_CLK,  19200); // precalculated buffer;
     //spi_bus_manager_init(HSPI_HOST, VSPI_MOSI, VSPI_MISO, VSPI_CLK,  19200); // precalculated buffer;
 
@@ -183,8 +172,16 @@ void setup()
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
 
-    // USB.begin();
-    // usbStorage.init();
+    usbHal.modes(USB_MODE_HID); // Set USB mode to MSC
+
+    usbHal.usbHid.sendKey('A'); // Example of sending a key press
+    usbHal.usbHid.sendKey('B'); // Example of sending a key press
+    usbHal.usbHid.sendKey('C'); // Example of sending a key press
+    usbHal.usbHid.sendKey('D'); // Example of sending a key press
+    usbHal.usbHid.sendKey('E'); // Example of sending a key press
+    usbHal.usbHid.sendKey('F'); // Example of sending a key press
+    usbHal.usbHid.sendKey('G'); // Example of sending a key press
+    usbHal.usbHid.sendKey('H'); // Example of sending a key press
 
 }
 void loop()
