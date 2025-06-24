@@ -5,7 +5,9 @@
 #ifndef USBHAL_H
 #define USBHAL_H
 #include <cstdint>
+
 #include "usbHID/usbHID.h"
+#include "usbStorage/usbStorage.h"
 
 
 /*
@@ -39,13 +41,22 @@ enum USB_MODES {
 class USBHAL {
 private:
     uint8_t usbMode = USB_MODE_NONE;
+
+    /// @brief USB Mass Storage instance
+    USBSTORAGE usbStorage;
 public:
 
+    /// @brief USB HID instance
+    /// This is used for keyboard, mouse, gamepad, etc.
     usbHID usbHid;
-    
 
+    /// @brief Initialize the USB HAL subsystem.
     bool init();
+
+    /// @brief Deinitialize the USB Device subsystem. Not the USB Host subsystem.
     void deinit();
+
+    /// @brief Set the USB mode for the HAL subsystem.
     void modes(uint8_t mode);
 };
 

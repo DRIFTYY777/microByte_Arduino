@@ -25,7 +25,7 @@ public:
     bool deinit();
 };
 
-extern USBSTORAGE usbStorage;
+//extern USBSTORAGE usbStorage;
 
 
 #endif //USBMSC_H

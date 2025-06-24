@@ -13,6 +13,7 @@
 #include "helpers.h"
 #include "notificationBar.h"
 #include "settings.h"
+#include "usbUI.h"
 
 //
 
@@ -51,7 +52,9 @@ static void EventHandler(lv_event_t *e)
         }
         else if (strcmp(text, "USB") == 0)
         {
-
+            isInMenu = false;
+            clear_group_focus();
+            usbUIscreen( );
         }
         else if (strcmp(text, "Settings") == 0)
         {
@@ -72,6 +75,7 @@ static void EventHandler(lv_event_t *e)
         }
     }
 }
+
 
 void mainScreen()
 {

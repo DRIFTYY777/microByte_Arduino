@@ -172,16 +172,21 @@ void setup()
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
 
-    usbHal.modes(USB_MODE_HID); // Set USB mode to MSC
-
-    usbHal.usbHid.sendKey('A'); // Example of sending a key press
-    usbHal.usbHid.sendKey('B'); // Example of sending a key press
-    usbHal.usbHid.sendKey('C'); // Example of sending a key press
-    usbHal.usbHid.sendKey('D'); // Example of sending a key press
-    usbHal.usbHid.sendKey('E'); // Example of sending a key press
-    usbHal.usbHid.sendKey('F'); // Example of sending a key press
-    usbHal.usbHid.sendKey('G'); // Example of sending a key press
-    usbHal.usbHid.sendKey('H'); // Example of sending a key press
+    // usbHal.modes(USB_MODE_HID); // Set USB mode to MSC
+    //
+    // usbHal.usbHid.device(DEVICE_TYPE_KEYBOARD); // Set USB HID device type to keyboard
+    //
+    // usbHal.usbHid.sendKey('A'); // Example of sending a key press
+    // usbHal.usbHid.sendKey('B'); // Example of sending a key press
+    // usbHal.usbHid.sendKey('C'); // Example of sending a key press
+    // usbHal.usbHid.sendKey('D'); // Example of sending a key press
+    // usbHal.usbHid.sendKey('E'); // Example of sending a key press
+    // usbHal.usbHid.sendKey('F'); // Example of sending a key press
+    // usbHal.usbHid.sendKey('G'); // Example of sending a key press
+    // usbHal.usbHid.sendKey('H'); // Example of sending a key press
+    //
+    //
+    // usbHal.usbHid.mouseClick( MOUSE_LEFT); // Example of mouse click)
 
 }
 void loop()

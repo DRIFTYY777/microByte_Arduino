@@ -93,4 +93,4 @@ bool USBSTORAGE::deinit()
     sd_card.sd_init();
 }
 
-USBSTORAGE usbStorage;
+//USBSTORAGE usbStorage;

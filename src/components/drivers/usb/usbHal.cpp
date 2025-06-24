@@ -1,7 +1,6 @@
 #include "usbHal.h"
 #include "USB.h"
 
-#include "usbStorage/usbStorage.h"
 
 #include "HardwareSerial.h"
 
@@ -42,6 +41,10 @@ void USBHAL::deinit()
             //USB.endDebug();
             Serial.println("USB Debug deinitialized");
             break;
+
+        case USB_MODE_NONE:
+            Serial.println("USB already deinitialized");
+            break;
         default:
             Serial.println("USB deinitialized");
             break;
@@ -60,7 +63,7 @@ void USBHAL::modes(uint8_t mode)
         usbMode = USB_MODE_CDC;
         break;
     case USB_MODE_HID:
-        usbHid.init(DEVICE_TYPE_KEYBOARD); // Initialize HID with keyboard as default
+        usbHid.init(); // Initialize HID with keyboard as default
         Serial.println("USB Mode set to HID");
         usbMode = USB_MODE_HID;
         break;

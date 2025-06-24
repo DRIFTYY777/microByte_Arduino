@@ -4,6 +4,7 @@
 
 #ifndef USBHID_H
 #define USBHID_H
+
 #include <cstdint>
 
 #include "USBHIDKeyboard.h"
@@ -40,17 +41,41 @@ private:
     //void deinitCustomDevice();
 
 public:
-    void init(uint8_t device_type);
+
+    /// @brief Initialize the USB HID a subsystem with a default device (keyboard).
+    void init();
+
+    /// @brief Deinitialize the USB HID subsystem based on the current device.
     void deinit();
 
-    /* Keyboard methods */
+    /// @brief Set the current device type for USB HID operations. Like keyboard, mouse, gamepad, etc.
+    void device(uint8_t device);
+
+    /* Keyboard Methods */
+    /// @brief Send a key press event to the current USB HID device. (INSTANTLY)
     void sendKey(char key);
 
+    /// @brief Send a string to the current USB HID device. (INSTANTLY)
+    void sendString(const char* str);
+
+    /// @brief Press a key on the current USB HID device.
+    void keyPress(uint8_t key);
+
+    /// @brief Release a key on the current USB HID device.
+    void keyRelease(uint8_t key);
+
+    /* Mouse Methods */
+    /// @brief Move the mouse cursor by the specified x and y offsets, with optional wheel and pan movements.
+    void moveMouse(int8_t x, int8_t y, int8_t wheel = 0, int8_t pan = 0);
+
+    /// @brief Perform a mouse click with the specified button.
+    void mouseClick(uint8_t button);
+
+    /// @brief Check if a mouse button is currently pressed.
+    void mousePress(uint8_t button);
+
+    /// @brief Release a mouse button.
+    void mouseRelease(uint8_t button);
 
 };
-
-//extern usbHID usbHid;
-
-
-
 #endif //USBHID_H
