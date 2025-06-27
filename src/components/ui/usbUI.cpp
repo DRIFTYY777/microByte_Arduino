@@ -21,7 +21,7 @@ void usbEvent(lv_event_t *e)
     {
         usbHal.modes(USB_MODE_MSC); // Set USB mode to Mass Storage
         show_waiting_overlay(lv_scr_act()); // Show overlay on current screen
-        lv_timer_create(hide_overlay_cb, 4000, nullptr);
+        lv_timer_create(hide_overlay_cb, 1000, nullptr);
     }
 }
 
