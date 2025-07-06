@@ -25,9 +25,12 @@ bool WIFI_CONNECTIONS::begin_wifi() {
     // check the saved Wi-Fi credentials if exist return true else return false
     if (SystemManager::getCredentials("wifi_name") == nullptr ||
         SystemManager::getCredentials("wifi_password") == nullptr) {
+
         currentState = NO_CREDENTIALS;
+
         SystemManager::saveCredentials("wifi_name", "WIFISSID");
         SystemManager::saveCredentials("wifi_password", "WIFIPASSWORD");
+
         return false;
     }
     return true;
@@ -37,7 +40,7 @@ bool WIFI_CONNECTIONS::begin_wifi() {
     ESP_LOGI(TAG, "WiFi task started and managed by ProcessManager");
 
     while (true) {
-        // Check if process is still alive and should continue running
+        // Check if a process is still alive and should continue running
         if (!process_manager.is_process_alive(wifi_process_id)) {
             ESP_LOGW(TAG, "WiFi process is no longer alive, terminating task");
             break;
@@ -63,11 +66,11 @@ bool WIFI_CONNECTIONS::begin_wifi() {
             }
 
             while (WiFiClass::status() != WL_CONNECTED && attempts < 10) {
-                // Check if process should continue during connection attempts
+                // Check if a process should continue during connection attempts
                 if (!process_manager.is_process_alive(wifi_process_id)) {
                     ESP_LOGW(TAG, "WiFi process terminated during connection attempt");
                     WiFi.disconnect();
-                    vTaskDelete(NULL);
+                    vTaskDelete(nullptr);
                     return;
                 }
 
@@ -109,7 +112,7 @@ bool WIFI_CONNECTIONS::begin_wifi() {
     }
 
     ESP_LOGI(TAG, "WiFi task terminating");
-    vTaskDelete(NULL);
+    vTaskDelete(nullptr);
 }
 
 void WIFI_CONNECTIONS::wifi_init()
@@ -121,7 +124,7 @@ void WIFI_CONNECTIONS::wifi_init()
         return;
     }
 
-    // Create WiFi process using ProcessManager instead of xTaskCreate
+    // Create a WiFi process using ProcessManager instead of xTaskCreate
     wifi_process_id = process_manager.create_process(
         "WiFi_Task",               // Process name
         wifi_task,                 // Task function
@@ -159,7 +162,7 @@ void WIFI_CONNECTIONS::wifi_deinit()
 {
     ESP_LOGI(TAG, "Deinitializing WiFi");
     
-    // Stop WiFi process
+    // Stop a WiFi process
     stop_wifi_process();
     
     // Disconnect WiFi
@@ -183,7 +186,7 @@ WiFiState WIFI_CONNECTIONS::getState() {
     return currentState;
 }
 
-bool WIFI_CONNECTIONS::changePassword(char *ssid, char *password) {
+bool WIFI_CONNECTIONS::changePassword(const char *ssid, const char *password) {
     if (!ssid || !password) {
         ESP_LOGE(TAG, "Invalid SSID or password provided");
         return false;
@@ -192,8 +195,8 @@ bool WIFI_CONNECTIONS::changePassword(char *ssid, char *password) {
     ESP_LOGI(TAG, "Changing WiFi credentials to SSID: %s", ssid);
     
     // Save new credentials
-    sys_manager.saveCredentials("wifi_name", ssid);
-    sys_manager.saveCredentials("wifi_password", password);
+    SystemManager::saveCredentials("wifi_name", ssid);
+    SystemManager::saveCredentials("wifi_password", password);
     
     // Trigger reconnection with new credentials
     return restart_wifi_connection();

@@ -91,6 +91,7 @@ bool USBSTORAGE::deinit()
         usbModeActive = false;
     }
     sd_card.sd_init();
+    return true; // Always return true for simplicity
 }
 
 //USBSTORAGE usbStorage;

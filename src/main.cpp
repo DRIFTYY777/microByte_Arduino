@@ -33,26 +33,9 @@
 #include "components/drivers/usb/usbHal.h"
 
 
-
-/*
-
-Amazing Spider-Man.gb
-[ 22059][E][vfs_api.cpp:105]
- open(): /sd/Emulator/GameBoy/Save_Data/Amazing Spider-Man.gb.sav does not exist, no permits for creation
- gbu loader.c
-*/
-
-#include <SD.h>
-
-/*
-    LVGL Version: 8.3.9
-    old TFT_eSPI: 2.5.43 // not stable
-*/
-
-
 uint32_t gui_process_id = 0;
 
-static const char *TAG = "Main";
+static auto TAG = "Main";
 
 uint8_t console_running;
 bool boot_screen_ani = true;
@@ -72,9 +55,6 @@ void on_resource_alert(const system_resources_t* resources) {
     ESP_LOGW(TAG, "Resource alert! Free heap: %lu bytes, Task count: %d",
              resources->free_heap, resources->task_count);
 }
-
-
-
 
 void setup()
 {
@@ -97,7 +77,7 @@ void setup()
     process_manager.set_stack_warning_threshold(1024);  // 1KB
 
     /* Initialize the usb */
-    usbHal.init();
+    // usbHal.init();
 
 
     /* Initialize the SPI bus once in your main application */
@@ -143,7 +123,6 @@ void setup()
     /* Init LED for Notification */
     LED_NOTIFICATION::LED_init();
 
-
     ESP_LOGE(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n",
              sys_manager.system_memory(MEMORY_SPIRAM),
              sys_manager.system_memory(MEMORY_INTERNAL),
@@ -171,6 +150,10 @@ void setup()
 
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
+
+
+    RADIOHALL::PrintAllNetworks();
+    RADIOHALL::EducationalWiFiInterferenceDemo();
 
     // usbHal.modes(USB_MODE_HID); // Set USB mode to MSC
     //

@@ -5,6 +5,7 @@
 #ifndef USBHAL_H
 #define USBHAL_H
 #include <cstdint>
+#include <USBCDC.h>
 
 #include "usbHID/usbHID.h"
 #include "usbStorage/usbStorage.h"
@@ -44,11 +45,23 @@ private:
 
     /// @brief USB Mass Storage instance
     USBSTORAGE usbStorage;
+
+
+
+    void initCDC();
+    void deinitCDC();
+
+
 public:
 
     /// @brief USB HID instance
     /// This is used for keyboard, mouse, gamepad, etc.
     usbHID usbHid;
+
+    /// @brief USB Communication Device Class instance
+    /// This is used for serial communication over USB.
+    USBCDC USBSerial;
+
 
     /// @brief Initialize the USB HAL subsystem.
     bool init();

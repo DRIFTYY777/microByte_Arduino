@@ -12,6 +12,9 @@ public:
     static void configureRadio(uint8_t channel, uint8_t payload);
     static void isConnected();
 
+    static void PrintAllNetworks();
+    static void EducationalWiFiInterferenceDemo();
+
 };
 
 extern RADIOHALL radioHall;

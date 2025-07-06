@@ -133,7 +133,9 @@ void educational_rf_demonstration(NRF24_t* nrf);
 void educational_channel_scanner(NRF24_t* nrf);
 
 
+uint8_t Nrf24_scanNetworks(NRF24_t* nrf);
 
+char Nrf24_getNetworkName(NRF24_t* nrf, uint8_t index);
 
 
 #ifdef __cplusplus

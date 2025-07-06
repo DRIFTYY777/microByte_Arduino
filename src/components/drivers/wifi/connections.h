@@ -24,7 +24,7 @@ public:
     static void wifi_init();
     static void wifi_deinit();
     static WiFiState getState();
-    static bool changePassword(char *ssid, char *password);
+    static bool changePassword(const char *ssid, const char *password);
     
     // Process management functions
     static void stop_wifi_process();

@@ -870,6 +870,53 @@ void educational_channel_scanner(NRF24_t* nrf) {
     ESP_LOGI(TAG, "Channel scan completed");
 }
 
+uint8_t Nrf24_scanNetworks(NRF24_t* nrf) {
+	// return all scaned networks
+	uint8_t foundNetworks = 0;
+	ESP_LOGI(TAG, "Starting NRF24 Network Scan");
+	// Set to receive mode
+	if (!Nrf24_receiveMode(nrf)) {
+		ESP_LOGE(TAG, "Failed to set receive mode");
+		return foundNetworks;
+	}
+	// Scan across channels to demonstrate spectrum usage
+	for (uint8_t channel = 0; channel < 126; channel++) {
+		if (!Nrf24_setChannel(nrf, channel)) {
+			continue;
+		}
+
+		// Brief listen period
+		vTaskDelay(pdMS_TO_TICKS(5));
+
+		// Check if there's activity (educational purposes)
+		uint8_t status = Nrf24_getStatus(nrf);
+		if (status & 0x40) { // RX_DR bit
+			ESP_LOGI(TAG, "Network detected on channel %d (freq: %d MHz)",
+					 channel, 2400 + channel);
+			foundNetworks++;
+		}
+
+		// Clear status
+		Nrf24_clearStatus(nrf);
+	}
+	ESP_LOGI(TAG, "Network scan completed. Found %d networks", foundNetworks);
+	return foundNetworks;
+}
+
+char Nrf24_getNetworkName(NRF24_t* nrf, uint8_t index){
+	// return all scaned networks names
+	ESP_LOGI(TAG, "Getting network name for index %d", index);
+	// This is a placeholder function, as NRF24 does not inherently support network names.
+	if (index < 0 || index >= 10) { // Assuming a maximum of 10 networks for simplicity
+		ESP_LOGE(TAG, "Index out of range: %d", index);
+		return '\0'; // Return null character if index is invalid
+	}
+	// For educational purposes, we can return a dummy name based on the index
+	char networkName[20];
+	snprintf(networkName, sizeof(networkName), "Network_%d", index);
+	ESP_LOGI(TAG, "Network name: %s", networkName);
+	return networkName[0]; // Return the first character of the network name
+}
 
 
 
