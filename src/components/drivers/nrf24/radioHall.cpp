@@ -5,43 +5,51 @@
 #include <components/drivers/nrf24/nrf24.h>
 #include <components/system_config/system_config.h>
 
-static const char* TAG = "RADIOHALL";
+static const char *TAG = "RADIOHALL";
 
 NRF24_t nrf24 = {
     .cePin = NRF_CE,
     .csnPin = NRF_CSN,
-    .PTX = 1, // Start in TX mode
+    .PTX = 1,      // Start in TX mode
     .channel = 76, // Default channel (0-127, avoid WiFi overlap)
     .payload = 16, // Default payload size
 
     .spi_host = SPI3_HOST,
     .spi_speed = 1000000, // 1 MHz (explicit value)
-    .spi = nullptr, // Will be initialized during setup
-    .status = 0 // Initial status
+    .spi = nullptr,       // Will be initialized during setup
+    .status = 0           // Initial status
 };
 
-
-void RADIOHALL::init() {
-    if (Nrf24_init(&nrf24)) {
+void RADIOHALL::init()
+{
+    if (Nrf24_init(&nrf24))
+    {
         ESP_LOGI(TAG, "NRF24 radio initialized successfully");
     }
-    else {
+    else
+    {
         ESP_LOGE(TAG, "Failed to initialize NRF24 radio");
     }
 }
 
-void RADIOHALL::denit() {
+void RADIOHALL::denit()
+{
     Nrf24_deinit(&nrf24);
 }
 
-void RADIOHALL::configureRadio(const uint8_t channel, const uint8_t payload) {
+void RADIOHALL::configureRadio(const uint8_t channel, const uint8_t payload)
+{
     Nrf24_config(&nrf24, channel, payload);
 }
 
-void RADIOHALL::isConnected() {
-    if (Nrf24_isConnected(&nrf24)) {
+void RADIOHALL::isConnected()
+{
+    if (Nrf24_isConnected(&nrf24))
+    {
         ESP_LOGI(TAG, "NRF24 radio is connected");
-    } else {
+    }
+    else
+    {
         ESP_LOGE(TAG, "NRF24 radio is not connected");
     }
 }
@@ -66,71 +74,76 @@ void RADIOHALL::PrintAllNetworks() {
 
     uint8_t networkCount = 0;
     Serial.println("Scanning channels 0-125 for activity...");
-    Serial.println("Channel | Frequency | Activity");
-    Serial.println("--------|-----------|----------");
+    Serial.println("Channel | Frequency | RSSI | Activity");
+    Serial.println("--------|-----------|------|----------");
 
     // Scan all available channels
     for (uint8_t channel = 0; channel < 126; channel++) {
-        // Set channel
+        // Set scanning channel
         if (!Nrf24_setChannel(&nrf24, channel)) {
             continue;
         }
 
+        // Clear previous status
+        Nrf24_clearStatus(&nrf24);
+
         // Listen for a short period
         vTaskDelay(pdMS_TO_TICKS(10));
 
-        // Check for activity on this channel
+        // Check for activity using multiple methods
         uint8_t status = Nrf24_getStatus(&nrf24);
-        bool activityDetected = false;
+        bool activity = false;
 
-        // Check RX_DR bit for received data
-        if (status & 0x40) {
-            activityDetected = true;
+        // Method 1: Check RX_DR flag
+        if (status & (1 << 6)) {
+            activity = true;
+        }
+
+        // Method 2: Check if RX FIFO is not empty
+        if (!Nrf24_rxFifoEmpty(&nrf24)) {
+            activity = true;
+        }
+
+        // Method 3: Simple carrier detection (reading register multiple times)
+        uint8_t carrier_count = 0;
+        for (int i = 0; i < 10; i++) {
+            uint8_t reg_val = Nrf24_getStatus(&nrf24);
+            if (reg_val != 0x0E) { // Default empty state
+                carrier_count++;
+            }
+            vTaskDelay(1);
+        }
+
+        if (carrier_count > 3 || activity) {
+            uint16_t frequency = 2400 + channel;
+            Serial.printf("  %3d   |  %4d MHz |  N/A | DETECTED\n",
+                         channel, frequency);
+            ESP_LOGI(TAG, "Activity detected on channel %d (%d MHz)",
+                     channel, frequency);
             networkCount++;
         }
 
-        // Also check if RX FIFO is not empty
+        // Show progress every 25 channels
+        if (channel % 25 == 0) {
+            Serial.printf("Progress: %d/126 channels scanned...\n", channel + 1);
+        }
+
+        // Clear any received data
         if (!Nrf24_rxFifoEmpty(&nrf24)) {
-            activityDetected = true;
-            if (!(status & 0x40)) { // Don't double count
-                networkCount++;
-            }
-        }
-
-        if (activityDetected) {
-            uint16_t frequency = 2400 + channel;
-            ESP_LOGI(TAG, "Activity detected on channel %d (freq: %d MHz)", channel, frequency);
-            Serial.printf("  %3d   |  %4d MHz |    YES\n", channel, frequency);
-
-            // Clear any received data
-            if (Nrf24_dataReady(&nrf24)) {
-                uint8_t dummyData[32];
-                Nrf24_getData(&nrf24, dummyData);
-            }
-        }
-
-        // Clear status register
-        Nrf24_clearStatus(&nrf24);
-
-        // Small delay between channels
-        vTaskDelay(pdMS_TO_TICKS(2));
-
-        // Print progress every 25 channels
-        if ((channel + 1) % 25 == 0) {
-            Serial.printf("Progress: %d/125 channels scanned\n", channel + 1);
+            Nrf24_flushRx(&nrf24);
         }
     }
 
-    Serial.println("=====================================");
+    Serial.println("========================================");
     Serial.printf("Scan complete. Found activity on %d channels\n", networkCount);
     ESP_LOGI(TAG, "Network scan completed. Found activity on %d channels", networkCount);
 
     if (networkCount == 0) {
-        Serial.println("No network activity detected.");
-        Serial.println("This could mean:");
-        Serial.println("- No devices transmitting on 2.4GHz NRF24 frequencies");
+        Serial.println("No activity detected. Possible causes:");
+        Serial.println("- No other 2.4GHz devices active");
         Serial.println("- Radio sensitivity needs adjustment");
         Serial.println("- Antenna issues");
+        Serial.println("- Interference from strong signals");
     }
 
     // Reset to default channel and mode
@@ -139,7 +152,7 @@ void RADIOHALL::PrintAllNetworks() {
 }
 
 void RADIOHALL::EducationalWiFiInterferenceDemo() {
- ESP_LOGW(TAG, "=== EDUCATIONAL RF INTERFERENCE DEMONSTRATION ===");
+    ESP_LOGW(TAG, "=== EDUCATIONAL RF INTERFERENCE DEMONSTRATION ===");
     ESP_LOGW(TAG, "WARNING: This is for educational purposes only!");
     ESP_LOGW(TAG, "Ensure you have proper authorization and comply with local laws");
     ESP_LOGW(TAG, "Use only in controlled environments with your own equipment");
@@ -156,9 +169,6 @@ void RADIOHALL::EducationalWiFiInterferenceDemo() {
     }
 
     // WiFi channels in 2.4GHz band (overlapping with NRF24 channels)
-    // WiFi Ch 1: 2412 MHz (NRF24 Ch 12)
-    // WiFi Ch 6: 2437 MHz (NRF24 Ch 37)
-    // WiFi Ch 11: 2462 MHz (NRF24 Ch 62)
     const uint8_t wifi_channels[][2] = {
         {12, 1},   // NRF24 channel 12 = WiFi channel 1 (2412 MHz)
         {37, 6},   // NRF24 channel 37 = WiFi channel 6 (2437 MHz)
@@ -175,14 +185,7 @@ void RADIOHALL::EducationalWiFiInterferenceDemo() {
     Serial.println("NRF Ch | WiFi Ch | Frequency | Duration");
     Serial.println("-------|---------|-----------|----------");
 
-    // Set to transmit mode
-    if (!Nrf24_transmitMode(&nrf24)) {
-        ESP_LOGE(TAG, "Failed to set transmit mode");
-        Serial.println("Error: Failed to set transmit mode");
-        return;
-    }
-
-    // Loop through each WiFi channel and demonstrate interference
+    // Fixed: Loop through only 3 channels (array size)
     for (int i = 0; i < 3; i++) {
         uint8_t nrf_channel = wifi_channels[i][0];
         uint8_t wifi_channel = wifi_channels[i][1];
@@ -220,33 +223,15 @@ void RADIOHALL::EducationalWiFiInterferenceDemo() {
         }
 
         Serial.printf("Completed demo on WiFi channel %d\n", wifi_channel);
-
-        // Pause between channels
         vTaskDelay(pdMS_TO_TICKS(2000)); // 2 second pause
     }
 
     // Return to receive mode
     Nrf24_receiveMode(&nrf24);
-    Nrf24_setChannel(&nrf24, nrf24.channel); // Reset to default channel
+    Nrf24_setChannel(&nrf24, nrf24.channel);
 
-    Serial.println("=====================================");
     Serial.println("Educational demonstration completed");
-    Serial.println("");
-    Serial.println("EDUCATIONAL NOTES:");
-    Serial.println("- This demonstrates how 2.4GHz devices can interfere");
-    Serial.println("- NRF24 and WiFi share the same frequency band");
-    Serial.println("- Real interference would be continuous and stronger");
-    Serial.println("- WiFi uses spread spectrum for interference resistance");
-    Serial.println("- Modern WiFi has adaptive frequency hopping");
-    Serial.println("");
-    Serial.println("LEGAL REMINDER:");
-    Serial.println("- Intentional interference is illegal in most countries");
-    Serial.println("- Use only for educational purposes in controlled environments");
-    Serial.println("- Always comply with local telecommunications regulations");
-
     ESP_LOGI(TAG, "Educational WiFi interference demonstration completed");
-    ESP_LOGW(TAG, "Remember: Use this knowledge responsibly and legally!");
 }
 
 extern RADIOHALL radioHall;
-

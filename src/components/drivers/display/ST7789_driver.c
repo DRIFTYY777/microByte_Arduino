@@ -18,18 +18,15 @@
 
 #include <components/drivers/spiManager/spiManager.h>
 
-
 #define ST7789_SPI_QUEUE_SIZE 7
 
 static const char *TAG = "ST7789_driver";
-
 
 static void ST7789_send_cmd(st7789_driver_t *driver, const st7789_command_t *command);
 static void ST7789_config(st7789_driver_t *driver);
 static void ST7789_pre_cb(spi_transaction_t *transaction);
 static void ST7789_queue_empty(st7789_driver_t *driver);
 static void ST7789_multi_cmd(st7789_driver_t *driver, const st7789_command_t *sequence);
-
 
 bool ST7789_init(st7789_driver_t *driver)
 {
@@ -237,9 +234,9 @@ void ST7789_set_window(st7789_driver_t *driver, uint16_t start_x, uint16_t start
 	ST7789_multi_cmd(driver, sequence);
 }
 
-uint16_t swap_rgb(uint16_t color) {
-	    return ((color & 0xF800) >> 11) | (color & 0x07E0) | ((color & 0x001F) << 11);
-
+uint16_t swap_rgb(uint16_t color)
+{
+	return ((color & 0xF800) >> 11) | (color & 0x07E0) | ((color & 0x001F) << 11);
 }
 
 void ST7789_little_endian(st7789_driver_t *driver)
@@ -395,20 +392,11 @@ static void ST7789_config(st7789_driver_t *driver)
 		{ST7789_CMD_SLPIN, 10, 0, NULL},	// Sleep
 		{ST7789_CMD_SWRESET, 200, 0, NULL}, // Reset
 		{ST7789_CMD_SLPOUT, 120, 0, NULL},	// Sleep out
-
-		// {ST7789_CMD_MADCTL, 0, 1, (const uint8_t *)"\x00"}, // Page / column address order
-		// {ST7789_CMD_COLMOD, 0, 1, (const uint8_t *)"\x55"}, // 16 bit RGB
-		// {ST7789_CMD_INVON, 0, 0, NULL},						// Inversion on
-		// {ST7789_CMD_CASET, 0, 4, (const uint8_t *)&caset},	// Set width
-		// {ST7789_CMD_RASET, 0, 4, (const uint8_t *)&raset},	// Set height
-
-
 		{ST7789_CMD_MADCTL, 0, 1, (const uint8_t *)"\x00"}, // Page / column address order
 		{ST7789_CMD_COLMOD, 0, 1, (const uint8_t *)"\x55"}, // 16 bit RGB
 		{ST7789_CMD_INVOFF, 0, 0, NULL},					// Inversion OFF (Corrected)
 		{ST7789_CMD_CASET, 0, 4, (const uint8_t *)&caset},	// Set width
 		{ST7789_CMD_RASET, 0, 4, (const uint8_t *)&raset},	// Set height
-
 
 		// Porch setting
 		{ST7789_CMD_PORCTRL, 0, 5, (const uint8_t *)"\x0c\x0c\x00\x33\x33"},

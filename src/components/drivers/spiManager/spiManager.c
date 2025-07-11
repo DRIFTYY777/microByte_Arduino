@@ -245,6 +245,8 @@ void set_max_transfer_size(spi_host_device_t host, size_t max_transfer_sz) {
     };
 }
 
+
+
 esp_err_t spi_manager_transmit(spi_device_handle_t handle, const uint8_t *tx_data, size_t length)
 {
     if (handle == NULL || tx_data == NULL || length == 0) {

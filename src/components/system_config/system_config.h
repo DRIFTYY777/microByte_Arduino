@@ -18,7 +18,7 @@
 // #define I2C_SDA 18 // SDA
 // #define I2C_SCL 8  // SCL
 #define I2C_SDA 8 // SDA
-#define I2C_SCL 9  // SCL
+#define I2C_SCL 9 // SCL
 
 // SD Card pin configuration
 #define SD_CS 39
@@ -66,8 +66,6 @@
 #define NRF_CLK_SPEED (8 * 1000 * 1000) // 8Mhz
 
 #define NTP_SERVER "pool.ntp.org"
-
-
 
 // WiFi Configuration
 // #define WIFI_SSID "Dhiman"

@@ -32,7 +32,6 @@
 #include "components/drivers/spiManager/spiManager.h"
 #include "components/drivers/usb/usbHal.h"
 
-
 uint32_t gui_process_id = 0;
 
 static auto TAG = "Main";
@@ -43,15 +42,18 @@ bool game_running = false;
 bool game_executed = false;
 
 // Process manager callback functions
-void on_process_created(const process_info_t* process) {
+void on_process_created(const process_info_t *process)
+{
     ESP_LOGI(TAG, "Process created callback: %s (ID: %lu)", process->name.c_str(), process->id);
 }
 // Callback for process deletion
-void on_process_deleted(uint32_t process_id) {
+void on_process_deleted(uint32_t process_id)
+{
     ESP_LOGI(TAG, "Process deleted callback: ID %lu", process_id);
 }
 // Callback for resource alerts
-void on_resource_alert(const system_resources_t* resources) {
+void on_resource_alert(const system_resources_t *resources)
+{
     ESP_LOGW(TAG, "Resource alert! Free heap: %lu bytes, Task count: %d",
              resources->free_heap, resources->task_count);
 }
@@ -62,7 +64,8 @@ void setup()
     Serial.print("\n");
 
     // Initialize Process Manager first
-    if (!process_manager.init()) {
+    if (!process_manager.init())
+    {
         ESP_LOGE(TAG, "Failed to initialize Process Manager");
         return;
     }
@@ -74,16 +77,14 @@ void setup()
 
     // Set resource thresholds
     process_manager.set_heap_warning_threshold(20480); // 20KB
-    process_manager.set_stack_warning_threshold(1024);  // 1KB
+    process_manager.set_stack_warning_threshold(1024); // 1KB
 
     /* Initialize the usb */
     // usbHal.init();
 
-
     /* Initialize the SPI bus once in your main application */
-    spi_bus_manager_init(VSPI_HOST, HSPI_MOSI, HSPI_MISO, HSPI_CLK,  19200); // precalculated buffer;
-    //spi_bus_manager_init(HSPI_HOST, VSPI_MOSI, VSPI_MISO, VSPI_CLK,  19200); // precalculated buffer;
-
+    spi_bus_manager_init(VSPI_HOST, HSPI_MOSI, HSPI_MISO, HSPI_CLK, 19200); // precalculated buffer;
+    // spi_bus_manager_init(HSPI_HOST, VSPI_MOSI, VSPI_MISO, VSPI_CLK,  19200); // precalculated buffer;
 
     /* Increase of Watchdog */
     esp_task_wdt_init(10, true); // 10-second timeout
@@ -136,8 +137,9 @@ void setup()
     // xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024 * 8, nullptr, 2, &gui_handler, 0);
 
     gui_process_id = process_manager.create_process("GUI_Task", GUI_task, 1024 * 8,
-                                                   nullptr, PROCESS_PRIORITY_HIGH, 0);
-    if (gui_process_id == 0) {
+                                                    nullptr, PROCESS_PRIORITY_HIGH, 0);
+    if (gui_process_id == 0)
+    {
         ESP_LOGE(TAG, "Failed to create GUI process");
         return;
     }
@@ -150,7 +152,6 @@ void setup()
 
     /* Queue for creating or ... */
     modeQueue = xQueueCreate(1, sizeof(app));
-
 
     RADIOHALL::PrintAllNetworks();
     RADIOHALL::EducationalWiFiInterferenceDemo();
@@ -170,34 +171,39 @@ void setup()
     //
     //
     // usbHal.usbHid.mouseClick( MOUSE_LEFT); // Example of mouse click)
-
 }
 void loop()
 {
-    if (xQueueReceive(modeQueue, &app, portMAX_DELAY) == pdTRUE) {
-        if (app.mode == MODE_APPLEJUICE) {
-            if (app.status == STATUS_RUNNING) {
+    if (xQueueReceive(modeQueue, &app, portMAX_DELAY) == pdTRUE)
+    {
+        if (app.mode == MODE_APPLEJUICE)
+        {
+            if (app.status == STATUS_RUNNING)
+            {
                 // Create process for AppleJuice attack
-                uint32_t apple_process_id = process_manager.create_process("AppleJuice",
-                    [](void* param) {
+                uint32_t apple_process_id = process_manager.create_process("AppleJuice", [](void *param)
+                                                                           {
                         while (app.status == STATUS_RUNNING) {
                             evilApple.startAdvertising();
                         }
                         evilApple.stopAdvertising();
-                        vTaskDelete(nullptr);
-                    }, 1024 * 4, nullptr, PROCESS_PRIORITY_NORMAL);
+                        vTaskDelete(nullptr); }, 1024 * 4, nullptr, PROCESS_PRIORITY_NORMAL);
 
-                if (apple_process_id == 0) {
+                if (apple_process_id == 0)
+                {
                     ESP_LOGE(TAG, "Failed to create AppleJuice process");
                 }
             }
         }
-        else if (app.mode == MODE_EXT_APP) {
-            if (app.status == STATUS_RUNNING) {
+        else if (app.mode == MODE_EXT_APP)
+        {
+            if (app.status == STATUS_RUNNING)
+            {
                 ESP_LOGI(TAG, "Loading external App");
 
                 // Suspend GUI process before switching
-                if (gui_process_id != 0) {
+                if (gui_process_id != 0)
+                {
                     process_manager.suspend_process(gui_process_id);
                 }
 
@@ -207,15 +213,18 @@ void loop()
                 esp_restart();
             }
         }
-        else if (app.mode == MODE_UPDATE) {
-            if (app.status == STATUS_RUNNING) {
+        else if (app.mode == MODE_UPDATE)
+        {
+            if (app.status == STATUS_RUNNING)
+            {
                 ESP_LOGE(TAG, "Loading OTA");
 
                 // Stop monitoring during OTA update
                 process_manager.stop_monitoring();
 
                 // Suspend GUI process
-                if (gui_process_id != 0) {
+                if (gui_process_id != 0)
+                {
                     process_manager.suspend_process(gui_process_id);
                 }
 
@@ -225,12 +234,15 @@ void loop()
                 esp_restart();
             }
         }
-        else if (app.mode == MODE_GAME) {
-            if (app.console == NES) {
-                if (app.status == STATUS_RUNNING) {
+        else if (app.mode == MODE_GAME)
+        {
+            if (app.console == NES)
+            {
+                if (app.status == STATUS_RUNNING)
+                {
                     // Create NES emulator process
-                    uint32_t nes_process_id = process_manager.create_process("NES_Emulator",
-                        [](void* param) {
+                    uint32_t nes_process_id = process_manager.create_process("NES_Emulator", [](void *param)
+                                                                             {
                             if (gui_process_id != 0) {
                                 process_manager.suspend_process(gui_process_id);
                             }
@@ -242,19 +254,21 @@ void loop()
                             }
                             game_executed = true;
                             game_running = true;
-                            vTaskDelete(nullptr);
-                        }, 1024 * 16, nullptr, PROCESS_PRIORITY_HIGH);
+                            vTaskDelete(nullptr); }, 1024 * 16, nullptr, PROCESS_PRIORITY_HIGH);
 
-                    if (nes_process_id == 0) {
+                    if (nes_process_id == 0)
+                    {
                         ESP_LOGE(TAG, "Failed to create NES emulator process");
                     }
                 }
             }
-            else if (app.console == GAMEBOY_COLOR || app.console == GAMEBOY) {
-                if (app.status == STATUS_RUNNING) {
+            else if (app.console == GAMEBOY_COLOR || app.console == GAMEBOY)
+            {
+                if (app.status == STATUS_RUNNING)
+                {
                     // Create GameBoy emulator process
-                    uint32_t gb_process_id = process_manager.create_process("GB_Emulator",
-                        [](void* param) {
+                    uint32_t gb_process_id = process_manager.create_process("GB_Emulator", [](void *param)
+                                                                            {
                             if (gui_process_id != 0) {
                                 process_manager.suspend_process(gui_process_id);
                             }
@@ -262,10 +276,10 @@ void loop()
                             gnuboy_start();
                             game_executed = true;
                             game_running = true;
-                            vTaskDelete(nullptr);
-                        }, 1024 * 16, nullptr, PROCESS_PRIORITY_HIGH);
+                            vTaskDelete(nullptr); }, 1024 * 16, nullptr, PROCESS_PRIORITY_HIGH);
 
-                    if (gb_process_id == 0) {
+                    if (gb_process_id == 0)
+                    {
                         ESP_LOGE(TAG, "Failed to create GameBoy emulator process");
                     }
                 }

@@ -19,26 +19,33 @@
 
 static const char *TAG = "SD_CARD";
 
-#define SPI_DMA_CHAN    2
+#define SPI_DMA_CHAN 2
 
 SD_CARD_INFO sd_card_info;
 
-void listDir(File dir, int depth) {
-    while (true) {
+void listDir(File dir, int depth)
+{
+    while (true)
+    {
         File entry = dir.openNextFile();
-        if (!entry) {
+        if (!entry)
+        {
             break;
         }
 
-        for (int i = 0; i < depth; i++) {
+        for (int i = 0; i < depth; i++)
+        {
             Serial.print("  ");
         }
 
-        if (entry.isDirectory()) {
+        if (entry.isDirectory())
+        {
             Serial.print("[DIR] ");
             Serial.println(entry.name());
-            listDir(entry, depth + 1);  // Recursive call for subdirectory
-        } else {
+            listDir(entry, depth + 1); // Recursive call for subdirectory
+        }
+        else
+        {
             Serial.print("[FILE] ");
             Serial.print(entry.name());
             Serial.print("  SIZE: ");
@@ -49,7 +56,6 @@ void listDir(File dir, int depth) {
     }
 }
 
-
 bool SD_CARD::sd_init()
 {
     // necessary of usb msc
@@ -58,21 +64,19 @@ bool SD_CARD::sd_init()
         SD.end();
         SD_mount = false;
         // 20 ms delay to ensure SD Card is properly unmounted
-        vTaskDelay( 20 / portTICK_PERIOD_MS );
+        vTaskDelay(20 / portTICK_PERIOD_MS);
     }
-
 
     SPI.begin(VSPI_CLK, VSPI_MISO, VSPI_MOSI); // Initialize SPI bus (optional, default is HSPI)
     SPI.setFrequency(4000000);
 
-     if (!SD.begin(SD_CS, SPI)) // Initialize SD card using SPI with CS pin
-     {
-         ESP_LOGE(TAG, "Card Mount Failed (SPI)");
-         SD_mount = false;
-         sd_card_info.card_mounted = 0;
-         return false;
-     }
-
+    if (!SD.begin(SD_CS, SPI)) // Initialize SD card using SPI with CS pin
+    {
+        ESP_LOGE(TAG, "Card Mount Failed (SPI)");
+        SD_mount = false;
+        sd_card_info.card_mounted = 0;
+        return false;
+    }
 
     delay(100);
     // The SD library doesn't have a direct equivalent to SD_MMC.cardType()
@@ -83,7 +87,7 @@ bool SD_CARD::sd_init()
     const uint64_t cardSize = SD.cardSize() / (1024 * 1024);
     const uint64_t usedSpace = cardSize - (SD.usedBytes() / (1024 * 1024));
 
-    //ESP_LOGE(TAG, "SD Card Size: %lluMB", cardSize);
+    // ESP_LOGE(TAG, "SD Card Size: %lluMB", cardSize);
 
     // Update struct info
     sd_card_info.card_type = SDIO; // Or some other indication that it's using SPI
@@ -122,12 +126,12 @@ bool SD_CARD::is_card_mounted()
     return SD_mount;
 }
 
-bool SD_CARD::readRAW_(uint8_t* buffer, uint32_t sector)
+bool SD_CARD::readRAW_(uint8_t *buffer, uint32_t sector)
 {
     return SD.readRAW(buffer, sector);
 }
 
-bool SD_CARD::writeRAW_(uint8_t* buffer, uint32_t sector)
+bool SD_CARD::writeRAW_(uint8_t *buffer, uint32_t sector)
 {
     return SD.writeRAW(buffer, sector);
 }
@@ -136,7 +140,6 @@ uint64_t SD_CARD::sd_get_size()
 {
     return SD.cardSize();
 }
-
 
 uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
 {
@@ -164,7 +167,7 @@ uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
     {
         if (!entry.isDirectory())
         {
-            const char* fileName = entry.name();
+            const char *fileName = entry.name();
             ESP_LOGI(TAG, "Checking file: %s", fileName);
 
             if (String(fileName).endsWith(".bin"))
@@ -189,7 +192,6 @@ uint8_t SD_CARD::sd_app_list(char *app_list[100], bool update)
     root.close();
     return i;
 }
-
 
 size_t SD_CARD::sd_file_size(const char *path)
 {
@@ -285,7 +287,6 @@ uint8_t SD_CARD::sd_game_list(char *game_list[100], uint8_t console)
     ESP_LOGI(TAG, "Total games found in %s: %d", dirPath, i);
     return i;
 }
-
 
 bool SD_CARD::sd_sav_exist(char *file_name, uint8_t emulator)
 {
@@ -437,8 +438,5 @@ void SD_CARD::system_dir()
         SD.mkdir("/Firmware");
     }
 }
-
-
-
 
 SD_CARD sd_card;
