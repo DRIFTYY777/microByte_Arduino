@@ -12,7 +12,8 @@
 #include <string>
 
 // Process states
-typedef enum {
+typedef enum
+{
     PROCESS_STATE_READY,
     PROCESS_STATE_RUNNING,
     PROCESS_STATE_BLOCKED,
@@ -22,7 +23,8 @@ typedef enum {
 } process_state_t;
 
 // Process priority levels
-typedef enum {
+typedef enum
+{
     PROCESS_PRIORITY_IDLE = 0,
     PROCESS_PRIORITY_LOW = 1,
     PROCESS_PRIORITY_NORMAL = 2,
@@ -31,7 +33,8 @@ typedef enum {
 } process_priority_t;
 
 // Process information structure
-typedef struct {
+typedef struct
+{
     TaskHandle_t handle;
     std::string name;
     uint32_t id;
@@ -46,7 +49,8 @@ typedef struct {
 } process_info_t;
 
 // Resource usage structure
-typedef struct {
+typedef struct
+{
     uint32_t total_heap;
     uint32_t free_heap;
     uint32_t min_free_heap;
@@ -59,11 +63,12 @@ typedef struct {
 } system_resources_t;
 
 // Process manager callbacks
-typedef void (*process_created_callback_t)(const process_info_t* process);
+typedef void (*process_created_callback_t)(const process_info_t *process);
 typedef void (*process_deleted_callback_t)(uint32_t process_id);
-typedef void (*resource_alert_callback_t)(const system_resources_t* resources);
+typedef void (*resource_alert_callback_t)(const system_resources_t *resources);
 
-class ProcessManager {
+class ProcessManager
+{
 private:
     std::map<uint32_t, process_info_t> processes;
     std::vector<process_created_callback_t> creation_callbacks;
@@ -85,7 +90,7 @@ private:
     // static void monitor_task(void* parameter);
     static void monitor_timer_callback(TimerHandle_t timer);
 
-    void update_process_info(process_info_t& process);
+    void update_process_info(process_info_t &process);
     void check_resource_thresholds();
     process_state_t get_task_state(eTaskState freertos_state);
 
@@ -100,20 +105,17 @@ public:
     void set_stack_warning_threshold(uint32_t threshold);
 
     // Process management
-    uint32_t create_process(const char* name, TaskFunction_t task_function,
-                           uint32_t stack_size, void* parameters,
-                           process_priority_t priority, BaseType_t core_id = tskNO_AFFINITY);
+    uint32_t create_process(const char *name, TaskFunction_t task_function,
+                            uint32_t stack_size, void *parameters,
+                            process_priority_t priority, BaseType_t core_id = tskNO_AFFINITY);
 
     bool delete_process(uint32_t process_id);
-    bool delete_process_by_name(const char* name);
+    bool delete_process_by_name(const char *name);
     bool suspend_process(uint32_t process_id);
     bool resume_process(uint32_t process_id);
     bool set_process_priority(uint32_t process_id, process_priority_t priority);
 
-
     //
-
-
 
     // Process monitoring
     bool start_monitoring();
@@ -122,8 +124,8 @@ public:
 
     // Process information
     std::vector<process_info_t> get_all_processes();
-    process_info_t* get_process_info(uint32_t process_id);
-    process_info_t* get_process_info_by_name(const char* name);
+    process_info_t *get_process_info(uint32_t process_id);
+    process_info_t *get_process_info_by_name(const char *name);
     uint16_t get_process_count();
 
     // System resources
@@ -143,11 +145,7 @@ public:
     void cleanup_dead_processes();
     // uint32_t process_get_stack_usage(uint32_t process_id);
 
-
-    bool process_send_message(uint32_t process_id, const void* message, size_t size);
-
-
-
+    bool process_send_message(uint32_t process_id, const void *message, size_t size);
 };
 
 extern ProcessManager process_manager;

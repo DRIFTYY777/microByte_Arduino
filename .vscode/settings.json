@@ -401,6 +401,6 @@
     "spi_master.h": "c",
     "esp_bit_defs.h": "c"
   },
-  "cmake.sourceDirectory": "C:/Users/dhima/Desktop/microByte_Arduino/lib/lvgl",
+  "cmake.sourceDirectory": "D:/MicroControllers/esp 32 projects/microByteArduinoExamples/microByte_Arduino/lib/lvgl",
   "C_Cpp.default.compilerPath": ""
 }

@@ -32,6 +32,9 @@
 #include "components/drivers/spiManager/spiManager.h"
 #include "components/drivers/usb/usbHal.h"
 
+
+#include "led_strip.h"
+
 uint32_t gui_process_id = 0;
 
 static auto TAG = "Main";
