@@ -8,6 +8,7 @@
 
 #include <components/core/processManager.h>
 
+
 // #include <components/drivers/battery/battery.h>
 #include <esp_task_wdt.h>
 #include <USB.h>
@@ -32,8 +33,6 @@
 #include "components/drivers/spiManager/spiManager.h"
 #include "components/drivers/usb/usbHal.h"
 
-
-#include "led_strip.h"
 
 uint32_t gui_process_id = 0;
 

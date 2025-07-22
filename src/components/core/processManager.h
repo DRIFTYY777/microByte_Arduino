@@ -10,6 +10,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include "processMemory.h"
 
 // Process states
 typedef enum

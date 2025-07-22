@@ -5,6 +5,8 @@
 #include "mainScreen.h"
 #include "theme.h"
 
+#include "../core/processManager.h"
+
 // System
 #include <components/system_config/system_config.h>
 #include <components/system_config/system_manager.h>
@@ -60,12 +62,16 @@
 
 static void lv_tick_task(void *arg);
 static lv_disp_drv_t disp_drv;
-static SemaphoreHandle_t xGuiSemaphore;
+static process_semaphore_t *xGuiSemaphore;
+
+//static SemaphoreHandle_t xGuiSemaphore;
 
 
 void ui_init()
 {
-    xGuiSemaphore = xSemaphoreCreateMutex();
+//        xGuiSemaphore = xSemaphoreCreateMutex();
+
+    xGuiSemaphore = semaphore_create("gui_semaphore", SEAMPHORE_TYPE_MUTEX, 1);
 
     lv_init();
 
@@ -73,8 +79,11 @@ void ui_init()
     static lv_disp_draw_buf_t draw_buf;
 
     // buffer in psram
-    static lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
-    static lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    //static lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    //static lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    
+    static lv_color_t *buf1 = (lv_color_t *)memory_allocate(size_in_px * sizeof(lv_color_t));
+    static lv_color_t *buf2 = (lv_color_t *)memory_allocate(size_in_px * sizeof(lv_color_t));
 
     // buffer in dma
     // static lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(size_in_px * sizeof(lv_color_t), MALLOC_CAP_DMA);
@@ -117,10 +126,13 @@ void ui_init()
     {
         if (xGuiSemaphore != nullptr)
         {
-            if (xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
+            //if (xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
+            if (semaphore_take(xGuiSemaphore, portMAX_DELAY))
             {
                 lv_task_handler();
-                xSemaphoreGive(xGuiSemaphore);
+                semaphore_give(xGuiSemaphore);
+                //                xSemaphoreGive(xGuiSemaphore);
+
             }
         }
         esp_task_wdt_reset();
@@ -137,31 +149,30 @@ static void lv_tick_task(void *arg)
 
 void lv_example_img_1(void);
 
-
-
-
-static void ta_event_cb(lv_event_t * e)
+static void ta_event_cb(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * ta = lv_event_get_target(e);
-    lv_obj_t * kb = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
-    if(code == LV_EVENT_FOCUSED) {
+    lv_obj_t *ta = lv_event_get_target(e);
+    lv_obj_t *kb = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
+    if (code == LV_EVENT_FOCUSED)
+    {
         lv_keyboard_set_textarea(kb, ta);
         lv_obj_clear_flag(kb, LV_OBJ_FLAG_HIDDEN);
     }
-    if(code == LV_EVENT_DEFOCUSED) {
+    if (code == LV_EVENT_DEFOCUSED)
+    {
         lv_keyboard_set_textarea(kb, NULL);
         lv_obj_add_flag(kb, LV_OBJ_FLAG_HIDDEN);
     }
 }
-
+-
 void lv_example_keyboard_1(void)
 {
     /*Create a keyboard to use it with an of the text areas*/
-    lv_obj_t * kb = lv_keyboard_create(lv_scr_act());
+    lv_obj_t *kb = lv_keyboard_create(lv_scr_act());
 
     /*Create a text area. The keyboard will write here*/
-    lv_obj_t * ta;
+    lv_obj_t *ta;
     ta = lv_textarea_create(lv_scr_act());
     lv_obj_align(ta, LV_ALIGN_TOP_LEFT, 10, 10);
     lv_obj_add_event_cb(ta, ta_event_cb, LV_EVENT_ALL, kb);
@@ -176,11 +187,12 @@ void lv_example_keyboard_1(void)
     lv_keyboard_set_textarea(kb, ta);
 
     // make keyboard focus
-    lv_group_t * group = lv_group_create();
+    lv_group_t *group = lv_group_create();
     lv_group_add_obj(group, kb);
     lv_group_add_obj(group, ta);
-    lv_indev_t * kb_indev = lv_indev_get_next(NULL);
-    if (kb_indev != NULL) {
+    lv_indev_t *kb_indev = lv_indev_get_next(NULL);
+    if (kb_indev != NULL)
+    {
         lv_indev_set_group(kb_indev, group);
     }
 }
@@ -198,8 +210,6 @@ void GUI_frontend()
     // Create a group for interactive objects
     group_interact = lv_group_create();
     lv_indev_set_group(kb_indev, group_interact);
-
-
 
     // Set the group to the main screen
     // lv_example_img_1();
